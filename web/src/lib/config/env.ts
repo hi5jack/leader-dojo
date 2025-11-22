@@ -13,6 +13,10 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().min(1).default("sk-test-1234567890"),
   AI_PROVIDER: z.enum(["openai"]).default("openai"),
   APP_BASE_URL: z.string().url().optional(),
+  MOBILE_TOKEN_SECRET: z
+    .string()
+    .min(20)
+    .default("dev-mobile-secret-change-me-0987654321"),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -25,6 +29,10 @@ export const env: Env = envSchema.parse({
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   AI_PROVIDER: process.env.AI_PROVIDER ?? "openai",
   APP_BASE_URL: process.env.APP_BASE_URL ?? process.env.NEXTAUTH_URL,
+  MOBILE_TOKEN_SECRET:
+    process.env.MOBILE_TOKEN_SECRET ??
+    process.env.NEXTAUTH_SECRET ??
+    process.env.AUTH_SECRET,
   NODE_ENV: process.env.NODE_ENV,
 });
 

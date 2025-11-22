@@ -22,3 +22,8 @@ export const POST = withUser<Params>(async ({ request, userId, params }) => {
   return NextResponse.json(entry, { status: 201 });
 });
 
+export const GET = withUser<Params>(async ({ userId, params }) => {
+  const entries = await entriesService.getTimeline(userId, params.id);
+  return NextResponse.json(entries);
+});
+

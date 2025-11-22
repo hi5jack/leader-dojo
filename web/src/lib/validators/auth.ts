@@ -8,3 +8,10 @@ export const registerSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+export const mobileLoginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+});
+
+export type MobileLoginInput = z.infer<typeof mobileLoginSchema>;
+

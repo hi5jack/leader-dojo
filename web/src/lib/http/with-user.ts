@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getCurrentSession } from "@/lib/auth/session";
+import { verifyMobileToken } from "@/lib/auth/tokens";
 
 const isPromise = <T>(value: T | Promise<T>): value is Promise<T> => {
   return (
@@ -22,8 +23,18 @@ export const withUser = <TParams>(handler: Handler<TParams>) => {
     context: { params: TParams | Promise<TParams> },
   ) => {
     const session = await getCurrentSession();
+    let authenticatedUserId = session?.user?.id;
 
-    if (!session?.user?.id) {
+    if (!authenticatedUserId) {
+      const authHeader = request.headers.get("authorization");
+      if (authHeader?.startsWith("Bearer ")) {
+        const token = authHeader.replace(/^Bearer\s+/i, "");
+        const result = await verifyMobileToken(token);
+        authenticatedUserId = result?.userId;
+      }
+    }
+
+    if (!authenticatedUserId) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -35,7 +46,7 @@ export const withUser = <TParams>(handler: Handler<TParams>) => {
       return await handler({
         request,
         params,
-        userId: session.user.id,
+        userId: authenticatedUserId,
       });
     } catch (error) {
       console.error("API error", error);

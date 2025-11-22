@@ -155,7 +155,6 @@
 
 @layer theme {
   :root, :host {
-    --color-emerald-600: #009767;
     --color-black: #000;
     --color-white: #fff;
     --spacing: .25rem;
@@ -188,12 +187,6 @@
     --default-transition-timing-function: cubic-bezier(.4, 0, .2, 1);
     --default-font-family: var(--font-geist-sans);
     --default-mono-font-family: var(--font-geist-mono);
-  }
-
-  @supports (color: lab(0% 0 0)) {
-    :root, :host {
-      --color-emerald-600: lab(55.0481% -49.9246 15.93);
-    }
   }
 }
 
@@ -766,10 +759,6 @@
 
   .w-\[140px\] {
     width: 140px;
-  }
-
-  .w-\[180px\] {
-    width: 180px;
   }
 
   .w-fit {
@@ -1384,10 +1373,6 @@
 
   .text-destructive {
     color: var(--destructive);
-  }
-
-  .text-emerald-600 {
-    color: var(--color-emerald-600);
   }
 
   .text-foreground {
@@ -2059,18 +2044,6 @@
   @media (min-width: 40rem) {
     .sm\:flex-row {
       flex-direction: row;
-    }
-  }
-
-  @media (min-width: 40rem) {
-    .sm\:items-center {
-      align-items: center;
-    }
-  }
-
-  @media (min-width: 40rem) {
-    .sm\:justify-between {
-      justify-content: space-between;
     }
   }
 

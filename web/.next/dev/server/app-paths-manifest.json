@@ -1,10 +1,3 @@
 {
-  "/(authenticated)/capture/page": "app/(authenticated)/capture/page.js",
-  "/(authenticated)/commitments/page": "app/(authenticated)/commitments/page.js",
-  "/(authenticated)/dashboard/page": "app/(authenticated)/dashboard/page.js",
-  "/(authenticated)/projects/page": "app/(authenticated)/projects/page.js",
-  "/(authenticated)/reflections/page": "app/(authenticated)/reflections/page.js",
-  "/(unauthenticated)/auth/signup/page": "app/(unauthenticated)/auth/signup/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/auth/signup/route": "app/api/auth/signup/route.js"
+  "/(authenticated)/projects/page": "app/(authenticated)/projects/page.js"
 }

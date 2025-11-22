@@ -24,11 +24,11 @@ type JsonSchemaBody = {
 };
 
 type ResponseWithOutput = {
-  output_text?: string[];
+  output_text?: string;
 };
 
 const parseJsonOutput = <T>(response: ResponseWithOutput) => {
-  const [text] = response.output_text ?? [];
+  const text = response.output_text;
   if (!text) {
     throw new Error("AI response missing output_text");
   }
@@ -50,9 +50,9 @@ const createJsonRequest = async <T>({
     model,
     input: prompt,
     temperature: 0.4,
-    response_format: {
-      type: "json_schema",
-      json_schema: {
+    text: {
+      format: {
+        type: "json_schema",
         name: schemaName,
         schema: schemaBody,
         strict: true,

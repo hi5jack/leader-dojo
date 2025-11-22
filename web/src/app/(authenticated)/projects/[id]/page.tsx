@@ -1,4 +1,5 @@
 import { unstable_noStore as noStore } from "next/cache";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -7,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CommitmentsService, EntriesService } from "@/lib/services";
 import { getCurrentSession } from "@/lib/auth/session";
+import { env } from "@/lib/config/env";
 import type { Project } from "@/lib/db/types";
 import { ProjectTimeline } from "./project-timeline";
 import { PrepDrawer } from "./prep-drawer";
@@ -20,15 +22,23 @@ const commitmentsService = new CommitmentsService();
 
 export const dynamic = "force-dynamic";
 
-export default async function ProjectDetailPage({ params }: { params: Params }) {
+export default async function ProjectDetailPage({ params }: { params: Promise<Params> }) {
   noStore();
   const session = await getCurrentSession();
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }
 
-  const projectResponse = await fetch(`/api/secure/projects/${params.id}`, {
+  const headersList = await headers();
+  const cookieHeader = headersList.get("cookie") ?? "";
+  const { id } = await params;
+  const baseUrl = env.APP_BASE_URL ?? env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+  const projectResponse = await fetch(`${baseUrl}/api/secure/projects/${id}`, {
     cache: "no-store",
+    headers: {
+      cookie: cookieHeader,
+    },
   });
 
   if (projectResponse.status === 404) {
@@ -42,9 +52,9 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
   const project = (await projectResponse.json()) as Project;
 
   const [entries, commitments] = await Promise.all([
-    entriesService.getTimeline(session.user.id, params.id),
+    entriesService.getTimeline(session.user.id, id),
     commitmentsService.listCommitments(session.user.id, {
-      projectId: params.id,
+      projectId: id,
       statuses: ["open"],
     }),
   ]);

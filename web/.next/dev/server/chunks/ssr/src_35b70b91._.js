@@ -1442,19 +1442,19 @@ const CreateProjectDialog = ()=>{
                             className: "h-4 w-4"
                         }, void 0, false, {
                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                            lineNumber: 67,
+                            lineNumber: 68,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0)),
                         "New Project"
                     ]
                 }, void 0, true, {
                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                    lineNumber: 66,
+                    lineNumber: 67,
                     columnNumber: 9
                 }, ("TURBOPACK compile-time value", void 0))
             }, void 0, false, {
                 fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                lineNumber: 65,
+                lineNumber: 66,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogContent"], {
@@ -1465,12 +1465,12 @@ const CreateProjectDialog = ()=>{
                             children: "Create project"
                         }, void 0, false, {
                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                            lineNumber: 73,
+                            lineNumber: 74,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                        lineNumber: 72,
+                        lineNumber: 73,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0)),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Form"], {
@@ -1488,7 +1488,7 @@ const CreateProjectDialog = ()=>{
                                                     children: "Name"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 82,
+                                                    lineNumber: 83,
                                                     columnNumber: 19
                                                 }, void 0),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormControl"], {
@@ -1497,28 +1497,28 @@ const CreateProjectDialog = ()=>{
                                                         ...field
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                        lineNumber: 84,
+                                                        lineNumber: 85,
                                                         columnNumber: 21
                                                     }, void 0)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 83,
+                                                    lineNumber: 84,
                                                     columnNumber: 19
                                                 }, void 0),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormMessage"], {}, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 86,
+                                                    lineNumber: 87,
                                                     columnNumber: 19
                                                 }, void 0)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 81,
+                                            lineNumber: 82,
                                             columnNumber: 17
                                         }, void 0)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                    lineNumber: 77,
+                                    lineNumber: 78,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormField"], {
@@ -1530,7 +1530,7 @@ const CreateProjectDialog = ()=>{
                                                     children: "Description"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 95,
+                                                    lineNumber: 96,
                                                     columnNumber: 19
                                                 }, void 0),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormControl"], {
@@ -1540,28 +1540,28 @@ const CreateProjectDialog = ()=>{
                                                         ...field
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                        lineNumber: 97,
+                                                        lineNumber: 98,
                                                         columnNumber: 21
                                                     }, void 0)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 96,
+                                                    lineNumber: 97,
                                                     columnNumber: 19
                                                 }, void 0),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormMessage"], {}, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 99,
+                                                    lineNumber: 100,
                                                     columnNumber: 19
                                                 }, void 0)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 94,
+                                            lineNumber: 95,
                                             columnNumber: 17
                                         }, void 0)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                    lineNumber: 90,
+                                    lineNumber: 91,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1576,7 +1576,7 @@ const CreateProjectDialog = ()=>{
                                                             children: "Type"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 109,
+                                                            lineNumber: 110,
                                                             columnNumber: 21
                                                         }, void 0),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -1587,17 +1587,17 @@ const CreateProjectDialog = ()=>{
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 113,
+                                                                            lineNumber: 114,
                                                                             columnNumber: 27
                                                                         }, void 0)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                        lineNumber: 112,
+                                                                        lineNumber: 113,
                                                                         columnNumber: 25
                                                                     }, void 0)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                    lineNumber: 111,
+                                                                    lineNumber: 112,
                                                                     columnNumber: 23
                                                                 }, void 0),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1607,7 +1607,7 @@ const CreateProjectDialog = ()=>{
                                                                             children: "Project"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 117,
+                                                                            lineNumber: 118,
                                                                             columnNumber: 25
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1615,7 +1615,7 @@ const CreateProjectDialog = ()=>{
                                                                             children: "Relationship"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 118,
+                                                                            lineNumber: 119,
                                                                             columnNumber: 25
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1623,35 +1623,35 @@ const CreateProjectDialog = ()=>{
                                                                             children: "Area"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 119,
+                                                                            lineNumber: 120,
                                                                             columnNumber: 25
                                                                         }, void 0)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                    lineNumber: 116,
+                                                                    lineNumber: 117,
                                                                     columnNumber: 23
                                                                 }, void 0)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 110,
+                                                            lineNumber: 111,
                                                             columnNumber: 21
                                                         }, void 0),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormMessage"], {}, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 122,
+                                                            lineNumber: 123,
                                                             columnNumber: 21
                                                         }, void 0)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 108,
+                                                    lineNumber: 109,
                                                     columnNumber: 19
                                                 }, void 0)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 104,
+                                            lineNumber: 105,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormField"], {
@@ -1663,7 +1663,7 @@ const CreateProjectDialog = ()=>{
                                                             children: "Status"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 131,
+                                                            lineNumber: 132,
                                                             columnNumber: 21
                                                         }, void 0),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["Select"], {
@@ -1674,17 +1674,17 @@ const CreateProjectDialog = ()=>{
                                                                     children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectTrigger"], {
                                                                         children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectValue"], {}, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 135,
+                                                                            lineNumber: 136,
                                                                             columnNumber: 27
                                                                         }, void 0)
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                        lineNumber: 134,
+                                                                        lineNumber: 135,
                                                                         columnNumber: 25
                                                                     }, void 0)
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                    lineNumber: 133,
+                                                                    lineNumber: 134,
                                                                     columnNumber: 23
                                                                 }, void 0),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectContent"], {
@@ -1694,7 +1694,7 @@ const CreateProjectDialog = ()=>{
                                                                             children: "Active"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 139,
+                                                                            lineNumber: 140,
                                                                             columnNumber: 25
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1702,7 +1702,7 @@ const CreateProjectDialog = ()=>{
                                                                             children: "On hold"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 140,
+                                                                            lineNumber: 141,
                                                                             columnNumber: 25
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1710,7 +1710,7 @@ const CreateProjectDialog = ()=>{
                                                                             children: "Completed"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 141,
+                                                                            lineNumber: 142,
                                                                             columnNumber: 25
                                                                         }, void 0),
                                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$select$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["SelectItem"], {
@@ -1718,35 +1718,35 @@ const CreateProjectDialog = ()=>{
                                                                             children: "Archived"
                                                                         }, void 0, false, {
                                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                            lineNumber: 142,
+                                                                            lineNumber: 143,
                                                                             columnNumber: 25
                                                                         }, void 0)
                                                                     ]
                                                                 }, void 0, true, {
                                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                    lineNumber: 138,
+                                                                    lineNumber: 139,
                                                                     columnNumber: 23
                                                                 }, void 0)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 132,
+                                                            lineNumber: 133,
                                                             columnNumber: 21
                                                         }, void 0),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormMessage"], {}, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 145,
+                                                            lineNumber: 146,
                                                             columnNumber: 21
                                                         }, void 0)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 130,
+                                                    lineNumber: 131,
                                                     columnNumber: 19
                                                 }, void 0)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 126,
+                                            lineNumber: 127,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0)),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormField"], {
@@ -1758,7 +1758,7 @@ const CreateProjectDialog = ()=>{
                                                             children: "Priority"
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 154,
+                                                            lineNumber: 155,
                                                             columnNumber: 21
                                                         }, void 0),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormControl"], {
@@ -1771,34 +1771,34 @@ const CreateProjectDialog = ()=>{
                                                                 onChange: (event)=>field.onChange(Number(event.target.value))
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                                lineNumber: 156,
+                                                                lineNumber: 157,
                                                                 columnNumber: 23
                                                             }, void 0)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 155,
+                                                            lineNumber: 156,
                                                             columnNumber: 21
                                                         }, void 0),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormMessage"], {}, void 0, false, {
                                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                            lineNumber: 165,
+                                                            lineNumber: 166,
                                                             columnNumber: 21
                                                         }, void 0)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 153,
+                                                    lineNumber: 154,
                                                     columnNumber: 19
                                                 }, void 0)
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 149,
+                                            lineNumber: 150,
                                             columnNumber: 15
                                         }, ("TURBOPACK compile-time value", void 0))
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                    lineNumber: 103,
+                                    lineNumber: 104,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormField"], {
@@ -1810,7 +1810,7 @@ const CreateProjectDialog = ()=>{
                                                     children: "Owner notes"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 175,
+                                                    lineNumber: 176,
                                                     columnNumber: 19
                                                 }, void 0),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormControl"], {
@@ -1820,28 +1820,28 @@ const CreateProjectDialog = ()=>{
                                                         ...field
                                                     }, void 0, false, {
                                                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                        lineNumber: 177,
+                                                        lineNumber: 178,
                                                         columnNumber: 21
                                                     }, void 0)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 176,
+                                                    lineNumber: 177,
                                                     columnNumber: 19
                                                 }, void 0),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$form$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["FormMessage"], {}, void 0, false, {
                                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                                    lineNumber: 179,
+                                                    lineNumber: 180,
                                                     columnNumber: 19
                                                 }, void 0)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 174,
+                                            lineNumber: 175,
                                             columnNumber: 17
                                         }, void 0)
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                    lineNumber: 170,
+                                    lineNumber: 171,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0)),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$ui$2f$dialog$2e$tsx__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["DialogFooter"], {
@@ -1853,40 +1853,40 @@ const CreateProjectDialog = ()=>{
                                             className: "h-4 w-4 animate-spin"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                            lineNumber: 185,
+                                            lineNumber: 186,
                                             columnNumber: 33
                                         }, ("TURBOPACK compile-time value", void 0)) : "Create project"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                        lineNumber: 184,
+                                        lineNumber: 185,
                                         columnNumber: 15
                                     }, ("TURBOPACK compile-time value", void 0))
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                                    lineNumber: 183,
+                                    lineNumber: 184,
                                     columnNumber: 13
                                 }, ("TURBOPACK compile-time value", void 0))
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                            lineNumber: 76,
+                            lineNumber: 77,
                             columnNumber: 11
                         }, ("TURBOPACK compile-time value", void 0))
                     }, void 0, false, {
                         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                        lineNumber: 75,
+                        lineNumber: 76,
                         columnNumber: 9
                     }, ("TURBOPACK compile-time value", void 0))
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-                lineNumber: 71,
+                lineNumber: 72,
                 columnNumber: 7
             }, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/(authenticated)/projects/create-project-dialog.tsx",
-        lineNumber: 64,
+        lineNumber: 65,
         columnNumber: 5
     }, ("TURBOPACK compile-time value", void 0));
 };

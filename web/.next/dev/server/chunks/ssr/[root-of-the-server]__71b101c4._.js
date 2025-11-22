@@ -415,7 +415,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$openai$2f$cl
 ;
 const model = "gpt-4.1-mini";
 const parseJsonOutput = (response)=>{
-    const [text] = response.output_text ?? [];
+    const text = response.output_text;
     if (!text) {
         throw new Error("AI response missing output_text");
     }
@@ -426,9 +426,9 @@ const createJsonRequest = async ({ client, prompt, schemaName, schemaBody })=>{
         model,
         input: prompt,
         temperature: 0.4,
-        response_format: {
-            type: "json_schema",
-            json_schema: {
+        text: {
+            format: {
+                type: "json_schema",
                 name: schemaName,
                 schema: schemaBody,
                 strict: true

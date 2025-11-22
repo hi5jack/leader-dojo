@@ -1,3 +1,4 @@
+import { unstable_noStore as noStore } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 
@@ -18,6 +19,7 @@ const entriesService = new EntriesService();
 const commitmentsService = new CommitmentsService();
 
 export default async function ProjectDetailPage({ params }: { params: Params }) {
+  noStore();
   const session = await getCurrentSession();
   if (!session?.user?.id) {
     redirect("/auth/signin");

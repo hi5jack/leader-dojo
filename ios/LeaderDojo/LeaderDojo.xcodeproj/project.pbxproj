@@ -1,0 +1,592 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D02A0B900000000100000001 /* LeaderDojoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000100000001 /* LeaderDojoApp.swift */; };
+		D02A0B900000000200000001 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000200000001 /* AppEnvironment.swift */; };
+		D02A0B900000000300000001 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000300000001 /* MainTabView.swift */; };
+		D02A0B900000000400000001 /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000400000001 /* SignInView.swift */; };
+		D02A0B900000000500000001 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000500000001 /* DashboardView.swift */; };
+		D02A0B900000000600000001 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000600000001 /* ProjectsListView.swift */; };
+		D02A0B900000000700000001 /* CommitmentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000700000001 /* CommitmentsView.swift */; };
+		D02A0B900000000800000001 /* ReflectionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000800000001 /* ReflectionsListView.swift */; };
+		D02A0B900000000900000001 /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000900000001 /* CaptureView.swift */; };
+		D02A0B900000000A00000001 /* Colors.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000A00000001 /* Colors.swift */; };
+		D02A0B900000000B00000001 /* Typography.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000B00000001 /* Typography.swift */; };
+		D02A0B900000000C00000001 /* Spacing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000C00000001 /* Spacing.swift */; };
+		D02A0B900000000D00000001 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000D00000001 /* User.swift */; };
+		D02A0B900000000E00000001 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000E00000001 /* Project.swift */; };
+		D02A0B900000000F00000001 /* Commitment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000000F00000001 /* Commitment.swift */; };
+		D02A0B900000001000000001 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001000000001 /* Entry.swift */; };
+		D02A0B900000001100000001 /* Reflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001100000001 /* Reflection.swift */; };
+		D02A0B900000001200000001 /* DashboardData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001200000001 /* DashboardData.swift */; };
+		D02A0B900000001300000001 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001300000001 /* Assets.xcassets */; };
+		D02A0B900000001400000001 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001500000001 /* KeychainManager.swift */; };
+		D02A0B900000001500000001 /* Date+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001600000001 /* Date+Extensions.swift */; };
+		D02A0B900000001600000001 /* View+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001700000001 /* View+Extensions.swift */; };
+		D02A0B900000001700000001 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001800000001 /* APIClient.swift */; };
+		D02A0B900000001800000001 /* APIEndpoint.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001900000001 /* APIEndpoint.swift */; };
+		D02A0B900000001900000001 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001A00000001 /* AuthService.swift */; };
+		D02A0B900000001A00000001 /* DashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001B00000001 /* DashboardService.swift */; };
+		D02A0B900000001B00000001 /* ProjectsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001C00000001 /* ProjectsService.swift */; };
+		D02A0B900000001C00000001 /* CommitmentsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001D00000001 /* CommitmentsService.swift */; };
+		D02A0B900000001D00000001 /* ReflectionsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001E00000001 /* ReflectionsService.swift */; };
+		D02A0B900000001E00000001 /* EntriesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000001F00000001 /* EntriesService.swift */; };
+		D02A0B900000001F00000001 /* AnyEncodable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000200000001 /* AnyEncodable.swift */; };
+		D02A0B90000000200000001 /* AuthViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000210000001 /* AuthViewModel.swift */; };
+		D02A0B90000000210000001 /* DashboardViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000220000001 /* DashboardViewModel.swift */; };
+		D02A0B90000000220000001 /* ProjectsListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000230000001 /* ProjectsListViewModel.swift */; };
+		D02A0B90000000230000001 /* ProjectDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000240000001 /* ProjectDetailViewModel.swift */; };
+		D02A0B90000000240000001 /* CreateProjectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000250000001 /* CreateProjectView.swift */; };
+		D02A0B90000000250000001 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000260000001 /* ProjectDetailView.swift */; };
+		D02A0B90000000260000001 /* AddEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000270000001 /* AddEntryView.swift */; };
+		D02A0B90000000270000001 /* CommitmentsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000280000001 /* CommitmentsViewModel.swift */; };
+		D02A0B90000000280000001 /* CommitmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B85000000290000001 /* CommitmentDetailView.swift */; };
+		D02A0B90000000290000001 /* ReflectionsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002A00000001 /* ReflectionsViewModel.swift */; };
+		D02A0B900000002A00000001 /* ReflectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002B00000001 /* ReflectionDetailView.swift */; };
+		D02A0B900000002B00000001 /* ReflectionWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002C00000001 /* ReflectionWizardView.swift */; };
+		D02A0B900000002C00000001 /* CaptureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002D00000001 /* CaptureViewModel.swift */; };
+		D02A0B900000002D00000001 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002E00000001 /* Haptics.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		D02A0B820000000100000001 /* LeaderDojo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LeaderDojo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D02A0B850000000100000001 /* LeaderDojoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderDojoApp.swift; sourceTree = "<group>"; };
+		D02A0B850000000200000001 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
+		D02A0B850000000300000001 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		D02A0B850000000400000001 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
+		D02A0B850000000500000001 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		D02A0B850000000600000001 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		D02A0B850000000700000001 /* CommitmentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitmentsView.swift; sourceTree = "<group>"; };
+		D02A0B850000000800000001 /* ReflectionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsListView.swift; sourceTree = "<group>"; };
+		D02A0B850000000900000001 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
+		D02A0B850000000A00000001 /* Colors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Colors.swift; sourceTree = "<group>"; };
+		D02A0B850000000B00000001 /* Typography.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Typography.swift; sourceTree = "<group>"; };
+		D02A0B850000000C00000001 /* Spacing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Spacing.swift; sourceTree = "<group>"; };
+		D02A0B850000000D00000001 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		D02A0B850000000E00000001 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		D02A0B850000000F00000001 /* Commitment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commitment.swift; sourceTree = "<group>"; };
+		D02A0B850000001000000001 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		D02A0B850000001100000001 /* Reflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reflection.swift; sourceTree = "<group>"; };
+		D02A0B850000001200000001 /* DashboardData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardData.swift; sourceTree = "<group>"; };
+		D02A0B850000001300000001 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		D02A0B850000001400000001 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D02A0B850000001500000001 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		D02A0B850000001600000001 /* Date+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date+Extensions.swift"; sourceTree = "<group>"; };
+		D02A0B850000001700000001 /* View+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "View+Extensions.swift"; sourceTree = "<group>"; };
+		D02A0B850000001800000001 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		D02A0B850000001900000001 /* APIEndpoint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIEndpoint.swift; sourceTree = "<group>"; };
+		D02A0B850000001A00000001 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		D02A0B850000001B00000001 /* DashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardService.swift; sourceTree = "<group>"; };
+		D02A0B850000001C00000001 /* ProjectsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsService.swift; sourceTree = "<group>"; };
+		D02A0B850000001D00000001 /* CommitmentsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitmentsService.swift; sourceTree = "<group>"; };
+		D02A0B850000001E00000001 /* ReflectionsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsService.swift; sourceTree = "<group>"; };
+		D02A0B850000001F00000001 /* EntriesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntriesService.swift; sourceTree = "<group>"; };
+		D02A0B85000000200000001 /* AnyEncodable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnyEncodable.swift; sourceTree = "<group>"; };
+		D02A0B85000000210000001 /* AuthViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViewModel.swift; sourceTree = "<group>"; };
+		D02A0B85000000220000001 /* DashboardViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardViewModel.swift; sourceTree = "<group>"; };
+		D02A0B85000000230000001 /* ProjectsListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListViewModel.swift; sourceTree = "<group>"; };
+		D02A0B85000000240000001 /* ProjectDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailViewModel.swift; sourceTree = "<group>"; };
+		D02A0B85000000250000001 /* CreateProjectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateProjectView.swift; sourceTree = "<group>"; };
+		D02A0B85000000260000001 /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		D02A0B85000000270000001 /* AddEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEntryView.swift; sourceTree = "<group>"; };
+		D02A0B85000000280000001 /* CommitmentsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitmentsViewModel.swift; sourceTree = "<group>"; };
+		D02A0B85000000290000001 /* CommitmentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitmentDetailView.swift; sourceTree = "<group>"; };
+		D02A0B850000002A00000001 /* ReflectionsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsViewModel.swift; sourceTree = "<group>"; };
+		D02A0B850000002B00000001 /* ReflectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionDetailView.swift; sourceTree = "<group>"; };
+		D02A0B850000002C00000001 /* ReflectionWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionWizardView.swift; sourceTree = "<group>"; };
+		D02A0B850000002D00000001 /* CaptureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewModel.swift; sourceTree = "<group>"; };
+		D02A0B850000002E00000001 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D02A0B830000000100000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D02A0B810000000100000001 = {
+			isa = PBXGroup;
+			children = (
+				D02A0B840000000100000001 /* LeaderDojo */,
+				D02A0B820000000200000001 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D02A0B820000000200000001 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B820000000100000001 /* LeaderDojo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D02A0B840000000100000001 /* LeaderDojo */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B870000000100000001 /* App */,
+				D02A0B870000000200000001 /* Core */,
+				D02A0B870000000300000001 /* Features */,
+				D02A0B870000000400000001 /* Resources */,
+				D02A0B8A0000000200000001 /* Utilities */,
+			);
+			path = LeaderDojo;
+			sourceTree = "<group>";
+		};
+		D02A0B870000000100000001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000000100000001 /* LeaderDojoApp.swift */,
+				D02A0B850000000200000001 /* AppEnvironment.swift */,
+				D02A0B850000000300000001 /* MainTabView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		D02A0B870000000200000001 /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B880000000100000001 /* Models */,
+				D02A0B8A0000000300000001 /* Networking */,
+				D02A0B8A0000000400000001 /* Services */,
+			);
+			path = Core;
+			sourceTree = "<group>";
+		};
+		D02A0B870000000300000001 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B890000000100000001 /* Auth */,
+				D02A0B890000000200000001 /* Dashboard */,
+				D02A0B890000000300000001 /* Projects */,
+				D02A0B890000000400000001 /* Commitments */,
+				D02A0B890000000500000001 /* Reflections */,
+				D02A0B890000000600000001 /* Capture */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		D02A0B870000000400000001 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B8A0000000100000001 /* Theme */,
+				D02A0B850000001300000001 /* Assets.xcassets */,
+				D02A0B850000001400000001 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		D02A0B880000000100000001 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000000D00000001 /* User.swift */,
+				D02A0B850000000E00000001 /* Project.swift */,
+				D02A0B850000000F00000001 /* Commitment.swift */,
+				D02A0B850000001000000001 /* Entry.swift */,
+				D02A0B850000001100000001 /* Reflection.swift */,
+				D02A0B850000001200000001 /* DashboardData.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		D02A0B890000000100000001 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B85000000210000001 /* AuthViewModel.swift */,
+				D02A0B850000000400000001 /* SignInView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		D02A0B890000000200000001 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B8A0000000500000001 /* ViewModels */,
+				D02A0B850000000500000001 /* DashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		D02A0B890000000300000001 /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B8A0000000600000001 /* ViewModels */,
+				D02A0B850000000600000001 /* ProjectsListView.swift */,
+				D02A0B85000000250000001 /* CreateProjectView.swift */,
+				D02A0B85000000260000001 /* ProjectDetailView.swift */,
+				D02A0B85000000270000001 /* AddEntryView.swift */,
+			);
+			path = Projects;
+			sourceTree = "<group>";
+		};
+		D02A0B890000000400000001 /* Commitments */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B8A0000000700000001 /* ViewModels */,
+				D02A0B850000000700000001 /* CommitmentsView.swift */,
+				D02A0B85000000290000001 /* CommitmentDetailView.swift */,
+			);
+			path = Commitments;
+			sourceTree = "<group>";
+		};
+		D02A0B890000000500000001 /* Reflections */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B8A0000000800000001 /* ViewModels */,
+				D02A0B850000000800000001 /* ReflectionsListView.swift */,
+				D02A0B850000002B00000001 /* ReflectionDetailView.swift */,
+				D02A0B850000002C00000001 /* ReflectionWizardView.swift */,
+			);
+			path = Reflections;
+			sourceTree = "<group>";
+		};
+		D02A0B890000000600000001 /* Capture */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B8A0000000900000001 /* ViewModels */,
+				D02A0B850000000900000001 /* CaptureView.swift */,
+				D02A0B850000002D00000001 /* CaptureViewModel.swift */,
+			);
+			path = Capture;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000100000001 /* Theme */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000000A00000001 /* Colors.swift */,
+				D02A0B850000000B00000001 /* Typography.swift */,
+				D02A0B850000000C00000001 /* Spacing.swift */,
+			);
+			path = Theme;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000200000001 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000001500000001 /* KeychainManager.swift */,
+				D02A0B850000001600000001 /* Date+Extensions.swift */,
+				D02A0B850000001700000001 /* View+Extensions.swift */,
+				D02A0B850000002E00000001 /* Haptics.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000300000001 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000001800000001 /* APIClient.swift */,
+				D02A0B850000001900000001 /* APIEndpoint.swift */,
+				D02A0B85000000200000001 /* AnyEncodable.swift */,
+			);
+			path = Networking;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000400000001 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000001A00000001 /* AuthService.swift */,
+				D02A0B850000001B00000001 /* DashboardService.swift */,
+				D02A0B850000001C00000001 /* ProjectsService.swift */,
+				D02A0B850000001D00000001 /* CommitmentsService.swift */,
+				D02A0B850000001E00000001 /* ReflectionsService.swift */,
+				D02A0B850000001F00000001 /* EntriesService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000500000001 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B85000000220000001 /* DashboardViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000600000001 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B85000000230000001 /* ProjectsListViewModel.swift */,
+				D02A0B85000000240000001 /* ProjectDetailViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000700000001 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B85000000280000001 /* CommitmentsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000800000001 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B850000002A00000001 /* ReflectionsViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		D02A0B8A0000000900000001 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D02A0B840000000200000001 /* LeaderDojo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D02A0B8F0000000100000001 /* Build configuration list for PBXNativeTarget "LeaderDojo" */;
+			buildPhases = (
+				D02A0B830000000200000001 /* Sources */,
+				D02A0B830000000100000001 /* Frameworks */,
+				D02A0B830000000300000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LeaderDojo;
+			productName = LeaderDojo;
+			productReference = D02A0B820000000100000001 /* LeaderDojo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D02A0B810000000200000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				ORGANIZATIONNAME = "Leader Dojo";
+				TargetAttributes = {
+					D02A0B840000000200000001 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = D02A0B8E0000000100000001 /* Build configuration list for PBXProject "LeaderDojo" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = D02A0B810000000100000001;
+			productRefGroup = D02A0B820000000200000001 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D02A0B840000000200000001 /* LeaderDojo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D02A0B830000000300000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D02A0B900000001300000001 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D02A0B830000000200000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D02A0B900000001200000001 /* DashboardData.swift in Sources */,
+				D02A0B900000000F00000001 /* Commitment.swift in Sources */,
+				D02A0B900000000A00000001 /* Colors.swift in Sources */,
+				D02A0B900000001000000001 /* Entry.swift in Sources */,
+				D02A0B900000001100000001 /* Reflection.swift in Sources */,
+				D02A0B900000000C00000001 /* Spacing.swift in Sources */,
+				D02A0B900000000D00000001 /* User.swift in Sources */,
+				D02A0B900000000E00000001 /* Project.swift in Sources */,
+				D02A0B900000000400000001 /* SignInView.swift in Sources */,
+				D02A0B900000000600000001 /* ProjectsListView.swift in Sources */,
+				D02A0B900000000900000001 /* CaptureView.swift in Sources */,
+				D02A0B900000000500000001 /* DashboardView.swift in Sources */,
+				D02A0B900000000200000001 /* AppEnvironment.swift in Sources */,
+				D02A0B900000001400000001 /* KeychainManager.swift in Sources */,
+				D02A0B900000000300000001 /* MainTabView.swift in Sources */,
+				D02A0B900000001700000001 /* APIClient.swift in Sources */,
+				D02A0B900000001800000001 /* APIEndpoint.swift in Sources */,
+				D02A0B900000001B00000001 /* ProjectsService.swift in Sources */,
+				D02A0B900000000800000001 /* ReflectionsListView.swift in Sources */,
+				D02A0B900000000100000001 /* LeaderDojoApp.swift in Sources */,
+				D02A0B900000001500000001 /* Date+Extensions.swift in Sources */,
+				D02A0B900000000700000001 /* CommitmentsView.swift in Sources */,
+				D02A0B900000000B00000001 /* Typography.swift in Sources */,
+				D02A0B900000001C00000001 /* CommitmentsService.swift in Sources */,
+				D02A0B900000001D00000001 /* ReflectionsService.swift in Sources */,
+				D02A0B900000001E00000001 /* EntriesService.swift in Sources */,
+				D02A0B900000001900000001 /* AuthService.swift in Sources */,
+				D02A0B900000001A00000001 /* DashboardService.swift in Sources */,
+				D02A0B900000001600000001 /* View+Extensions.swift in Sources */,
+				D02A0B900000001F00000001 /* AnyEncodable.swift in Sources */,
+				D02A0B90000000240000001 /* CreateProjectView.swift in Sources */,
+				D02A0B90000000200000001 /* AuthViewModel.swift in Sources */,
+				D02A0B90000000250000001 /* ProjectDetailView.swift in Sources */,
+				D02A0B90000000210000001 /* DashboardViewModel.swift in Sources */,
+				D02A0B90000000220000001 /* ProjectsListViewModel.swift in Sources */,
+				D02A0B90000000230000001 /* ProjectDetailViewModel.swift in Sources */,
+				D02A0B90000000260000001 /* AddEntryView.swift in Sources */,
+				D02A0B90000000270000001 /* CommitmentsViewModel.swift in Sources */,
+				D02A0B90000000280000001 /* CommitmentDetailView.swift in Sources */,
+				D02A0B90000000290000001 /* ReflectionsViewModel.swift in Sources */,
+				D02A0B900000002A00000001 /* ReflectionDetailView.swift in Sources */,
+				D02A0B900000002B00000001 /* ReflectionWizardView.swift in Sources */,
+				D02A0B900000002C00000001 /* CaptureViewModel.swift in Sources */,
+				D02A0B900000002D00000001 /* Haptics.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D02A0B8C0000000100000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = LeaderDojo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				OTHER_SWIFT_FLAGS = "-warnings-as-errors";
+				PRODUCT_BUNDLE_IDENTIFIER = joinleaderdojo.com;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		D02A0B8D0000000100000001 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_PREVIEWS = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				INFOPLIST_FILE = LeaderDojo/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_SWIFT_FLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = joinleaderdojo.com;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D02A0B8E0000000100000001 /* Build configuration list for PBXProject "LeaderDojo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D02A0B8C0000000100000001 /* Debug */,
+				D02A0B8D0000000100000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D02A0B8F0000000100000001 /* Build configuration list for PBXNativeTarget "LeaderDojo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D02A0B8C0000000100000001 /* Debug */,
+				D02A0B8D0000000100000001 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D02A0B810000000200000001 /* Project object */;
+}

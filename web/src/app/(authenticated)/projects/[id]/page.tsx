@@ -18,6 +18,8 @@ const projectsService = new ProjectsService();
 const entriesService = new EntriesService();
 const commitmentsService = new CommitmentsService();
 
+export const dynamic = "force-dynamic";
+
 export default async function ProjectDetailPage({ params }: { params: Params }) {
   noStore();
   const session = await getCurrentSession();

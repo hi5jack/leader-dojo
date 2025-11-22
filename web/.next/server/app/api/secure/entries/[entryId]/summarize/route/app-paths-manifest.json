@@ -1,3 +1,0 @@
-{
-  "/api/secure/entries/[entryId]/summarize/route": "app/api/secure/entries/[entryId]/summarize/route.js"
-}

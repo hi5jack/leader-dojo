@@ -1,8 +1,0 @@
-{
-  "/(authenticated)/dashboard/page": "app/(authenticated)/dashboard/page.js",
-  "/(authenticated)/projects/[id]/entries/new/page": "app/(authenticated)/projects/[id]/entries/new/page.js",
-  "/(authenticated)/projects/[id]/page": "app/(authenticated)/projects/[id]/page.js",
-  "/(authenticated)/projects/page": "app/(authenticated)/projects/page.js",
-  "/api/secure/projects/[id]/prep/route": "app/api/secure/projects/[id]/prep/route.js",
-  "/api/secure/projects/[id]/route": "app/api/secure/projects/[id]/route.js"
-}

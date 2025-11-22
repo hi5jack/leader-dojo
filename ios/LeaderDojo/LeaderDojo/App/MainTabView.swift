@@ -4,129 +4,67 @@ struct MainTabView: View {
     @EnvironmentObject private var appEnvironment: AppEnvironment
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Main content
-            TabView(selection: $appEnvironment.activeTab) {
-                DashboardView()
-                    .tag(AppEnvironment.MainTab.dashboard)
-
-                ProjectsListView()
-                    .tag(AppEnvironment.MainTab.projects)
-
-                CommitmentsView()
-                    .tag(AppEnvironment.MainTab.commitments)
-
-                ReflectionsListView()
-                    .tag(AppEnvironment.MainTab.reflections)
-
-                CaptureView()
-                    .tag(AppEnvironment.MainTab.capture)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
+        TabView(selection: $appEnvironment.activeTab) {
+            DashboardView()
+                .tabItem {
+                    Label("Home", systemImage: DojoIcons.dashboard)
+                }
+                .tag(AppEnvironment.MainTab.dashboard)
             
-            // Custom Tab Bar
-            CustomTabBar(selectedTab: $appEnvironment.activeTab)
-                .ignoresSafeArea(.keyboard)
+            ProjectsListView()
+                .tabItem {
+                    Label("Projects", systemImage: DojoIcons.projects)
+                }
+                .tag(AppEnvironment.MainTab.projects)
+            
+            CommitmentsView()
+                .tabItem {
+                    Label("Commits", systemImage: DojoIcons.commitments)
+                }
+                .tag(AppEnvironment.MainTab.commitments)
+            
+            ReflectionsListView()
+                .tabItem {
+                    Label("Reflect", systemImage: DojoIcons.reflections)
+                }
+                .tag(AppEnvironment.MainTab.reflections)
+            
+            CaptureView()
+                .tabItem {
+                    Label("Capture", systemImage: DojoIcons.capture)
+                }
+                .tag(AppEnvironment.MainTab.capture)
+        }
+        .tint(LeaderDojoColors.dojoAmber)
+        .onAppear {
+            configureTabBarAppearance()
         }
     }
-}
-
-// MARK: - Custom Tab Bar
-
-private struct CustomTabBar: View {
-    @Binding var selectedTab: AppEnvironment.MainTab
     
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(AppEnvironment.MainTab.allCases, id: \.self) { tab in
-                TabButton(
-                    tab: tab,
-                    isSelected: selectedTab == tab,
-                    action: {
-                        Haptics.tabSwitch()
-                        withAnimation(LeaderDojoAnimation.tabSwitch) {
-                            selectedTab = tab
-                        }
-                    }
-                )
-            }
-        }
-        .padding(.horizontal, LeaderDojoSpacing.s)
-        .padding(.top, LeaderDojoSpacing.sm)
-        .padding(.bottom, LeaderDojoSpacing.m)
-        .background(
-            Rectangle()
-                .fill(LeaderDojoColors.surfaceSecondary)
-                .shadow(
-                    color: Color.black.opacity(0.3),
-                    radius: 20,
-                    x: 0,
-                    y: -4
-                )
-        )
-        .overlay(
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            LeaderDojoColors.dojoDarkGray,
-                            Color.clear
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .frame(height: 1),
-            alignment: .top
-        )
-    }
-}
-
-// MARK: - Tab Button
-
-private struct TabButton: View {
-    let tab: AppEnvironment.MainTab
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: LeaderDojoSpacing.xs) {
-                ZStack {
-                    // Background circle for selected state
-                    if isSelected {
-                        Circle()
-                            .fill(LeaderDojoColors.dojoAmber.opacity(0.2))
-                            .frame(width: 44, height: 44)
-                    }
-                    
-                    // Icon
-                    Image(systemName: tab.icon)
-                        .font(.system(size: 22, weight: isSelected ? .semibold : .regular))
-                        .foregroundStyle(isSelected ? LeaderDojoColors.dojoAmber : LeaderDojoColors.textTertiary)
-                        .scaleEffect(isSelected ? 1.1 : 1.0)
-                }
-                
-                // Label
-                Text(tab.label)
-                    .font(LeaderDojoTypography.label)
-                    .foregroundStyle(isSelected ? LeaderDojoColors.dojoAmber : LeaderDojoColors.textTertiary)
-                
-                // Active indicator
-                if isSelected {
-                    Capsule()
-                        .fill(LeaderDojoColors.dojoAmber)
-                        .frame(width: 32, height: 3)
-                } else {
-                    Capsule()
-                        .fill(Color.clear)
-                        .frame(width: 32, height: 3)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .animation(LeaderDojoAnimation.tabSwitch, value: isSelected)
-        }
-        .buttonStyle(.plain)
+    private func configureTabBarAppearance() {
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = UIColor(LeaderDojoColors.surfaceSecondary)
+        
+        // Configure normal state
+        appearance.stackedLayoutAppearance.normal.iconColor = UIColor(LeaderDojoColors.textTertiary)
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor(LeaderDojoColors.textTertiary),
+            .font: UIFont.systemFont(ofSize: 10, weight: .regular)
+        ]
+        
+        // Configure selected state
+        appearance.stackedLayoutAppearance.selected.iconColor = UIColor(LeaderDojoColors.dojoAmber)
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: UIColor(LeaderDojoColors.dojoAmber),
+            .font: UIFont.systemFont(ofSize: 10, weight: .semibold)
+        ]
+        
+        // Add subtle top border
+        appearance.shadowColor = UIColor(LeaderDojoColors.dojoDarkGray)
+        
+        UITabBar.appearance().standardAppearance = appearance
+        UITabBar.appearance().scrollEdgeAppearance = appearance
     }
 }
 

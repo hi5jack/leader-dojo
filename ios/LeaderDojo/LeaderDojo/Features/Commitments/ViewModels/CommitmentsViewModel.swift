@@ -14,7 +14,7 @@ final class CommitmentsViewModel: ObservableObject {
     }
 
     func load() async {
-        guard let service else { return }
+        guard let service, !isLoading else { return }
         isLoading = true
         defer { isLoading = false }
         do {

@@ -42,8 +42,9 @@ struct CaptureView: View {
                     }
                     .padding(.horizontal, LeaderDojoSpacing.ml)
                     .padding(.top, LeaderDojoSpacing.l)
-                    .padding(.bottom, 120) // Space for button
+                    .padding(.bottom, 120) // Space for save button
                 }
+                .scrollDismissesKeyboard(.interactively)
                 
                 Spacer()
                 
@@ -58,13 +59,27 @@ struct CaptureView: View {
         }
         .onAppear {
             viewModel.configure(service: appEnvironment.projectsService)
-            // Auto-focus on note field
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                isNoteFieldFocused = true
-            }
         }
         .task {
             await viewModel.loadProjects()
+        }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Button {
+                    save()
+                } label: {
+                    Text(viewModel.isSaving ? "Saving..." : "Save")
+                        .fontWeight(.semibold)
+                }
+                .disabled(viewModel.note.isEmpty || viewModel.isSaving)
+                
+                Spacer()
+                
+                Button("Done") {
+                    isNoteFieldFocused = false
+                }
+                .fontWeight(.semibold)
+            }
         }
     }
     
@@ -302,6 +317,13 @@ struct CaptureView: View {
     }
 
     private func save() {
+        guard !viewModel.note.isEmpty, !viewModel.isSaving else {
+            isNoteFieldFocused = false
+            return
+        }
+        
+        isNoteFieldFocused = false
+        
         Task {
             do {
                 Haptics.entryCreated()

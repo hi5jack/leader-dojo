@@ -5,6 +5,7 @@ import { Loader2, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { type z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { createProjectSchema } from "@/lib/validators/projects";
 
-type FormValues = typeof createProjectSchema._type;
+type FormValues = z.input<typeof createProjectSchema>;
 
 export const CreateProjectDialog = () => {
   const router = useRouter();

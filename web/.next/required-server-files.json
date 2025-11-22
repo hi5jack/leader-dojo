@@ -100,7 +100,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/Users/jackchen/Desktop/Coding/dojo/leader-dojo",
+    "outputFileTracingRoot": "/Users/jackchen/Desktop/Coding/leader-dojo/web",
     "cacheComponents": false,
     "cacheLife": {
       "default": {
@@ -293,11 +293,11 @@
       "bcryptjs"
     ],
     "turbopack": {
-      "root": "/Users/jackchen/Desktop/Coding/dojo/leader-dojo"
+      "root": "/Users/jackchen/Desktop/Coding/leader-dojo/web"
     },
     "distDirRoot": ".next"
   },
-  "appDir": "/Users/jackchen/Desktop/Coding/dojo/leader-dojo",
+  "appDir": "/Users/jackchen/Desktop/Coding/leader-dojo/web",
   "relativeAppDir": "",
   "files": [
     ".next/routes-manifest.json",

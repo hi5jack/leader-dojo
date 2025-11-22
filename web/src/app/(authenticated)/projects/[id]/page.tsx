@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CommitmentsService, EntriesService, ProjectsService } from "@/lib/services";
+import { CommitmentsService, EntriesService } from "@/lib/services";
 import { getCurrentSession } from "@/lib/auth/session";
+import type { Project } from "@/lib/db/types";
 import { ProjectTimeline } from "./project-timeline";
 import { PrepDrawer } from "./prep-drawer";
 
@@ -14,7 +15,6 @@ type Params = {
   id: string;
 };
 
-const projectsService = new ProjectsService();
 const entriesService = new EntriesService();
 const commitmentsService = new CommitmentsService();
 
@@ -27,18 +27,27 @@ export default async function ProjectDetailPage({ params }: { params: Params }) 
     redirect("/auth/signin");
   }
 
-  const [project, entries, commitments] = await Promise.all([
-    projectsService.getProject(session.user.id, params.id),
+  const projectResponse = await fetch(`/api/secure/projects/${params.id}`, {
+    cache: "no-store",
+  });
+
+  if (projectResponse.status === 404) {
+    notFound();
+  }
+
+  if (!projectResponse.ok) {
+    throw new Error("Failed to load project");
+  }
+
+  const project = (await projectResponse.json()) as Project;
+
+  const [entries, commitments] = await Promise.all([
     entriesService.getTimeline(session.user.id, params.id),
     commitmentsService.listCommitments(session.user.id, {
       projectId: params.id,
       statuses: ["open"],
     }),
   ]);
-
-  if (!project) {
-    notFound();
-  }
 
   return (
     <div className="space-y-8">

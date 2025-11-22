@@ -1,0 +1,3 @@
+{
+  "/api/secure/entries/[entryId]/commitments/route": "app/api/secure/entries/[entryId]/commitments/route.js"
+}

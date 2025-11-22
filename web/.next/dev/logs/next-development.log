@@ -1,0 +1,22 @@
+[00:00:00.450] Server  WARN     ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+[00:00:00.505] Server  LOG      ✓ Ready in 398ms
+[00:00:13.761] Server  WARN    The `fetchConnectionCache` option is deprecated (now always `true`)
+[00:00:15.926] Server  WARN    [next-auth][warn][NEXTAUTH_URL] "\nhttps://next-auth.js.org/warnings#nextauth_url"
+[00:00:16.948] Server  WARN    The `fetchConnectionCache` option is deprecated (now always `true`)
+[00:00:16.969] Server  WARN    [next-auth][warn][NEXTAUTH_URL] "\nhttps://next-auth.js.org/warnings#nextauth_url"
+[00:04:40.004] Server  WARN    The `fetchConnectionCache` option is deprecated (now always `true`)
+[00:04:40.027] Server  LOG      ✓ Compiled in 101ms
+[00:04:40.033] Server  WARN    [next-auth][warn][NEXTAUTH_URL] "\nhttps://next-auth.js.org/warnings#nextauth_url"
+[00:04:59.247] Server  LOG      ✓ Compiled in 118ms
+[00:05:13.192] Server  LOG      ✓ Compiled in 50ms
+[00:06:00.624] Server  LOG      ✓ Compiled in 42ms
+[00:06:00.662] Server  LOG      ✓ Compiled in 25ms
+[00:08:25.935] Server  LOG      ✓ Compiled in 43ms
+[00:08:58.202] Server  WARN    The `fetchConnectionCache` option is deprecated (now always `true`)
+[00:08:58.227] Server  WARN    [next-auth][warn][NEXTAUTH_URL] "\nhttps://next-auth.js.org/warnings#nextauth_url"
+[00:09:10.250] Server  LOG      ✓ Compiled in 44ms
+[00:10:51.762] Server  LOG      ✓ Compiled in 60ms
+[00:11:01.478] Server  WARN    The `fetchConnectionCache` option is deprecated (now always `true`)
+[00:11:01.517] Server  WARN    [next-auth][warn][NEXTAUTH_URL] "\nhttps://next-auth.js.org/warnings#nextauth_url"
+[00:11:06.325] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+[00:11:06.325] Browser WARN    Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.

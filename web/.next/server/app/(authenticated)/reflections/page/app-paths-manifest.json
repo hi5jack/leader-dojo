@@ -1,0 +1,3 @@
+{
+  "/(authenticated)/reflections/page": "app/(authenticated)/reflections/page.js"
+}

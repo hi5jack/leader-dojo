@@ -52,6 +52,11 @@
 		D02A0B900000002B00000001 /* ReflectionWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002C00000001 /* ReflectionWizardView.swift */; };
 		D02A0B900000002C00000001 /* CaptureViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002D00000001 /* CaptureViewModel.swift */; };
 		D02A0B900000002D00000001 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B850000002E00000001 /* Haptics.swift */; };
+		D02A0BA00000003000000001 /* AnimationConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B950000000100000001 /* AnimationConstants.swift */; };
+		D02A0BA00000004000000001 /* DojoIcons.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B950000000200000001 /* DojoIcons.swift */; };
+		D02A0BA00000005000000001 /* DojoBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B950000000300000001 /* DojoBadge.swift */; };
+		D02A0BA00000006000000001 /* DojoButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B950000000400000001 /* DojoButton.swift */; };
+		D02A0BA00000007000000001 /* Accessibility+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = D02A0B950000000500000001 /* Accessibility+Extensions.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -102,6 +107,11 @@
 		D02A0B850000002C00000001 /* ReflectionWizardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionWizardView.swift; sourceTree = "<group>"; };
 		D02A0B850000002D00000001 /* CaptureViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureViewModel.swift; sourceTree = "<group>"; };
 		D02A0B850000002E00000001 /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		D02A0B950000000100000001 /* AnimationConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationConstants.swift; sourceTree = "<group>"; };
+		D02A0B950000000200000001 /* DojoIcons.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DojoIcons.swift; sourceTree = "<group>"; };
+		D02A0B950000000300000001 /* DojoBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DojoBadge.swift; sourceTree = "<group>"; };
+		D02A0B950000000400000001 /* DojoButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DojoButton.swift; sourceTree = "<group>"; };
+		D02A0B950000000500000001 /* Accessibility+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Accessibility+Extensions.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +148,7 @@
 				D02A0B870000000200000001 /* Core */,
 				D02A0B870000000300000001 /* Features */,
 				D02A0B870000000400000001 /* Resources */,
+				D02A0B8B0000000100000001 /* Components */,
 				D02A0B8A0000000200000001 /* Utilities */,
 			);
 			path = LeaderDojo;
@@ -266,8 +277,18 @@
 				D02A0B850000000A00000001 /* Colors.swift */,
 				D02A0B850000000B00000001 /* Typography.swift */,
 				D02A0B850000000C00000001 /* Spacing.swift */,
+				D02A0B950000000100000001 /* AnimationConstants.swift */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		D02A0B8B0000000100000001 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				D02A0B950000000300000001 /* DojoBadge.swift */,
+				D02A0B950000000400000001 /* DojoButton.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 		D02A0B8A0000000200000001 /* Utilities */ = {
@@ -277,6 +298,8 @@
 				D02A0B850000001600000001 /* Date+Extensions.swift */,
 				D02A0B850000001700000001 /* View+Extensions.swift */,
 				D02A0B850000002E00000001 /* Haptics.swift */,
+				D02A0B950000000200000001 /* DojoIcons.swift */,
+				D02A0B950000000500000001 /* Accessibility+Extensions.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -428,10 +451,15 @@
 				D02A0B900000001400000001 /* KeychainManager.swift in Sources */,
 				D02A0B900000000300000001 /* MainTabView.swift in Sources */,
 				D02A0B900000001700000001 /* APIClient.swift in Sources */,
+				D02A0BA00000003000000001 /* AnimationConstants.swift in Sources */,
 				D02A0B900000001800000001 /* APIEndpoint.swift in Sources */,
+				D02A0BA00000005000000001 /* DojoBadge.swift in Sources */,
+				D02A0BA00000006000000001 /* DojoButton.swift in Sources */,
 				D02A0B900000001B00000001 /* ProjectsService.swift in Sources */,
+				D02A0BA00000004000000001 /* DojoIcons.swift in Sources */,
 				D02A0B900000000800000001 /* ReflectionsListView.swift in Sources */,
 				D02A0B900000000100000001 /* LeaderDojoApp.swift in Sources */,
+				D02A0BA00000007000000001 /* Accessibility+Extensions.swift in Sources */,
 				D02A0B900000001500000001 /* Date+Extensions.swift in Sources */,
 				D02A0B900000000700000001 /* CommitmentsView.swift in Sources */,
 				D02A0B900000000B00000001 /* Typography.swift in Sources */,

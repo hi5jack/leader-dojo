@@ -49,12 +49,12 @@ struct CommitmentDetailView: View {
                     Text("Importance")
                 }
                 Text("Importance: \(Int(importance))")
-                    .font(LeaderDojoTypography.caption)
+                    .dojoCaptionLarge()
                 Slider(value: $urgency, in: 1...5, step: 1) {
                     Text("Urgency")
                 }
                 Text("Urgency: \(Int(urgency))")
-                    .font(LeaderDojoTypography.caption)
+                    .dojoCaptionLarge()
             }
 
             Section("Notes") {

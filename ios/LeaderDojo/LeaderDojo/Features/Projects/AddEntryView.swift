@@ -96,7 +96,7 @@ struct AddEntryView: View {
     private func summarySection(_ summary: SummarizeEntryResponse) -> some View {
         Section("AI Summary") {
             Text(summary.summary)
-                .font(LeaderDojoTypography.body)
+                .dojoBodyLarge()
             if summary.suggestedActions.isEmpty {
                 Text("No suggested commitments.")
                     .foregroundStyle(.secondary)
@@ -116,8 +116,8 @@ struct AddEntryView: View {
                             VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
                                 Text(action.title)
                                 Text(action.direction == .i_owe ? "I Owe" : "Waiting For")
-                                    .font(LeaderDojoTypography.caption)
-                                    .foregroundStyle(.secondary)
+                                    .dojoCaptionLarge()
+                                    .foregroundStyle(LeaderDojoColors.textSecondary)
                             }
                         }
                     }

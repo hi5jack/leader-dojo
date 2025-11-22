@@ -6,16 +6,35 @@ struct DashboardView: View {
 
     var body: some View {
         NavigationStack {
-            content
-                .navigationTitle("Dashboard")
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: reload) {
-                            Image(systemName: "arrow.clockwise")
-                        }
-                        .disabled(isLoading)
+            ZStack {
+                // Background
+                LeaderDojoColors.surfacePrimary
+                    .ignoresSafeArea()
+                
+                content
+            }
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: LeaderDojoSpacing.s) {
+                        Image(systemName: DojoIcons.dashboard)
+                            .dojoIconMedium(color: LeaderDojoColors.dojoAmber)
+                        Text("Dashboard")
+                            .dojoHeadingLarge()
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        Haptics.refreshTriggered()
+                        reload()
+                    }) {
+                        Image(systemName: DojoIcons.refresh)
+                            .dojoIconMedium(color: LeaderDojoColors.textPrimary)
+                    }
+                    .disabled(isLoading)
+                }
+            }
         }
         .onAppear {
             viewModel.configure(service: appEnvironment.dashboardService)
@@ -28,83 +47,72 @@ struct DashboardView: View {
     private var content: some View {
         switch viewModel.state {
         case .idle, .loading:
-            return AnyView(loadingView)
+            return AnyView(DojoLoadingView("Loading your practice space..."))
         case let .failed(message):
-            return AnyView(errorView(message: message))
+            return AnyView(DojoErrorView(message: message, retryAction: reload))
         case let .loaded(data):
             return AnyView(loadedView(data: data))
         }
     }
 
-    private var loadingView: some View {
-        VStack {
-            Spacer()
-            ProgressView("Loading dashboard")
-            Spacer()
-        }
-        .padding()
-    }
-
-    private func errorView(message: String) -> some View {
-        VStack(spacing: LeaderDojoSpacing.m) {
-            Spacer()
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.largeTitle)
-                .foregroundStyle(.orange)
-            Text(message)
-                .multilineTextAlignment(.center)
-                .foregroundStyle(.secondary)
-            Button("Retry", action: reload)
-                .buttonStyle(.borderedProminent)
-            Spacer()
-        }
-        .padding()
-    }
-
     private func loadedView(data: DashboardData) -> some View {
-        ScrollView {
-            VStack(spacing: LeaderDojoSpacing.l) {
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: LeaderDojoSpacing.xl) {
+                // Hero Section
+                heroSection()
+                
+                // Weekly Focus
                 weeklyFocusSection(weeklyFocus: data.weeklyFocus)
+                
+                // Idle Projects
                 idleProjectsSection(projects: data.idleProjects)
+                
+                // Stats Section
                 pendingSection(pending: data.pending)
             }
-            .padding()
+            .padding(.horizontal, LeaderDojoSpacing.ml)
+            .padding(.vertical, LeaderDojoSpacing.l)
         }
-        .refreshable { await reloadAsync() }
+        .refreshable {
+            Haptics.refreshTriggered()
+            await reloadAsync()
+        }
+    }
+    
+    private func heroSection() -> some View {
+        VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
+            Text("FOCUS TODAY")
+                .dojoLabel()
+                .foregroundStyle(LeaderDojoColors.dojoAmber)
+            
+            Text("Your Leadership Practice")
+                .dojoDisplayMedium()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func weeklyFocusSection(weeklyFocus: [Commitment]) -> some View {
         VStack(alignment: .leading, spacing: LeaderDojoSpacing.m) {
-            header(title: "Top commitments", subtitle: "AI-prioritized focus for this week")
+            VStack(alignment: .leading, spacing: LeaderDojoSpacing.xs) {
+                Text("Top Commitments")
+                    .dojoHeadingMedium()
+                Text("AI-prioritized focus for this week")
+                    .dojoCaptionRegular()
+            }
+            
             if weeklyFocus.isEmpty {
-                Text("No open commitments right now.")
-                    .foregroundStyle(.secondary)
+                DojoEmptyState(
+                    icon: DojoIcons.emptyCommitments,
+                    title: "All Clear",
+                    message: "No open commitments right now. Great work staying on top of things!"
+                )
+                .dojoFlatCard()
             } else {
-                ForEach(weeklyFocus) { commitment in
-                    VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
-                        HStack {
-                            Text(commitment.title)
-                                .font(LeaderDojoTypography.subheading)
-                            Spacer()
-                            Text(commitment.direction == .i_owe ? "I Owe" : "Waiting For")
-                                .font(LeaderDojoTypography.caption)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(commitment.direction == .i_owe ? LeaderDojoColors.amber.opacity(0.2) : LeaderDojoColors.blue.opacity(0.2))
-                                .clipShape(Capsule())
+                ForEach(Array(weeklyFocus.enumerated()), id: \.element.id) { index, commitment in
+                    CommitmentCard(commitment: commitment, rank: index + 1)
+                        .onTapGesture {
+                            Haptics.cardTap()
                         }
-                        if let counterparty = commitment.counterparty {
-                            Text("Counterparty: \(counterparty)")
-                                .font(LeaderDojoTypography.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        if let dueDate = commitment.dueDate {
-                            Text("Due \(dueDate.formattedShort())")
-                                .font(LeaderDojoTypography.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .cardStyle()
                 }
             }
         }
@@ -112,29 +120,33 @@ struct DashboardView: View {
 
     private func idleProjectsSection(projects: [Project]) -> some View {
         VStack(alignment: .leading, spacing: LeaderDojoSpacing.m) {
-            header(title: "Idle projects", subtitle: "High-priority work with no recent activity")
+            VStack(alignment: .leading, spacing: LeaderDojoSpacing.xs) {
+                HStack(spacing: LeaderDojoSpacing.s) {
+                    Image(systemName: DojoIcons.warning)
+                        .dojoIconSmall(color: LeaderDojoColors.dojoRed)
+                    Text("Needs Attention")
+                        .dojoHeadingMedium()
+                }
+                Text("High-priority projects with no recent activity")
+                    .dojoCaptionRegular()
+            }
+            
             if projects.isEmpty {
-                Text("All priority projects have recent activity.")
-                    .foregroundStyle(.secondary)
+                HStack(spacing: LeaderDojoSpacing.m) {
+                    Image(systemName: DojoIcons.success)
+                        .dojoIconLarge(color: LeaderDojoColors.dojoGreen)
+                    Text("All priority projects have recent activity")
+                        .dojoBodyMedium()
+                        .foregroundStyle(LeaderDojoColors.textSecondary)
+                }
+                .dojoFlatCard()
             } else {
                 ForEach(projects) { project in
-                    VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
-                        HStack {
-                            Text(project.name)
-                                .font(LeaderDojoTypography.subheading)
-                            Spacer()
-                            Text("Priority \(project.priority)")
-                                .font(LeaderDojoTypography.caption)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(LeaderDojoColors.warning.opacity(0.2))
-                                .clipShape(Capsule())
+                    IdleProjectCard(project: project)
+                        .onTapGesture {
+                            Haptics.cardTap()
+                            appEnvironment.activeTab = .projects
                         }
-                        Text("Last update: \(project.lastActiveAt?.formattedShort() ?? "Unknown")")
-                            .font(LeaderDojoTypography.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .cardStyle()
                 }
             }
         }
@@ -142,40 +154,36 @@ struct DashboardView: View {
 
     private func pendingSection(pending: DashboardData.Pending) -> some View {
         VStack(alignment: .leading, spacing: LeaderDojoSpacing.m) {
-            header(title: "Pending reviews", subtitle: "Close the loop on reflections and decisions")
-            HStack(spacing: LeaderDojoSpacing.l) {
-                pendingTile(title: "Decisions needing review", value: pending.decisionsNeedingReview) {
+            VStack(alignment: .leading, spacing: LeaderDojoSpacing.xs) {
+                Text("Pending Reviews")
+                    .dojoHeadingMedium()
+                Text("Close the loop on reflections and decisions")
+                    .dojoCaptionRegular()
+            }
+            
+            HStack(spacing: LeaderDojoSpacing.m) {
+                PendingTile(
+                    title: "Decisions",
+                    subtitle: "Needing review",
+                    value: pending.decisionsNeedingReview,
+                    icon: DojoIcons.decision,
+                    color: LeaderDojoColors.dojoAmber
+                ) {
+                    Haptics.cardTap()
                     appEnvironment.activeTab = .projects
                 }
-                pendingTile(title: "Pending reflections", value: pending.pendingReflections) {
+                
+                PendingTile(
+                    title: "Reflections",
+                    subtitle: "To complete",
+                    value: pending.pendingReflections,
+                    icon: DojoIcons.insight,
+                    color: LeaderDojoColors.dojoEmerald
+                ) {
+                    Haptics.cardTap()
                     appEnvironment.activeTab = .reflections
                 }
             }
-        }
-    }
-
-    private func pendingTile(title: String, value: Int, action: @escaping () -> Void) -> some View {
-        VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
-            Text("\(value)")
-                .font(.system(size: 34, weight: .bold))
-            Text(title)
-                .font(LeaderDojoTypography.caption)
-                .foregroundStyle(.secondary)
-            Button("Go") {
-                action()
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .cardStyle()
-    }
-
-    private func header(title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(LeaderDojoTypography.subheading)
-            Text(subtitle)
-                .font(LeaderDojoTypography.caption)
-                .foregroundStyle(.secondary)
         }
     }
 
@@ -198,3 +206,151 @@ struct DashboardView: View {
         return false
     }
 }
+
+// MARK: - Commitment Card
+
+private struct CommitmentCard: View {
+    let commitment: Commitment
+    let rank: Int
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: LeaderDojoSpacing.m) {
+            // Header with rank
+            HStack(alignment: .top) {
+                // Rank indicator
+                Text("#\(rank)")
+                    .font(LeaderDojoTypography.label)
+                    .foregroundStyle(LeaderDojoColors.dojoAmber)
+                    .padding(.horizontal, LeaderDojoSpacing.s)
+                    .padding(.vertical, LeaderDojoSpacing.xs)
+                    .background(LeaderDojoColors.dojoAmber.opacity(0.2))
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: LeaderDojoSpacing.xs) {
+                    Text(commitment.title)
+                        .dojoHeadingMedium()
+                        .lineLimit(2)
+                    
+                    if let counterparty = commitment.counterparty {
+                        HStack(spacing: LeaderDojoSpacing.xs) {
+                            Image(systemName: "person.circle.fill")
+                                .dojoIconSmall(color: LeaderDojoColors.textTertiary)
+                            Text(counterparty)
+                                .dojoCaptionRegular()
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // Direction badge
+                DojoBadge.direction(
+                    commitment.direction == .i_owe ? "i_owe" : "waiting_for",
+                    size: .compact
+                )
+            }
+            
+            // Due date with urgency indicator
+            if let dueDate = commitment.dueDate {
+                HStack(spacing: LeaderDojoSpacing.s) {
+                    Image(systemName: DojoIcons.clock)
+                        .dojoIconSmall(color: dueDateColor(dueDate))
+                    Text("Due \(dueDate.formattedShort())")
+                        .font(LeaderDojoTypography.captionLarge)
+                        .foregroundStyle(dueDateColor(dueDate))
+                }
+            }
+        }
+        .dojoCardWithBorder(
+            color: commitment.direction == .i_owe ? LeaderDojoColors.dojoAmber : LeaderDojoColors.dojoBlue
+        )
+    }
+    
+    private func dueDateColor(_ date: Date) -> Color {
+        let daysUntilDue = Calendar.current.dateComponents([.day], from: Date(), to: date).day ?? 0
+        if daysUntilDue < 0 {
+            return LeaderDojoColors.dojoRed
+        } else if daysUntilDue <= 3 {
+            return LeaderDojoColors.dojoAmber
+        } else {
+            return LeaderDojoColors.textSecondary
+        }
+    }
+}
+
+// MARK: - Idle Project Card
+
+private struct IdleProjectCard: View {
+    let project: Project
+    
+    var body: some View {
+        HStack(spacing: LeaderDojoSpacing.m) {
+            // Warning indicator
+            Image(systemName: DojoIcons.warning)
+                .dojoIconLarge(color: LeaderDojoColors.dojoRed)
+                .frame(width: 44, height: 44)
+                .background(LeaderDojoColors.dojoRed.opacity(0.2))
+                .clipShape(Circle())
+            
+            VStack(alignment: .leading, spacing: LeaderDojoSpacing.xs) {
+                Text(project.name)
+                    .dojoHeadingMedium()
+                    .lineLimit(1)
+                
+                if let lastActive = project.lastActiveAt {
+                    let daysSince = Calendar.current.dateComponents([.day], from: lastActive, to: Date()).day ?? 0
+                    Text("\(daysSince) days since last activity")
+                        .dojoCaptionLarge()
+                        .foregroundStyle(LeaderDojoColors.dojoRed)
+                } else {
+                    Text("No recent activity")
+                        .dojoCaptionRegular()
+                }
+            }
+            
+            Spacer()
+            
+            DojoBadge.priority(project.priority, size: .compact)
+        }
+        .dojoCardWithBorder(color: LeaderDojoColors.dojoRed)
+    }
+}
+
+// MARK: - Pending Tile
+
+private struct PendingTile: View {
+    let title: String
+    let subtitle: String
+    let value: Int
+    let icon: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: LeaderDojoSpacing.m) {
+                Image(systemName: icon)
+                    .dojoIconXL(color: color)
+                
+                VStack(alignment: .leading, spacing: LeaderDojoSpacing.xs) {
+                    Text("\(value)")
+                        .font(.system(size: 40, weight: .bold))
+                        .foregroundStyle(LeaderDojoColors.textPrimary)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(LeaderDojoTypography.captionLarge)
+                            .foregroundStyle(LeaderDojoColors.textPrimary)
+                        Text(subtitle)
+                            .font(LeaderDojoTypography.captionRegular)
+                            .foregroundStyle(LeaderDojoColors.textTertiary)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .dojoCard()
+        }
+        .buttonStyle(.plain)
+    }
+}
+

@@ -80,7 +80,7 @@ struct ReflectionWizardView: View {
                     ForEach(promptResponse.questions, id: \.self) { question in
                         VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
                             Text(question)
-                                .font(LeaderDojoTypography.subheading)
+                                .dojoHeadingMedium()
                             TextField("Your answer", text: Binding(
                                 get: { answers[question] ?? "" },
                                 set: { answers[question] = $0 }

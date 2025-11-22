@@ -10,10 +10,10 @@ struct SignInView: View {
                 Spacer()
                 VStack(spacing: LeaderDojoSpacing.s) {
                     Text("Leader Dojo")
-                        .font(LeaderDojoTypography.heading)
+                        .dojoHeadingXL()
                     Text("Sign in to continue")
-                        .font(LeaderDojoTypography.body)
-                        .foregroundStyle(.secondary)
+                        .dojoBodyMedium()
+                        .foregroundStyle(LeaderDojoColors.textSecondary)
                 }
 
                 VStack(spacing: LeaderDojoSpacing.m) {
@@ -22,20 +22,20 @@ struct SignInView: View {
                         .keyboardType(.emailAddress)
                         .textContentType(.username)
                         .padding()
-                        .background(LeaderDojoColors.card)
+                        .background(LeaderDojoColors.surfaceSecondary)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                     SecureField("Password", text: $viewModel.password)
                         .textContentType(.password)
                         .padding()
-                        .background(LeaderDojoColors.card)
+                        .background(LeaderDojoColors.surfaceSecondary)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
 
                 if let message = viewModel.errorMessage {
                     Text(message)
-                        .font(LeaderDojoTypography.caption)
-                        .foregroundStyle(.red)
+                        .dojoCaptionLarge()
+                        .foregroundStyle(LeaderDojoColors.dojoRed)
                 }
 
                 Button(action: submit) {
@@ -44,20 +44,20 @@ struct SignInView: View {
                             ProgressView()
                         }
                         Text("Sign In")
-                            .font(LeaderDojoTypography.subheading)
+                            .font(LeaderDojoTypography.headingMedium)
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(LeaderDojoColors.primaryAction)
-                    .foregroundStyle(Color.white)
+                    .background(LeaderDojoColors.dojoAmber)
+                    .foregroundStyle(LeaderDojoColors.dojoBlack)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 .disabled(viewModel.isLoading)
 
                 Spacer()
                 Link("Need an account? Sign up on the web", destination: URL(string: "https://leaderdojo.com")!)
-                    .font(LeaderDojoTypography.caption)
-                    .foregroundStyle(.secondary)
+                    .dojoCaptionLarge()
+                    .foregroundStyle(LeaderDojoColors.textSecondary)
             }
             .padding(LeaderDojoSpacing.xl)
             .onAppear {

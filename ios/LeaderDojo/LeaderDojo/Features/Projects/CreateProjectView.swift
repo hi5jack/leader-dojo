@@ -38,8 +38,8 @@ struct CreateProjectView: View {
                         Text("Priority")
                     }
                     Text("Priority \(Int(priority))")
-                        .font(LeaderDojoTypography.caption)
-                        .foregroundStyle(.secondary)
+                        .dojoCaptionLarge()
+                        .foregroundStyle(LeaderDojoColors.textSecondary)
                 }
 
                 Section("Details") {

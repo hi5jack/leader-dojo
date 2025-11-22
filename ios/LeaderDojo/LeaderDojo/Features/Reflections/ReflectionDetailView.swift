@@ -17,10 +17,10 @@ struct ReflectionDetailView: View {
                 ForEach(reflection.questionsAndAnswers) { qa in
                     VStack(alignment: .leading, spacing: LeaderDojoSpacing.s) {
                         Text(qa.question)
-                            .font(LeaderDojoTypography.subheading)
+                            .font(LeaderDojoTypography.headingMedium)
                         Text(qa.answer)
-                            .font(LeaderDojoTypography.body)
-                            .foregroundStyle(.secondary)
+                            .font(LeaderDojoTypography.bodyLarge)
+                            .foregroundStyle(LeaderDojoColors.textSecondary)
                     }
                     .padding(.vertical, LeaderDojoSpacing.s)
                 }

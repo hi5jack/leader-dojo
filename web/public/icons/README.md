@@ -26,3 +26,4 @@ You can use tools like:
 - Consider both light and dark backgrounds
 - Use "maskable" safe zone (80% of canvas) for critical content
 
+

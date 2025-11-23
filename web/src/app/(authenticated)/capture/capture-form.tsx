@@ -85,13 +85,13 @@ export const CaptureForm = ({ projects }: { projects: Project[] }) => {
   };
 
   return (
-    <Card className="shadow-none border-0 sm:border">
-      <CardContent className="space-y-4 pt-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <Card variant="elevated" padding="mobile" className="shadow-none border-0 md:border md:shadow-elevation-md">
+      <CardContent className="space-y-6 p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <Label>Project</Label>
+            <Label className="text-base font-semibold mb-2">Project</Label>
             <Select value={projectId} onValueChange={setProjectId}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full h-12 text-base">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>
@@ -106,27 +106,43 @@ export const CaptureForm = ({ projects }: { projects: Project[] }) => {
           </div>
           {projectId === "new" && (
             <div>
-              <Label htmlFor="projectName">New project name</Label>
+              <Label htmlFor="projectName" className="text-base font-semibold mb-2">
+                New project name
+              </Label>
               <Input
                 id="projectName"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
                 placeholder="Strategic account expansion"
-                className="text-lg"
+                className="h-12 text-base"
               />
             </div>
           )}
           <div>
-            <Label>What happened?</Label>
+            <Label className="text-base font-semibold mb-2">What happened?</Label>
             <Textarea
               value={content}
               onChange={(event) => setContent(event.target.value)}
-              className="min-h-[200px] text-lg"
-              placeholder="Dictate or paste notes..."
+              className="min-h-[240px] md:min-h-[200px] text-base resize-none"
+              placeholder="Type or paste your notes here...
+
+Examples:
+• Meeting notes from conversation
+• Quick thought or insight
+• Action items from discussion
+• Reflection on recent event"
             />
+            <p className="text-xs text-muted-foreground mt-2">
+              {content.length > 0 && `${content.length} characters`}
+            </p>
           </div>
-          <Button type="submit" className="w-full py-6 text-lg" disabled={status === "saving"}>
-            {status === "saving" ? "Saving..." : "Save note"}
+          <Button 
+            type="submit" 
+            size="lg"
+            className="w-full text-base font-semibold" 
+            disabled={status === "saving"}
+          >
+            {status === "saving" ? "Saving..." : status === "success" ? "Saved!" : "Save note"}
           </Button>
         </form>
       </CardContent>

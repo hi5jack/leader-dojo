@@ -1,9 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { FileText, Calendar, Lightbulb, FileCheck, StickyNote, MessageSquare } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/ui/empty-state";
+import {
+  Timeline,
+  TimelineItem,
+  TimelineContent,
+  TimelineHeader,
+  TimelineTitle,
+  TimelineDescription,
+  TimelineTime,
+} from "@/components/ui/timeline";
 import type { ProjectEntry } from "@/lib/db/types";
 
 const entryKinds = [
@@ -20,6 +31,37 @@ type Props = {
   onSummarize?: (entryId: string) => void;
 };
 
+const getKindIcon = (kind: string) => {
+  switch (kind) {
+    case "meeting":
+      return <MessageSquare className="w-5 h-5" />;
+    case "update":
+      return <Calendar className="w-5 h-5" />;
+    case "decision":
+      return <FileCheck className="w-5 h-5" />;
+    case "self_note":
+      return <StickyNote className="w-5 h-5" />;
+    case "note":
+      return <Lightbulb className="w-5 h-5" />;
+    default:
+      return <FileText className="w-5 h-5" />;
+  }
+};
+
+const formatDate = (date: Date | string) => {
+  const d = new Date(date);
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 60) return `${diffMins} minutes ago`;
+  if (diffHours < 24) return `${diffHours} hours ago`;
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return d.toLocaleDateString();
+};
+
 export const ProjectTimeline = ({ entries }: Props) => {
   const [filter, setFilter] = useState<(typeof entryKinds)[number]["value"]>("all");
 
@@ -31,38 +73,51 @@ export const ProjectTimeline = ({ entries }: Props) => {
   return (
     <div className="space-y-4">
       <Tabs value={filter} onValueChange={(value) => setFilter(value as typeof filter)}>
-        <TabsList className="flex flex-wrap">
+        <TabsList className="w-full overflow-x-auto flex flex-nowrap justify-start md:justify-center">
           {entryKinds.map((kind) => (
-            <TabsTrigger key={kind.value} value={kind.value}>
+            <TabsTrigger key={kind.value} value={kind.value} className="shrink-0">
               {kind.label}
             </TabsTrigger>
           ))}
         </TabsList>
       </Tabs>
-      <div className="space-y-4">
-        {filteredEntries.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No entries yet.</p>
-        ) : (
-          filteredEntries.map((entry) => (
-            <div key={entry.id} className="rounded-lg border p-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="font-medium">{entry.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {entry.occurredAt ? new Date(entry.occurredAt).toLocaleString() : "No timestamp"}
-                  </p>
-                </div>
-                <Badge variant="outline">{entry.kind}</Badge>
-              </div>
-              {entry.aiSummary ? (
-                <p className="mt-3 text-sm text-muted-foreground">{entry.aiSummary}</p>
-              ) : entry.rawContent ? (
-                <p className="mt-3 text-sm text-muted-foreground line-clamp-3">{entry.rawContent}</p>
-              ) : null}
-            </div>
-          ))
-        )}
-      </div>
+
+      {filteredEntries.length === 0 ? (
+        <EmptyState
+          icon={<FileText className="w-8 h-8" />}
+          title="No entries yet"
+          description="Create your first entry to start tracking this project's timeline."
+        />
+      ) : (
+        <Timeline>
+          {filteredEntries.map((entry, index) => (
+            <TimelineItem
+              key={entry.id}
+              icon={getKindIcon(entry.kind)}
+              isLast={index === filteredEntries.length - 1}
+            >
+              <TimelineContent>
+                <TimelineHeader>
+                  <div className="flex-1">
+                    <TimelineTitle>{entry.title || "Untitled"}</TimelineTitle>
+                    <TimelineTime>
+                      {entry.occurredAt ? formatDate(entry.occurredAt) : "No timestamp"}
+                    </TimelineTime>
+                  </div>
+                  <Badge variant="outline">{entry.kind.replace("_", " ")}</Badge>
+                </TimelineHeader>
+                {entry.aiSummary ? (
+                  <TimelineDescription>{entry.aiSummary}</TimelineDescription>
+                ) : entry.rawContent ? (
+                  <TimelineDescription className="line-clamp-3">
+                    {entry.rawContent}
+                  </TimelineDescription>
+                ) : null}
+              </TimelineContent>
+            </TimelineItem>
+          ))}
+        </Timeline>
+      )}
     </div>
   );
 };

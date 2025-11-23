@@ -24,11 +24,11 @@ export default async function CommitmentsPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="section-gap">
       <div>
-        <h1 className="text-3xl font-semibold">Commitments</h1>
-        <p className="text-muted-foreground">
-          Triage what you owe and what you&apos;re waiting for.
+        <h1>Commitments</h1>
+        <p className="text-muted-foreground mt-1">
+          Swipe right to mark done. Keep track of what you owe and what you're waiting for.
         </p>
       </div>
       <CommitmentsBoard

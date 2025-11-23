@@ -6,8 +6,8 @@ export const suggestedActionSchema = z.object({
   counterparty: z.string().optional(),
   dueDate: z.string().optional(),
   notes: z.string().optional(),
-  importance: z.number().min(1).max(5).optional(),
-  urgency: z.number().min(1).max(5).optional(),
+  importance: z.coerce.number().min(1).max(5).optional(),
+  urgency: z.coerce.number().min(1).max(5).optional(),
 });
 
 export const suggestedActionsSchema = z.object({

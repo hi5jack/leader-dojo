@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Search, SlidersHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Select,
   SelectContent,
@@ -13,14 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import type { Project } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
 
 type FilterState = {
   status: string;
@@ -45,6 +49,7 @@ export const ProjectsTable = ({ projects }: { projects: Project[] }) => {
     priority: "all",
     sort: "last_active_desc",
   });
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredProjects = useMemo(() => {
     return projects.filter((project) => {
@@ -52,9 +57,12 @@ export const ProjectsTable = ({ projects }: { projects: Project[] }) => {
       const typeMatches = filters.type === "all" || project.type === filters.type;
       const priorityMatches =
         filters.priority === "all" || project.priority === Number(filters.priority);
-      return statusMatches && typeMatches && priorityMatches;
+      const searchMatches =
+        searchQuery === "" ||
+        project.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return statusMatches && typeMatches && priorityMatches && searchMatches;
     });
-  }, [filters, projects]);
+  }, [filters, projects, searchQuery]);
 
   const sortedProjects = useMemo(() => {
     return [...filteredProjects].sort((a, b) => {
@@ -70,113 +78,188 @@ export const ProjectsTable = ({ projects }: { projects: Project[] }) => {
     });
   }, [filteredProjects, filters.sort]);
 
+  const getPriorityColor = (priority: number) => {
+    if (priority >= 5) return "var(--destructive)";
+    if (priority >= 4) return "var(--warning)";
+    return "var(--muted-foreground)";
+  };
+
+  const getRelativeTime = (date: Date | string | null) => {
+    if (!date) return "Never";
+    const now = new Date();
+    const past = new Date(date);
+    const diffMs = now.getTime() - past.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    return `${Math.floor(diffDays / 30)} months ago`;
+  };
+
   return (
-    <Card className="p-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Select
-          value={filters.status}
-          onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {statusOptions.map((option) => (
-              <SelectItem value={option} key={option}>
-                {option === "all" ? "All statuses" : option.replace("_", " ")}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+    <div className="space-y-4">
+      {/* Search and Filter Bar */}
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search projects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        
+        {/* Mobile Filter Sheet */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon">
+              <SlidersHorizontal className="w-4 h-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom">
+            <SheetHeader>
+              <SheetTitle>Filter Projects</SheetTitle>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Status</label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((option) => (
+                      <SelectItem value={option} key={option}>
+                        {option === "all" ? "All statuses" : option.replace("_", " ")}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <Select
-          value={filters.type}
-          onValueChange={(value) => setFilters((prev) => ({ ...prev, type: value }))}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            {typeOptions.map((option) => (
-              <SelectItem value={option} key={option}>
-                {option === "all" ? "All types" : option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Type</label>
+                <Select
+                  value={filters.type}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, type: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {typeOptions.map((option) => (
+                      <SelectItem value={option} key={option}>
+                        {option === "all" ? "All types" : option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <Select
-          value={filters.priority}
-          onValueChange={(value) => setFilters((prev) => ({ ...prev, priority: value }))}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Priority" />
-          </SelectTrigger>
-          <SelectContent>
-            {priorityOptions.map((option) => (
-              <SelectItem value={option} key={option}>
-                {option === "all" ? "All priorities" : `Priority ${option}`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Priority</label>
+                <Select
+                  value={filters.priority}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, priority: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {priorityOptions.map((option) => (
+                      <SelectItem value={option} key={option}>
+                        {option === "all" ? "All priorities" : `Priority ${option}`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-        <Select
-          value={filters.sort}
-          onValueChange={(value) => setFilters((prev) => ({ ...prev, sort: value }))}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            {sortOptions.map((option) => (
-              <SelectItem value={option.value} key={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Sort by</label>
+                <Select
+                  value={filters.sort}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, sort: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map((option) => (
+                      <SelectItem value={option.value} key={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
-      <Table className="mt-6">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Type</TableHead>
-            <TableHead>Priority</TableHead>
-            <TableHead>Last activity</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {sortedProjects.map((project) => (
-            <TableRow key={project.id}>
-              <TableCell className="font-medium">
-                <Link href={`/projects/${project.id}`} className="hover:underline">
-                  {project.name}
-                </Link>
-              </TableCell>
-              <TableCell>
-                <Badge variant="outline">{project.status}</Badge>
-              </TableCell>
-              <TableCell>{project.type}</TableCell>
-              <TableCell>{project.priority}</TableCell>
-              <TableCell>
-                {project.lastActiveAt
-                  ? new Date(project.lastActiveAt).toLocaleDateString()
-                  : "—"}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
+      {/* Projects Grid - Mobile First */}
       {sortedProjects.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          No projects match the current filters.
-        </p>
-      ) : null}
-    </Card>
+        <EmptyState
+          title="No projects found"
+          description="Try adjusting your search or filters, or create a new project to get started."
+        />
+      ) : (
+        <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {sortedProjects.map((project) => (
+            <Link key={project.id} href={`/projects/${project.id}`}>
+              <Card
+                variant="interactive"
+                accentColor={getPriorityColor(project.priority)}
+                className="h-full"
+              >
+                <CardContent className="p-4 space-y-3">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="font-semibold text-base line-clamp-2 flex-1">
+                      {project.name}
+                    </h3>
+                    <Badge variant="outline" size="lg" className="shrink-0">
+                      P{project.priority}
+                    </Badge>
+                  </div>
+
+                  {/* Badges */}
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary" size="lg">
+                      {project.type}
+                    </Badge>
+                    <Badge
+                      variant={
+                        project.status === "active"
+                          ? "success"
+                          : project.status === "on_hold"
+                          ? "warning"
+                          : "outline"
+                      }
+                      size="lg"
+                    >
+                      {project.status.replace("_", " ")}
+                    </Badge>
+                  </div>
+
+                  {/* Last Activity */}
+                  <div className="text-sm text-muted-foreground">
+                    Last active: {getRelativeTime(project.lastActiveAt)}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
   );
 };
 

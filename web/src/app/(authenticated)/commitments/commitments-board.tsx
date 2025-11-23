@@ -1,11 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition } from "react";
+import { CheckCircle2, Clock, AlertCircle, SlidersHorizontal } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { EmptyState } from "@/components/ui/empty-state";
+import { SwipeActions } from "@/components/ui/swipe-actions";
 import {
   Select,
   SelectContent,
@@ -13,17 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Commitment, Project } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
 
 type Props = {
   initialIOwe: Commitment[];
@@ -51,6 +52,7 @@ export const CommitmentsBoard = ({
     status: "all",
     sort: "due_date",
   });
+  
   const projectLookup = useMemo(
     () => new Map(projects.map((project) => [project.id, project.name])),
     [projects],
@@ -108,148 +110,236 @@ export const CommitmentsBoard = ({
     [applyFilters, waitingFor],
   );
 
-  const renderTable = (items: Commitment[]) => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Title</TableHead>
-          <TableHead>Project</TableHead>
-          <TableHead>Counterparty</TableHead>
-          <TableHead>Due date</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Notes</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.title}</TableCell>
-            <TableCell>
-              <Badge variant="secondary">{projectLookup.get(item.projectId) ?? "Project"}</Badge>
-            </TableCell>
-            <TableCell>{item.counterparty ?? "—"}</TableCell>
-            <TableCell>
-              <Input
-                type="date"
-                defaultValue={item.dueDate ? new Date(item.dueDate).toISOString().slice(0, 10) : ""}
-                onBlur={(event) =>
-                  updateCommitment(item.id, {
-                    dueDate: event.target.value,
-                  })
-                }
-              />
-            </TableCell>
-            <TableCell>
-              <Select
-                defaultValue={item.status}
-                onValueChange={(value) =>
-                  updateCommitment(item.id, {
-                    status: value,
-                  })
-                }
+  const getDueDateColor = (dueDate: Date | string | null) => {
+    if (!dueDate) return "text-muted-foreground";
+    const date = new Date(dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffMs = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return "text-destructive"; // Overdue
+    if (diffDays <= 3) return "text-warning"; // Due soon
+    return "text-muted-foreground";
+  };
+
+  const formatDueDate = (dueDate: Date | string | null) => {
+    if (!dueDate) return "No due date";
+    const date = new Date(dueDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffMs = date.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return `Overdue by ${Math.abs(diffDays)} days`;
+    if (diffDays === 0) return "Due today";
+    if (diffDays === 1) return "Due tomorrow";
+    if (diffDays <= 7) return `Due in ${diffDays} days`;
+    return date.toLocaleDateString();
+  };
+
+  const renderCommitmentCard = (item: Commitment) => (
+    <SwipeActions
+      key={item.id}
+      actions={[
+        {
+          label: "Done",
+          icon: <CheckCircle2 className="w-5 h-5" />,
+          onClick: () => updateCommitment(item.id, { status: "done" }),
+          variant: "success",
+        },
+      ]}
+      disabled={item.status === "done" || isPending}
+    >
+      <Card variant="interactive" className="border-0 shadow-none hover:shadow-none">
+        <CardContent className="p-4">
+          <div className="space-y-3">
+            {/* Header */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold line-clamp-2 mb-1">{item.title}</h3>
+                <div className="flex items-center gap-2 text-sm">
+                  <Badge variant="secondary" size="lg">
+                    {projectLookup.get(item.projectId) ?? "Project"}
+                  </Badge>
+                  {item.counterparty && (
+                    <span className="text-muted-foreground">• {item.counterparty}</span>
+                  )}
+                </div>
+              </div>
+              <Badge
+                variant={item.status === "done" ? "success" : "outline"}
+                size="lg"
+                className="shrink-0"
               >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem value={status} key={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </TableCell>
-            <TableCell>
-              <Textarea
-                defaultValue={item.notes ?? ""}
-                placeholder="Add notes"
-                className="min-w-[200px]"
-                onBlur={(event) =>
-                  updateCommitment(item.id, {
-                    notes: event.target.value,
-                  })
-                }
-              />
-            </TableCell>
-            <TableCell>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => updateCommitment(item.id, { status: "done" })}
-                disabled={item.status === "done" || isPending}
-              >
-                Mark done
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+                {item.status}
+              </Badge>
+            </div>
+
+            {/* Due Date */}
+            <div className="flex items-center gap-2">
+              {item.status !== "done" && (
+                <>
+                  <Clock className={cn("w-4 h-4", getDueDateColor(item.dueDate))} />
+                  <span className={cn("text-sm font-medium", getDueDateColor(item.dueDate))}>
+                    {formatDueDate(item.dueDate)}
+                  </span>
+                </>
+              )}
+              {item.importance && item.importance >= 4 && (
+                <Badge variant="destructive" size="lg" className="ml-auto">
+                  High priority
+                </Badge>
+              )}
+            </div>
+
+            {/* Notes */}
+            {item.notes && (
+              <p className="text-sm text-muted-foreground line-clamp-2">{item.notes}</p>
+            )}
+
+            {/* Desktop Actions */}
+            <div className="hidden md:flex gap-2">
+              {item.status !== "done" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => updateCommitment(item.id, { status: "done" })}
+                  disabled={isPending}
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Mark done
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </SwipeActions>
   );
+
+  const renderCommitmentsList = (items: Commitment[], emptyMessage: string) => {
+    if (items.length === 0) {
+      return (
+        <EmptyState
+          icon={<CheckCircle2 className="w-8 h-8" />}
+          title={emptyMessage}
+          description="Adjust your filters or add new commitments to get started."
+        />
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {items.map((item) => renderCommitmentCard(item))}
+      </div>
+    );
+  };
 
   return (
-    <Card>
-      <CardContent className="space-y-4 pt-6">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <Select
-            value={filters.projectId}
-            onValueChange={(value) => setFilters((prev) => ({ ...prev, projectId: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Project" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All projects</SelectItem>
-              {projects.map((project) => (
-                <SelectItem value={project.id} key={project.id}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.status}
-            onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {statusOptions.map((status) => (
-                <SelectItem value={status} key={status}>
-                  {status === "all" ? "All statuses" : status}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={filters.sort}
-            onValueChange={(value) => setFilters((prev) => ({ ...prev, sort: value }))}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              {sortOptions.map((option) => (
-                <SelectItem value={option.value} key={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex gap-2">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="shrink-0">
+              <SlidersHorizontal className="w-4 h-4" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom">
+            <SheetHeader>
+              <SheetTitle>Filter & Sort</SheetTitle>
+            </SheetHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Project</label>
+                <Select
+                  value={filters.projectId}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, projectId: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All projects</SelectItem>
+                    {projects.map((project) => (
+                      <SelectItem value={project.id} key={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Status</label>
+                <Select
+                  value={filters.status}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusOptions.map((status) => (
+                      <SelectItem value={status} key={status}>
+                        {status === "all" ? "All statuses" : status}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Sort by</label>
+                <Select
+                  value={filters.sort}
+                  onValueChange={(value) => setFilters((prev) => ({ ...prev, sort: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {sortOptions.map((option) => (
+                      <SelectItem value={option.value} key={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        <div className="flex-1 overflow-hidden">
+          <p className="text-sm text-muted-foreground truncate">
+            {filters.projectId !== "all" && `Project: ${projectLookup.get(filters.projectId)} • `}
+            {filters.status !== "all" && `Status: ${filters.status} • `}
+            Sorted by {sortOptions.find((o) => o.value === filters.sort)?.label.toLowerCase()}
+          </p>
         </div>
-        <Tabs defaultValue="i_owe">
-          <TabsList>
-            <TabsTrigger value="i_owe">I Owe ({iOwe.length})</TabsTrigger>
-            <TabsTrigger value="waiting_for">Waiting For ({waitingFor.length})</TabsTrigger>
-          </TabsList>
-          <TabsContent value="i_owe">{renderTable(filteredIOwe)}</TabsContent>
-          <TabsContent value="waiting_for">{renderTable(filteredWaitingFor)}</TabsContent>
-        </Tabs>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="i_owe" className="w-full">
+        <TabsList className="w-full grid grid-cols-2">
+          <TabsTrigger value="i_owe" className="gap-2">
+            <AlertCircle className="w-4 h-4" />
+            I Owe ({filteredIOwe.length})
+          </TabsTrigger>
+          <TabsTrigger value="waiting_for" className="gap-2">
+            <Clock className="w-4 h-4" />
+            Waiting ({filteredWaitingFor.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="i_owe" className="mt-6">
+          {renderCommitmentsList(filteredIOwe, "No commitments you owe")}
+        </TabsContent>
+
+        <TabsContent value="waiting_for" className="mt-6">
+          {renderCommitmentsList(filteredWaitingFor, "Nothing you're waiting for")}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
-

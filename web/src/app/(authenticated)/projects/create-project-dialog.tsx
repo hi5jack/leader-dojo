@@ -24,7 +24,11 @@ import { createProjectSchema } from "@/lib/validators/projects";
 
 type FormValues = z.input<typeof createProjectSchema>;
 
-export const CreateProjectDialog = () => {
+interface CreateProjectDialogProps {
+  children?: React.ReactNode;
+}
+
+export const CreateProjectDialog = ({ children }: CreateProjectDialogProps) => {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,10 +68,12 @@ export const CreateProjectDialog = () => {
   return (
     <Dialog open={open} onOpenChange={(next) => !isSubmitting && setOpen(next)}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          New Project
-        </Button>
+        {children || (
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            New Project
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>

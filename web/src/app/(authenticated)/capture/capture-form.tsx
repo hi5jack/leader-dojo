@@ -9,19 +9,57 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import type { Project } from "@/lib/db/types";
 
 export const CaptureForm = ({ projects }: { projects: Project[] }) => {
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
+  const [projectId, setProjectId] = useState(projects[0]?.id ?? "new");
+  const [newProjectName, setNewProjectName] = useState("");
   const [content, setContent] = useState("");
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!projectId || !content.trim()) return;
+    if (!content.trim()) return;
+    
+    // Validate input based on selection
+    if (projectId === "new" && !newProjectName.trim()) {
+      toast.error("Please enter a project name");
+      return;
+    }
+    if (projectId !== "new" && !projectId) {
+      toast.error("Please select a project");
+      return;
+    }
+
     setStatus("saving");
 
-    const response = await fetch(`/api/secure/projects/${projectId}/entries`, {
+    let targetProjectId = projectId;
+
+    // Create new project if needed
+    if (projectId === "new") {
+      const createProjectResponse = await fetch("/api/secure/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newProjectName.trim(),
+          type: "project",
+          status: "active",
+          priority: 3,
+        }),
+      });
+
+      if (!createProjectResponse.ok) {
+        setStatus("error");
+        toast.error("Unable to create project. Try again.");
+        return;
+      }
+
+      const newProject = await createProjectResponse.json();
+      targetProjectId = newProject.id;
+    }
+
+    const response = await fetch(`/api/secure/projects/${targetProjectId}/entries`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -39,22 +77,12 @@ export const CaptureForm = ({ projects }: { projects: Project[] }) => {
     }
 
     setContent("");
+    setNewProjectName("");
+    setProjectId(projects[0]?.id ?? "new");
     setStatus("success");
     toast.success("Captured to timeline");
     setTimeout(() => setStatus("idle"), 2000);
   };
-
-  if (!projects.length) {
-    return (
-      <Card className="shadow-none border-0 sm:border">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground">
-            Create a project before capturing notes.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="shadow-none border-0 sm:border">
@@ -67,6 +95,7 @@ export const CaptureForm = ({ projects }: { projects: Project[] }) => {
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="new">+ Create new project</SelectItem>
                 {projects.map((project) => (
                   <SelectItem value={project.id} key={project.id}>
                     {project.name}
@@ -75,6 +104,18 @@ export const CaptureForm = ({ projects }: { projects: Project[] }) => {
               </SelectContent>
             </Select>
           </div>
+          {projectId === "new" && (
+            <div>
+              <Label htmlFor="projectName">New project name</Label>
+              <Input
+                id="projectName"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                placeholder="Strategic account expansion"
+                className="text-lg"
+              />
+            </div>
+          )}
           <div>
             <Label>What happened?</Label>
             <Textarea

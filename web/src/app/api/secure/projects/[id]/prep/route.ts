@@ -10,11 +10,22 @@ type Params = {
 };
 
 export const GET = withUser<Params>(async ({ userId, params }) => {
-  const result = await prepService.generateBriefing(userId, params.id);
-  if (!result) {
-    return NextResponse.json({ message: "Not found" }, { status: 404 });
-  }
+  try {
+    const result = await prepService.generateBriefing(userId, params.id);
+    if (!result) {
+      return NextResponse.json({ message: "Not found" }, { status: 404 });
+    }
 
-  return NextResponse.json(result);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("Prep briefing generation failed:", error);
+    return NextResponse.json(
+      { 
+        message: "Unable to generate prep briefing. The AI service may be unavailable.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      }, 
+      { status: 503 }
+    );
+  }
 });
 

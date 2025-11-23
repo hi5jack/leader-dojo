@@ -50,28 +50,35 @@ export const ReflectionWizard = () => {
     setStatus("loading");
     setError(null);
     setQuestions([]);
-    const response = await fetch("/api/secure/reflections", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        periodType,
-        periodStart,
-        periodEnd: periodEnd.toISOString(),
-      }),
-    });
+    
+    try {
+      const response = await fetch("/api/secure/reflections", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          periodType,
+          periodStart,
+          periodEnd: periodEnd.toISOString(),
+        }),
+      });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setError(data.message ?? "Unable to generate prompts");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.message ?? "Unable to generate prompts. The AI service may be unavailable.");
+        setStatus("idle");
+        return;
+      }
+
+      const data = await response.json();
+      setQuestions(data.questions ?? []);
+      setSuggestions(data.suggestions ?? []);
+      setAnswers({});
       setStatus("idle");
-      return;
+    } catch (error) {
+      console.error("Reflection prompts request failed:", error);
+      setError("Network error. Please check your connection and try again.");
+      setStatus("idle");
     }
-
-    const data = await response.json();
-    setQuestions(data.questions ?? []);
-    setSuggestions(data.suggestions ?? []);
-    setAnswers({});
-    setStatus("idle");
   };
 
   const saveReflection = async () => {

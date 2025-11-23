@@ -18,11 +18,22 @@ export const POST = withUser<Params>(async ({ userId, params }) => {
     return NextResponse.json({ message: "Not found" }, { status: 404 });
   }
 
-  const project = await projectsService.getProject(userId, entry.projectId);
-  const aiResult = await entriesService.generateSummary(entry, project?.description ?? project?.name);
+  try {
+    const project = await projectsService.getProject(userId, entry.projectId);
+    const aiResult = await entriesService.generateSummary(entry, project?.description ?? project?.name);
 
-  await entriesService.persistSummary(userId, entry.id, aiResult.summary, aiResult.suggestedActions);
+    await entriesService.persistSummary(userId, entry.id, aiResult.summary, aiResult.suggestedActions);
 
-  return NextResponse.json(aiResult);
+    return NextResponse.json(aiResult);
+  } catch (error) {
+    console.error("AI summarization failed:", error);
+    return NextResponse.json(
+      { 
+        message: "AI service is unavailable. Your entry was saved, but we couldn't generate a summary. Please try again later.",
+        error: error instanceof Error ? error.message : "Unknown error"
+      }, 
+      { status: 503 }
+    );
+  }
 });
 

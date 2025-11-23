@@ -10,13 +10,14 @@ type Params = {
 
 const prepService = new PrepService();
 
-export default async function PrepPage({ params }: { params: Params }) {
+export default async function PrepPage({ params }: { params: Promise<Params> }) {
   const session = await getCurrentSession();
   if (!session?.user?.id) {
     redirect("/auth/signin");
   }
 
-  const data = await prepService.generateBriefing(session.user.id, params.id);
+  const { id } = await params;
+  const data = await prepService.generateBriefing(session.user.id, id);
 
   if (!data) {
     notFound();

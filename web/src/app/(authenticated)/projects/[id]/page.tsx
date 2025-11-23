@@ -62,7 +62,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
+        <div className="flex-1">
           <p className="text-sm text-muted-foreground">Project</p>
           <h1 className="text-3xl font-semibold">{project.name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -70,11 +70,22 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
             <Badge variant="outline">{project.status}</Badge>
             <span>Priority {project.priority}</span>
           </div>
+          {project.description && (
+            <p className="mt-3 text-sm max-w-2xl">
+              {project.description}
+            </p>
+          )}
+          {project.ownerNotes && (
+            <div className="mt-3 rounded-lg bg-muted p-3 max-w-2xl">
+              <p className="text-xs font-medium text-muted-foreground mb-1">Owner notes</p>
+              <p className="text-sm">{project.ownerNotes}</p>
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-3">
-          <PrepDrawer projectId={project.id} />
+          <PrepDrawer projectId={id} />
           <Button asChild>
-            <Link href={`/projects/${project.id}/entries/new`}>Add entry</Link>
+            <Link href={`/projects/${id}/entries/new`}>Add entry</Link>
           </Button>
         </div>
       </div>

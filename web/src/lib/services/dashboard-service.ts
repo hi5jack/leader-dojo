@@ -1,10 +1,11 @@
-import { CommitmentsRepository, EntriesRepository, ProjectsRepository } from "@/lib/repositories";
+import { CommitmentsRepository, EntriesRepository, ProjectsRepository, ReflectionsRepository } from "@/lib/repositories";
 
 export class DashboardService {
   constructor(
     private readonly commitmentsRepo = new CommitmentsRepository(),
     private readonly projectsRepo = new ProjectsRepository(),
     private readonly entriesRepo = new EntriesRepository(),
+    private readonly reflectionsRepo = new ReflectionsRepository(),
   ) {}
 
   async getWeeklyFocus(userId: string) {
@@ -41,9 +42,42 @@ export class DashboardService {
 
     const decisionsNeedingReview = entries.filter((entry) => !entry.aiSummary).length;
 
+    // Calculate last full week (Monday to Sunday)
+    const now = new Date();
+    const lastWeekStart = new Date(now);
+    const dayOfWeek = now.getDay();
+    const daysToLastMonday = dayOfWeek === 0 ? 7 : dayOfWeek; // If Sunday, go back 7 days
+    lastWeekStart.setDate(now.getDate() - daysToLastMonday - 7);
+    lastWeekStart.setHours(0, 0, 0, 0);
+
+    // Calculate last full month
+    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    lastMonthStart.setHours(0, 0, 0, 0);
+
+    // Check for missing reflections
+    let pendingReflections = 0;
+    
+    const lastWeekReflection = await this.reflectionsRepo.findByPeriod(
+      userId,
+      "week",
+      lastWeekStart,
+    );
+    if (!lastWeekReflection) {
+      pendingReflections++;
+    }
+
+    const lastMonthReflection = await this.reflectionsRepo.findByPeriod(
+      userId,
+      "month",
+      lastMonthStart,
+    );
+    if (!lastMonthReflection) {
+      pendingReflections++;
+    }
+
     return {
       decisionsNeedingReview,
-      pendingReflections: 0,
+      pendingReflections,
     };
   }
 

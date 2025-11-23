@@ -76,27 +76,33 @@ export const EntryComposer = ({ projectId }: { projectId: string }) => {
     setStatus("summarizing");
     setError(null);
 
-    const response = await fetch(`/api/secure/entries/${entry.id}/summarize`, {
-      method: "POST",
-    });
+    try {
+      const response = await fetch(`/api/secure/entries/${entry.id}/summarize`, {
+        method: "POST",
+      });
 
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setError(data.message ?? "AI summarization failed");
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data.message ?? "AI summarization failed. Your entry was saved, but we couldn't generate a summary.");
+        setStatus("ready");
+        return;
+      }
+
+      const result = await response.json();
+      setSummary(result.summary);
+      setSuggestions(
+        result.suggestedActions.map((action: SuggestedAction, index: number) => ({
+          ...action,
+          id: `${index}-${action.title}`,
+          selected: true,
+        })),
+      );
       setStatus("ready");
-      return;
+    } catch (error) {
+      console.error("Summarization request failed:", error);
+      setError("Network error. Please check your connection and try again.");
+      setStatus("ready");
     }
-
-    const result = await response.json();
-    setSummary(result.summary);
-    setSuggestions(
-      result.suggestedActions.map((action: SuggestedAction, index: number) => ({
-        ...action,
-        id: `${index}-${action.title}`,
-        selected: true,
-      })),
-    );
-    setStatus("ready");
   };
 
   const toggleSuggestion = (id: string, updates?: Partial<SuggestionState>) => {

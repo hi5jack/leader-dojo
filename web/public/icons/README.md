@@ -27,3 +27,4 @@ You can use tools like:
 - Use "maskable" safe zone (80% of canvas) for critical content
 
 
+

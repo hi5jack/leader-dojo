@@ -175,11 +175,13 @@ export const CreateCommitmentForm = ({
                 <Input
                   type="date"
                   className="h-12 text-base"
-                  {...field}
+                  name={field.name}
+                  ref={field.ref}
+                  onBlur={field.onBlur}
                   value={
                     field.value instanceof Date
                       ? field.value.toISOString().split("T")[0]
-                      : field.value || ""
+                      : (field.value as string | undefined) || ""
                   }
                   onChange={(e) => {
                     const value = e.target.value;

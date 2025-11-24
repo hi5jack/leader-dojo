@@ -336,6 +336,10 @@
     @apply rounded-lg my-4 max-w-full h-auto;
   }
   
+  .prose mark {
+    @apply bg-yellow-200/70 dark:bg-yellow-300/40 rounded px-1 py-0.5;
+  }
+  
   /* Dark mode adjustments */
   .dark .prose code {
     @apply bg-muted/50;

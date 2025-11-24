@@ -89,6 +89,62 @@ const formatDateForInput = (date: Date | string) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
+// Lightweight remark plugin to support ==highlight== syntax by converting it to <mark>.
+// It scans text nodes for ==...== and wraps the contents in a "mark" node that
+// ReactMarkdown renders as a <mark> element (styled in globals.css).
+const remarkHighlight = () => {
+  return (tree: any) => {
+    const visit = (node: any) => {
+      if (!node || !node.children) return;
+
+      node.children = node.children.flatMap((child: any) => {
+        if (child.type === "text" && typeof child.value === "string") {
+          const value: string = child.value;
+          const regex = /==([^=]+)==/g;
+          const parts: any[] = [];
+          let lastIndex = 0;
+          let match: RegExpExecArray | null;
+
+          while ((match = regex.exec(value)) !== null) {
+            if (match.index > lastIndex) {
+              parts.push({
+                type: "text",
+                value: value.slice(lastIndex, match.index),
+              });
+            }
+
+            parts.push({
+              type: "mark",
+              data: { hName: "mark" },
+              children: [{ type: "text", value: match[1] }],
+            });
+
+            lastIndex = match.index + match[0].length;
+          }
+
+          if (!parts.length) {
+            return child;
+          }
+
+          if (lastIndex < value.length) {
+            parts.push({
+              type: "text",
+              value: value.slice(lastIndex),
+            });
+          }
+
+          return parts;
+        }
+
+        visit(child);
+        return child;
+      });
+    };
+
+    visit(tree);
+  };
+};
+
 export default function EntryDetailPage({
   params,
 }: {
@@ -410,7 +466,7 @@ export default function EntryDetailPage({
             </div>
           ) : entry.rawContent ? (
             <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkHighlight]}>
                 {entry.rawContent}
               </ReactMarkdown>
             </div>

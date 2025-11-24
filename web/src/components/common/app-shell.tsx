@@ -1,5 +1,7 @@
-"use client";
-
+ "use client";
+ 
+import { useEffect, useState } from "react";
+ 
 import { MobileNav } from "./mobile-nav";
 import { DesktopSidebar } from "./desktop-sidebar";
 
@@ -12,6 +14,18 @@ export const AppShell = ({
   userName?: string | null;
   userEmail?: string | null;
 }) => {
+  const [todayLabel, setTodayLabel] = useState<string | null>(null);
+
+  // Compute the date only on the client after hydration to avoid SSR mismatches.
+  useEffect(() => {
+    const label = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    });
+    setTodayLabel(label);
+  }, []);
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Desktop Sidebar */}
@@ -22,13 +36,11 @@ export const AppShell = ({
         {/* Simplified Header - Desktop Only */}
         <header className="hidden md:block border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="flex items-center justify-between px-6 py-4">
-            <div className="text-sm text-muted-foreground">
-              {new Date().toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-              })}
-            </div>
+            {todayLabel && (
+              <div className="text-sm text-muted-foreground" suppressHydrationWarning>
+                {todayLabel}
+              </div>
+            )}
           </div>
         </header>
 

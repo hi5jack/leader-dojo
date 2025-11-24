@@ -46,10 +46,16 @@ export const EntryComposer = ({ projectId }: { projectId: string }) => {
     setStatus("saving");
     const formData = new FormData(event.currentTarget);
 
+    const occurredAtRaw = formData.get("occurredAt")?.toString() ?? "";
+    const occurredAt =
+      occurredAtRaw.trim() !== ""
+        ? new Date(occurredAtRaw).toISOString()
+        : new Date().toISOString();
+
     const payload = {
       title: formData.get("title")?.toString() ?? "",
       kind,
-      occurredAt: formData.get("occurredAt")?.toString() ?? new Date().toISOString(),
+      occurredAt,
       rawContent: formData.get("rawContent")?.toString() ?? "",
     };
 

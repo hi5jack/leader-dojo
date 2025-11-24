@@ -523,7 +523,7 @@ export default function EntryDetailPage({
                     )}
                     {action.dueDate && (
                       <p className="text-sm text-muted-foreground">
-                        Due: {new Date(action.dueDate).toLocaleDateString()}
+                        Due: {new Date(action.dueDate).toLocaleDateString("en-US")}
                       </p>
                     )}
                     {action.notes && (

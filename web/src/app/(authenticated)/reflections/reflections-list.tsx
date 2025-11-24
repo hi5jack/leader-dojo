@@ -35,10 +35,10 @@ export const ReflectionsList = ({ reflections }: { reflections: Reflection[] }) 
                   <TableRow key={reflection.id}>
                     <TableCell>
                       {reflection.periodType} –{" "}
-                      {new Date(reflection.periodStart).toLocaleDateString()} -{" "}
-                      {new Date(reflection.periodEnd).toLocaleDateString()}
+                      {new Date(reflection.periodStart).toLocaleDateString("en-US")} -{" "}
+                      {new Date(reflection.periodEnd).toLocaleDateString("en-US")}
                     </TableCell>
-                    <TableCell>{new Date(reflection.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(reflection.createdAt).toLocaleDateString("en-US")}</TableCell>
                     <TableCell>{reflection.questionsAndAnswers.length}</TableCell>
                     <TableCell className="text-right">
                       <Button variant="outline" size="sm" onClick={() => setSelected(reflection)}>
@@ -57,7 +57,7 @@ export const ReflectionsList = ({ reflections }: { reflections: Reflection[] }) 
           <DialogHeader>
             <DialogTitle>
               {selected
-                ? `${selected.periodType} · ${new Date(selected.periodStart).toLocaleDateString()}`
+                ? `${selected.periodType} · ${new Date(selected.periodStart).toLocaleDateString("en-US")}`
                 : "Reflection"}
             </DialogTitle>
           </DialogHeader>

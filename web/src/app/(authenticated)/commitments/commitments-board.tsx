@@ -135,7 +135,7 @@ export const CommitmentsBoard = ({
     if (diffDays === 0) return "Due today";
     if (diffDays === 1) return "Due tomorrow";
     if (diffDays <= 7) return `Due in ${diffDays} days`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString("en-US");
   };
 
   const renderCommitmentCard = (item: Commitment) => (

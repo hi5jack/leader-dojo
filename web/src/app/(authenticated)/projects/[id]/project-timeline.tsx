@@ -54,14 +54,26 @@ const formatDate = (date: Date | string) => {
   const d = new Date(date);
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
+  const isFuture = diffMs < 0;
+  const absMs = Math.abs(diffMs);
+  const diffMins = Math.floor(absMs / 60000);
+  const diffHours = Math.floor(absMs / 3600000);
+  const diffDays = Math.floor(absMs / 86400000);
 
-  if (diffMins < 60) return `${diffMins} minutes ago`;
-  if (diffHours < 24) return `${diffHours} hours ago`;
-  if (diffDays < 7) return `${diffDays} days ago`;
-  return d.toLocaleDateString();
+  // For future timestamps, show "in X" instead of negative "X minutes ago".
+  if (diffMins < 60) {
+    return isFuture ? `in ${diffMins} minutes` : `${diffMins} minutes ago`;
+  }
+  if (diffHours < 24) {
+    return isFuture ? `in ${diffHours} hours` : `${diffHours} hours ago`;
+  }
+  if (diffDays < 7) {
+    return isFuture ? `in ${diffDays} days` : `${diffDays} days ago`;
+  }
+
+  // For older/future entries, fall back to a calendar date with a fixed locale
+  // so that server and client renders stay in sync.
+  return d.toLocaleDateString("en-US");
 };
 
 export const ProjectTimeline = ({ entries, projectId }: Props) => {

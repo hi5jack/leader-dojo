@@ -112,7 +112,7 @@ export const PrepDrawer = ({ projectId }: { projectId: string }) => {
                         <p className="text-sm text-muted-foreground">
                           {commitment.counterparty ?? "No counterparty"} ·{" "}
                           {commitment.dueDate
-                            ? new Date(commitment.dueDate).toLocaleDateString()
+                            ? new Date(commitment.dueDate).toLocaleDateString("en-US")
                             : "No due date"}
                         </p>
                       </div>
@@ -129,8 +129,14 @@ export const PrepDrawer = ({ projectId }: { projectId: string }) => {
                         <div>
                           <p className="font-medium">{entry.title}</p>
                           <p className="text-xs text-muted-foreground">
-                            {entry.occurredAt
-                              ? new Date(entry.occurredAt).toLocaleString()
+                          {entry.occurredAt
+                              ? new Date(entry.occurredAt).toLocaleString("en-US", {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
                               : "No timestamp"}
                           </p>
                         </div>

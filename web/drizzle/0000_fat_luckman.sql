@@ -1,9 +1,69 @@
-CREATE TYPE "public"."commitment_direction" AS ENUM('i_owe', 'waiting_for');--> statement-breakpoint
-CREATE TYPE "public"."commitment_status" AS ENUM('open', 'done', 'blocked', 'dropped');--> statement-breakpoint
-CREATE TYPE "public"."entry_kind" AS ENUM('meeting', 'update', 'decision', 'note', 'prep', 'reflection', 'self_note');--> statement-breakpoint
-CREATE TYPE "public"."project_status" AS ENUM('active', 'on_hold', 'completed', 'archived');--> statement-breakpoint
-CREATE TYPE "public"."project_type" AS ENUM('project', 'relationship', 'area');--> statement-breakpoint
-CREATE TYPE "public"."reflection_period_type" AS ENUM('week', 'month', 'quarter');--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'commitment_direction' AND n.nspname = 'public'
+  ) THEN
+    CREATE TYPE "public"."commitment_direction" AS ENUM('i_owe', 'waiting_for');
+  END IF;
+END$$;
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'commitment_status' AND n.nspname = 'public'
+  ) THEN
+    CREATE TYPE "public"."commitment_status" AS ENUM('open', 'done', 'blocked', 'dropped');
+  END IF;
+END$$;
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'entry_kind' AND n.nspname = 'public'
+  ) THEN
+    CREATE TYPE "public"."entry_kind" AS ENUM('meeting', 'update', 'decision', 'note', 'prep', 'reflection', 'self_note');
+  END IF;
+END$$;
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'project_status' AND n.nspname = 'public'
+  ) THEN
+    CREATE TYPE "public"."project_status" AS ENUM('active', 'on_hold', 'completed', 'archived');
+  END IF;
+END$$;
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'project_type' AND n.nspname = 'public'
+  ) THEN
+    CREATE TYPE "public"."project_type" AS ENUM('project', 'relationship', 'area');
+  END IF;
+END$$;
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_type t
+    JOIN pg_namespace n ON n.oid = t.typnamespace
+    WHERE t.typname = 'reflection_period_type' AND n.nspname = 'public'
+  ) THEN
+    CREATE TYPE "public"."reflection_period_type" AS ENUM('week', 'month', 'quarter');
+  END IF;
+END$$;
+--> statement-breakpoint
 CREATE TABLE "accounts" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"user_id" uuid NOT NULL,

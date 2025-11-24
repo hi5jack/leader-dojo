@@ -142,7 +142,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
                         <p className="text-sm text-muted-foreground">
                           Due:{" "}
                           {commitment.dueDate
-                            ? new Date(commitment.dueDate).toLocaleDateString()
+                            ? new Date(commitment.dueDate).toLocaleDateString("en-US")
                             : "TBD"}
                         </p>
                       </div>
@@ -178,7 +178,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
                   <p className="text-sm font-medium text-muted-foreground mb-1">Last Active</p>
                   <p className="text-base">
                     {project.lastActiveAt
-                      ? new Date(project.lastActiveAt).toLocaleDateString()
+                      ? new Date(project.lastActiveAt).toLocaleDateString("en-US")
                       : "Never"}
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
                         <p className="text-xs text-muted-foreground">
                           Due:{" "}
                           {commitment.dueDate
-                            ? new Date(commitment.dueDate).toLocaleDateString()
+                            ? new Date(commitment.dueDate).toLocaleDateString("en-US")
                             : "TBD"}
                         </p>
                       </div>

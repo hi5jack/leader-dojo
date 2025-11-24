@@ -27,7 +27,7 @@ BEGIN
     JOIN pg_namespace n ON n.oid = t.typnamespace
     WHERE t.typname = 'entry_kind' AND n.nspname = 'public'
   ) THEN
-    CREATE TYPE "public"."entry_kind" AS ENUM('meeting', 'update', 'decision', 'note', 'prep', 'reflection', 'self_note');
+    CREATE TYPE "public"."entry_kind" AS ENUM('meeting', 'update', 'decision', 'note', 'prep', 'reflection');
   END IF;
 END$$;
 --> statement-breakpoint

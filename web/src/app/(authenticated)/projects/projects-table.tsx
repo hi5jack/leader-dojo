@@ -89,6 +89,12 @@ export const ProjectsTable = ({ projects }: { projects: Project[] }) => {
     const now = new Date();
     const past = new Date(date);
     const diffMs = now.getTime() - past.getTime();
+
+    // Guard against future timestamps causing negative day counts
+    if (diffMs <= 0) {
+      return "Today";
+    }
+
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) return "Today";

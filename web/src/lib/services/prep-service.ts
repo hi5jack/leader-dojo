@@ -20,7 +20,7 @@ export class PrepService {
 
     const [entries, commitments] = await Promise.all([
       this.entriesRepo.listByProject(userId, projectId, {
-        kinds: ["meeting", "update", "decision", "self_note"],
+        kinds: ["meeting", "update", "decision", "note"],
       }),
       this.commitmentsRepo.listCommitments(userId, {
         projectId,

@@ -54,8 +54,6 @@ const getKindIcon = (kind: string) => {
       return "📝";
     case "decision":
       return "✅";
-    case "self_note":
-      return "📌";
     case "note":
       return "💡";
     default:
@@ -396,7 +394,6 @@ export default function EntryDetailPage({
                         <SelectItem value="update">Update</SelectItem>
                         <SelectItem value="decision">Decision</SelectItem>
                         <SelectItem value="note">Note</SelectItem>
-                        <SelectItem value="self_note">Self Note</SelectItem>
                         <SelectItem value="prep">Prep</SelectItem>
                         <SelectItem value="reflection">Reflection</SelectItem>
                       </SelectContent>

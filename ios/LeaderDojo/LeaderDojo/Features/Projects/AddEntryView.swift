@@ -25,7 +25,7 @@ struct AddEntryView: View {
                     Picker("Kind", selection: $kind) {
                         Text("Meeting").tag(Entry.Kind.meeting)
                         Text("Update").tag(Entry.Kind.update)
-                        Text("Self Note").tag(Entry.Kind.self_note)
+                        Text("Note").tag(Entry.Kind.note)
                         Text("Decision").tag(Entry.Kind.decision)
                     }
                     TextField("Title", text: $title)

@@ -64,7 +64,7 @@ export const CaptureForm = ({ projects }: { projects: Project[] }) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title: content.split(".")[0]?.slice(0, 60) || "Quick note",
-        kind: "self_note",
+        kind: "note",
         occurredAt: new Date().toISOString(),
         rawContent: content,
       }),

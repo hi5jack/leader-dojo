@@ -24,7 +24,6 @@ const entryKinds = [
   { label: "Update", value: "update" },
   { label: "Decision", value: "decision" },
   { label: "Note", value: "note" },
-  { label: "Self Note", value: "self_note" },
 ] as const;
 
 type Props = {
@@ -41,8 +40,6 @@ const getKindIcon = (kind: string) => {
       return <Calendar className="w-5 h-5" />;
     case "decision":
       return <FileCheck className="w-5 h-5" />;
-    case "self_note":
-      return <StickyNote className="w-5 h-5" />;
     case "note":
       return <Lightbulb className="w-5 h-5" />;
     default:

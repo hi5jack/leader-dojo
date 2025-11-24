@@ -43,7 +43,7 @@ final class CaptureViewModel: ObservableObject {
             newProjectName = ""
         }
 
-        let entryInput = CreateEntryInput(kind: .self_note, title: "Quick capture", occurredAt: Date(), rawContent: note)
+        let entryInput = CreateEntryInput(kind: .note, title: "Quick capture", occurredAt: Date(), rawContent: note)
         _ = try await service.createEntry(projectId: projectId, input: entryInput)
         note = ""
         Haptics.success()

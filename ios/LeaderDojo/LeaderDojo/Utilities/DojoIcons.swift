@@ -144,7 +144,7 @@ func entryKindIcon(_ kind: String) -> String {
         return DojoIcons.meeting
     case "update":
         return DojoIcons.update
-    case "self_note", "selfnote":
+    case "note":
         return DojoIcons.selfNote
     case "decision":
         return DojoIcons.decision

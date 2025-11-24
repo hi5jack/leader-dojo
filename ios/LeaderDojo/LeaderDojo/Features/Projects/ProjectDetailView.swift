@@ -309,7 +309,7 @@ private struct TimelineView: View {
             return LeaderDojoColors.dojoBlue
         case "update":
             return LeaderDojoColors.dojoGreen
-        case "self_note", "selfnote":
+        case "note":
             return LeaderDojoColors.dojoAmber
         case "decision":
             return LeaderDojoColors.dojoRed

@@ -34,7 +34,6 @@ export const entryKindEnum = pgEnum("entry_kind", [
   "note",
   "prep",
   "reflection",
-  "self_note",
 ]);
 
 export const commitmentDirectionEnum = pgEnum("commitment_direction", [

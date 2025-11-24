@@ -27,7 +27,6 @@ const entryKinds = [
   { label: "Update", value: "update" },
   { label: "Decision", value: "decision" },
   { label: "Note", value: "note" },
-  { label: "Self note", value: "self_note" },
 ];
 
 export const EntryComposer = ({ projectId }: { projectId: string }) => {

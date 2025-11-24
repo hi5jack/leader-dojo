@@ -1,5 +1,5 @@
 import type { SQL } from "drizzle-orm";
-import { and, desc, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 
 import { db } from "@/lib/db/client";
 import type { DbClient } from "@/lib/db/client";
@@ -46,7 +46,11 @@ export class EntriesRepository {
 
   async findById(userId: string, entryId: string) {
     return this.database.query.projectEntries.findFirst({
-      where: and(eq(projectEntries.id, entryId), eq(projectEntries.userId, userId)),
+      where: and(
+        eq(projectEntries.id, entryId),
+        eq(projectEntries.userId, userId),
+        isNull(projectEntries.deletedAt)
+      ),
     });
   }
 
@@ -58,6 +62,7 @@ export class EntriesRepository {
     const where = this.buildWhere([
       eq(projectEntries.projectId, projectId),
       eq(projectEntries.userId, userId),
+      isNull(projectEntries.deletedAt),
       filters.kinds ? inArray(projectEntries.kind, filters.kinds) : undefined,
       filters.occurredAfter
         ? gte(projectEntries.occurredAt, filters.occurredAfter)
@@ -76,6 +81,7 @@ export class EntriesRepository {
   async listForUser(userId: string, filters: EntryFilters = {}) {
     const where = this.buildWhere([
       eq(projectEntries.userId, userId),
+      isNull(projectEntries.deletedAt),
       filters.projectId ? eq(projectEntries.projectId, filters.projectId) : undefined,
       filters.kinds ? inArray(projectEntries.kind, filters.kinds) : undefined,
       filters.occurredAfter
@@ -94,10 +100,24 @@ export class EntriesRepository {
 
   async listByKind(userId: string, kind: typeof projectEntries.$inferSelect.kind) {
     return this.database.query.projectEntries.findMany({
-      where: and(eq(projectEntries.userId, userId), eq(projectEntries.kind, kind)),
+      where: and(
+        eq(projectEntries.userId, userId),
+        eq(projectEntries.kind, kind),
+        isNull(projectEntries.deletedAt)
+      ),
       orderBy: desc(projectEntries.occurredAt),
       limit: 20,
     });
+  }
+
+  async deleteEntry(userId: string, entryId: string) {
+    const [deleted] = await this.database
+      .update(projectEntries)
+      .set({ deletedAt: new Date() })
+      .where(and(eq(projectEntries.id, entryId), eq(projectEntries.userId, userId)))
+      .returning();
+
+    return deleted ?? null;
   }
 }
 

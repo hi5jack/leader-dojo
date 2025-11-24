@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FileText, Calendar, Lightbulb, FileCheck, StickyNote, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import { FileText, Calendar, Lightbulb, FileCheck, StickyNote, MessageSquare, ChevronRight } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -28,6 +29,7 @@ const entryKinds = [
 
 type Props = {
   entries: ProjectEntry[];
+  projectId: string;
   onSummarize?: (entryId: string) => void;
 };
 
@@ -62,7 +64,7 @@ const formatDate = (date: Date | string) => {
   return d.toLocaleDateString();
 };
 
-export const ProjectTimeline = ({ entries }: Props) => {
+export const ProjectTimeline = ({ entries, projectId }: Props) => {
   const [filter, setFilter] = useState<(typeof entryKinds)[number]["value"]>("all");
 
   const filteredEntries = useMemo(() => {
@@ -91,30 +93,38 @@ export const ProjectTimeline = ({ entries }: Props) => {
       ) : (
         <Timeline>
           {filteredEntries.map((entry, index) => (
-            <TimelineItem
-              key={entry.id}
-              icon={getKindIcon(entry.kind)}
-              isLast={index === filteredEntries.length - 1}
-            >
-              <TimelineContent>
-                <TimelineHeader>
-                  <div className="flex-1">
-                    <TimelineTitle>{entry.title || "Untitled"}</TimelineTitle>
-                    <TimelineTime>
-                      {entry.occurredAt ? formatDate(entry.occurredAt) : "No timestamp"}
-                    </TimelineTime>
-                  </div>
-                  <Badge variant="outline">{entry.kind.replace("_", " ")}</Badge>
-                </TimelineHeader>
-                {entry.aiSummary ? (
-                  <TimelineDescription>{entry.aiSummary}</TimelineDescription>
-                ) : entry.rawContent ? (
-                  <TimelineDescription className="line-clamp-3">
-                    {entry.rawContent}
-                  </TimelineDescription>
-                ) : null}
-              </TimelineContent>
-            </TimelineItem>
+              <TimelineItem
+                key={entry.id}
+                icon={getKindIcon(entry.kind)}
+                isLast={index === filteredEntries.length - 1}
+              >
+                <Link 
+                  href={`/projects/${projectId}/entries/${entry.id}`}
+                  className="block hover:opacity-80 transition-opacity"
+                >
+                  <TimelineContent>
+                    <TimelineHeader>
+                      <div className="flex-1">
+                        <TimelineTitle>{entry.title || "Untitled"}</TimelineTitle>
+                        <TimelineTime>
+                          {entry.occurredAt ? formatDate(entry.occurredAt) : "No timestamp"}
+                        </TimelineTime>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">{entry.kind.replace("_", " ")}</Badge>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                      </div>
+                    </TimelineHeader>
+                    {entry.aiSummary ? (
+                      <TimelineDescription>{entry.aiSummary}</TimelineDescription>
+                    ) : entry.rawContent ? (
+                      <TimelineDescription className="line-clamp-3">
+                        {entry.rawContent}
+                      </TimelineDescription>
+                    ) : null}
+                  </TimelineContent>
+                </Link>
+              </TimelineItem>
           ))}
         </Timeline>
       )}

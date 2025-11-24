@@ -124,7 +124,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
           </TabsList>
 
           <TabsContent value="timeline" className="mt-6">
-            <ProjectTimeline entries={entries} />
+            <ProjectTimeline entries={entries} projectId={id} />
           </TabsContent>
 
           <TabsContent value="commitments" className="mt-6 space-y-3">
@@ -195,7 +195,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<Pa
             <CardTitle>Timeline</CardTitle>
           </CardHeader>
           <CardContent>
-            <ProjectTimeline entries={entries} />
+            <ProjectTimeline entries={entries} projectId={id} />
           </CardContent>
         </Card>
 

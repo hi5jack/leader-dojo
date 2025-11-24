@@ -245,6 +245,105 @@
   p {
     @apply leading-relaxed;
   }
+  
+  /* Markdown Prose Styles */
+  .prose {
+    @apply text-foreground;
+  }
+  
+  .prose h1 {
+    @apply text-[24px] md:text-[28px] font-semibold tracking-tight mb-4 mt-6 text-foreground;
+  }
+  
+  .prose h2 {
+    @apply text-[20px] md:text-[22px] font-semibold tracking-tight mb-3 mt-5 text-foreground;
+  }
+  
+  .prose h3 {
+    @apply text-[18px] font-semibold mb-2 mt-4 text-foreground;
+  }
+  
+  .prose h4 {
+    @apply text-[16px] font-semibold mb-2 mt-3 text-foreground;
+  }
+  
+  .prose h5,
+  .prose h6 {
+    @apply text-[14px] font-semibold mb-2 mt-3 text-foreground;
+  }
+  
+  .prose p {
+    @apply mb-4 leading-relaxed text-foreground;
+  }
+  
+  .prose a {
+    @apply text-primary underline underline-offset-2 hover:text-primary-hover transition-colors;
+  }
+  
+  .prose strong {
+    @apply font-semibold text-foreground;
+  }
+  
+  .prose em {
+    @apply italic;
+  }
+  
+  .prose code {
+    @apply bg-muted text-foreground px-1.5 py-0.5 rounded text-[0.875em] font-mono border border-border;
+  }
+  
+  .prose pre {
+    @apply bg-muted border border-border rounded-lg p-4 overflow-x-auto mb-4 mt-4;
+  }
+  
+  .prose pre code {
+    @apply bg-transparent border-0 p-0 text-[0.875rem] leading-relaxed;
+  }
+  
+  .prose ul {
+    @apply list-disc list-outside ml-6 mb-4 space-y-2;
+  }
+  
+  .prose ol {
+    @apply list-decimal list-outside ml-6 mb-4 space-y-2;
+  }
+  
+  .prose li {
+    @apply leading-relaxed;
+  }
+  
+  .prose blockquote {
+    @apply border-l-4 border-primary pl-4 italic my-4 text-muted-foreground;
+  }
+  
+  .prose hr {
+    @apply border-border my-8;
+  }
+  
+  .prose table {
+    @apply w-full border-collapse mb-4;
+  }
+  
+  .prose th {
+    @apply border border-border bg-muted px-4 py-2 text-left font-semibold;
+  }
+  
+  .prose td {
+    @apply border border-border px-4 py-2;
+  }
+  
+  .prose img {
+    @apply rounded-lg my-4 max-w-full h-auto;
+  }
+  
+  /* Dark mode adjustments */
+  .dark .prose code {
+    @apply bg-muted/50;
+  }
+  
+  .dark .prose pre {
+    @apply bg-muted/50;
+  }
 }
 
 @layer utilities {

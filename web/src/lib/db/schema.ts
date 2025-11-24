@@ -188,6 +188,7 @@ export const projectEntries = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
   },
   (table) => ({
     entriesProjectIdx: index("entries_project_idx").on(

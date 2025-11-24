@@ -8,6 +8,13 @@
       "when": 1763802261883,
       "tag": "0000_fat_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1763957236965,
+      "tag": "0001_parched_junta",
+      "breakpoints": true
     }
   ]
 }

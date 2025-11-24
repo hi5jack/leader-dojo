@@ -38,6 +38,18 @@ export class EntriesService {
     return this.entriesRepo.findById(userId, entryId);
   }
 
+  async updateEntry(
+    userId: string,
+    entryId: string,
+    input: Partial<CreateEntryInput>
+  ) {
+    return this.entriesRepo.updateEntry(userId, entryId, input);
+  }
+
+  async deleteEntry(userId: string, entryId: string) {
+    return this.entriesRepo.deleteEntry(userId, entryId);
+  }
+
   async generateSummary(entry: ProjectEntry, projectContext?: string) {
     const ai = getAiClient();
     return ai.summarizeMeeting({

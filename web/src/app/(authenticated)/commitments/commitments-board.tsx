@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition } from "react";
-import { CheckCircle2, Clock, AlertCircle, SlidersHorizontal } from "lucide-react";
+import { CheckCircle2, Clock, AlertCircle, SlidersHorizontal, Plus } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Fab } from "@/components/ui/fab";
 import { SwipeActions } from "@/components/ui/swipe-actions";
 import {
   Select,
@@ -22,9 +23,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  BottomSheet,
+  BottomSheetContent,
+  BottomSheetHeader,
+  BottomSheetTitle,
+} from "@/components/ui/bottom-sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Commitment, Project } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
+import { CreateCommitmentForm } from "./create-commitment-form";
 
 type Props = {
   initialIOwe: Commitment[];
@@ -47,6 +55,7 @@ export const CommitmentsBoard = ({
   const [iOwe, setIOwe] = useState(initialIOwe);
   const [waitingFor, setWaitingFor] = useState(initialWaitingFor);
   const [isPending, startTransition] = useTransition();
+  const [isCreateSheetOpen, setIsCreateSheetOpen] = useState(false);
   const [filters, setFilters] = useState({
     projectId: "all",
     status: "all",
@@ -63,6 +72,15 @@ export const CommitmentsBoard = ({
       list.map((item) => (item.id === updated.id ? { ...item, ...updated } : item));
     setIOwe((prev) => updateList(prev));
     setWaitingFor((prev) => updateList(prev));
+  };
+
+  const addNewCommitment = (commitment: Commitment) => {
+    if (commitment.direction === "i_owe") {
+      setIOwe((prev) => [commitment, ...prev]);
+    } else {
+      setWaitingFor((prev) => [commitment, ...prev]);
+    }
+    setIsCreateSheetOpen(false);
   };
 
   const updateCommitment = (id: string, payload: Record<string, unknown>) => {
@@ -340,6 +358,29 @@ export const CommitmentsBoard = ({
           {renderCommitmentsList(filteredWaitingFor, "Nothing you're waiting for")}
         </TabsContent>
       </Tabs>
+
+      {/* FAB for creating commitments */}
+      <Fab
+        icon={<Plus className="h-6 w-6" />}
+        onClick={() => setIsCreateSheetOpen(true)}
+        aria-label="Add commitment"
+      />
+
+      {/* Bottom sheet for creating commitments */}
+      <BottomSheet open={isCreateSheetOpen} onOpenChange={setIsCreateSheetOpen}>
+        <BottomSheetContent>
+          <BottomSheetHeader>
+            <BottomSheetTitle>Create Commitment</BottomSheetTitle>
+          </BottomSheetHeader>
+          <div className="px-6 pb-6">
+            <CreateCommitmentForm
+              projects={projects}
+              onSuccess={addNewCommitment}
+              onCancel={() => setIsCreateSheetOpen(false)}
+            />
+          </div>
+        </BottomSheetContent>
+      </BottomSheet>
     </div>
   );
 };

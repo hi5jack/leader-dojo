@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SwipeActions } from "@/components/ui/swipe-actions";
 import { DashboardService } from "@/lib/services";
 import { getCurrentSession } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
+import { TopCommitments } from "./top-commitments";
 
 const dashboardService = new DashboardService();
 
@@ -59,45 +59,7 @@ export default async function DashboardPage() {
             />
           ) : (
             <>
-              {data.weeklyFocus.slice(0, 3).map((item) => (
-                <SwipeActions
-                  key={item.id}
-                  actions={[
-                    {
-                      label: "Done",
-                      icon: <CheckCircle2 className="w-5 h-5" />,
-                      onClick: () => {
-                        // TODO: Mark as done
-                        console.log("Mark done:", item.id);
-                      },
-                      variant: "success",
-                    },
-                  ]}
-                >
-                  <Card
-                    variant="interactive"
-                    className="border-0 shadow-none hover:shadow-none active:shadow-none"
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium mb-1 line-clamp-2">{item.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {item.counterparty || "No counterparty"}
-                          </p>
-                        </div>
-                        <Badge
-                          variant={item.direction === "i_owe" ? "i-owe" : "waiting-for"}
-                          size="lg"
-                          className="shrink-0"
-                        >
-                          {item.direction === "i_owe" ? "I Owe" : "Waiting"}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </SwipeActions>
-              ))}
+              <TopCommitments items={data.weeklyFocus} />
               {data.weeklyFocus.length > 3 && (
                 <Button variant="outline" className="w-full" asChild>
                   <Link href="/commitments">

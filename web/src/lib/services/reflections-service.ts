@@ -8,7 +8,7 @@ import {
   ReflectionsRepository,
 } from "@/lib/repositories";
 
-type ReflectionPeriod = typeof reflections.$inferSelect.periodType;
+type ReflectionPeriod = NonNullable<typeof reflections.$inferSelect.periodType>;
 
 type ReflectionQuestionAnswer = {
   question: string;

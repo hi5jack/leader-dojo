@@ -34,6 +34,7 @@ export const entryKindEnum = pgEnum("entry_kind", [
   "note",
   "prep",
   "reflection",
+  "commitment",
 ]);
 
 export const commitmentDirectionEnum = pgEnum("commitment_direction", [
@@ -250,10 +251,16 @@ export const reflections = pgTable(
     userId: uuid("user_id")
       .references(() => users.id, { onDelete: "cascade" })
       .notNull(),
-    periodType: reflectionPeriodEnum("period_type").notNull(),
-    periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
-    periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
-    stats: jsonb("stats").$type<Record<string, unknown>>().notNull(),
+    projectId: uuid("project_id").references(() => projects.id, {
+      onDelete: "cascade",
+    }),
+    entryId: uuid("entry_id").references(() => projectEntries.id, {
+      onDelete: "set null",
+    }),
+    periodType: reflectionPeriodEnum("period_type"),
+    periodStart: timestamp("period_start", { withTimezone: true }),
+    periodEnd: timestamp("period_end", { withTimezone: true }),
+    stats: jsonb("stats").$type<Record<string, unknown>>(),
     questionsAndAnswers: jsonb("questions_answers")
       .$type<
         Array<{
@@ -262,7 +269,7 @@ export const reflections = pgTable(
         }>
       >()
       .notNull(),
-    aiQuestions: jsonb("ai_questions").$type<string[]>().notNull(),
+    aiQuestions: jsonb("ai_questions").$type<string[]>(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -272,6 +279,10 @@ export const reflections = pgTable(
       table.userId,
       table.periodType,
       table.periodStart,
+    ),
+    reflectionsProjectIdx: index("reflections_project_idx").on(
+      table.projectId,
+      table.createdAt,
     ),
   }),
 );
@@ -286,6 +297,7 @@ export const userRelations = relations(users, ({ many }) => ({
 export const projectRelations = relations(projects, ({ many }) => ({
   entries: many(projectEntries),
   commitments: many(commitments),
+  reflections: many(reflections),
 }));
 
 export const entryRelations = relations(projectEntries, ({ one, many }) => ({
@@ -294,6 +306,7 @@ export const entryRelations = relations(projectEntries, ({ one, many }) => ({
     references: [projects.id],
   }),
   commitments: many(commitments),
+  reflections: many(reflections),
 }));
 
 export const commitmentRelations = relations(commitments, ({ one }) => ({
@@ -311,6 +324,14 @@ export const reflectionRelations = relations(reflections, ({ one }) => ({
   user: one(users, {
     fields: [reflections.userId],
     references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [reflections.projectId],
+    references: [projects.id],
+  }),
+  entry: one(projectEntries, {
+    fields: [reflections.entryId],
+    references: [projectEntries.id],
   }),
 }));
 

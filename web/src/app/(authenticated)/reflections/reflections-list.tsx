@@ -11,6 +11,24 @@ import type { Reflection } from "@/lib/db/types";
 export const ReflectionsList = ({ reflections }: { reflections: Reflection[] }) => {
   const [selected, setSelected] = useState<Reflection | null>(null);
 
+  const formatPeriod = (reflection: Reflection) => {
+    if (reflection.periodType && reflection.periodStart && reflection.periodEnd) {
+      return `${reflection.periodType} – ${new Date(
+        reflection.periodStart,
+      ).toLocaleDateString("en-US")} - ${new Date(
+        reflection.periodEnd,
+      ).toLocaleDateString("en-US")}`;
+    }
+
+    if (reflection.periodStart && reflection.periodEnd) {
+      return `${new Date(reflection.periodStart).toLocaleDateString(
+        "en-US",
+      )} - ${new Date(reflection.periodEnd).toLocaleDateString("en-US")}`;
+    }
+
+    return "Ad-hoc reflection";
+  };
+
   return (
     <>
       <Card>
@@ -34,9 +52,7 @@ export const ReflectionsList = ({ reflections }: { reflections: Reflection[] }) 
                 {reflections.map((reflection) => (
                   <TableRow key={reflection.id}>
                     <TableCell>
-                      {reflection.periodType} –{" "}
-                      {new Date(reflection.periodStart).toLocaleDateString("en-US")} -{" "}
-                      {new Date(reflection.periodEnd).toLocaleDateString("en-US")}
+                      {formatPeriod(reflection)}
                     </TableCell>
                     <TableCell>{new Date(reflection.createdAt).toLocaleDateString("en-US")}</TableCell>
                     <TableCell>{reflection.questionsAndAnswers.length}</TableCell>
@@ -57,7 +73,7 @@ export const ReflectionsList = ({ reflections }: { reflections: Reflection[] }) 
           <DialogHeader>
             <DialogTitle>
               {selected
-                ? `${selected.periodType} · ${new Date(selected.periodStart).toLocaleDateString("en-US")}`
+                ? formatPeriod(selected)
                 : "Reflection"}
             </DialogTitle>
           </DialogHeader>

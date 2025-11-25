@@ -21,3 +21,10 @@ export type NewCommitment = typeof commitments.$inferInsert;
 export type Reflection = typeof reflections.$inferSelect;
 export type NewReflection = typeof reflections.$inferInsert;
 
+// Unified capture response type
+export type CaptureResult = {
+  entryId: string;
+  commitmentId?: string;
+  reflectionId?: string;
+};
+

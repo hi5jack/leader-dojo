@@ -27,7 +27,10 @@ export class EntriesService {
   }
 
   async getTimeline(userId: string, projectId: string) {
-    return this.entriesRepo.listByProject(userId, projectId);
+    // Exclude commitment entries from project timelines
+    return this.entriesRepo.listByProject(userId, projectId, {
+      kinds: ["meeting", "update", "decision", "note", "prep", "reflection"],
+    });
   }
 
   async markAsDecision(userId: string, entryId: string) {
@@ -107,7 +110,8 @@ export class EntriesService {
   ) {
     const entries = await this.entriesRepo.listForUser(userId, {
       projectId: filters?.projectId,
-      kinds: filters?.kinds,
+      // By default, exclude commitment entries from cross-project activity timeline
+      kinds: filters?.kinds ?? ["meeting", "update", "decision", "note", "prep", "reflection"],
     });
 
     // Get unique project IDs

@@ -72,7 +72,10 @@ const kindConfig: Record<EntryKind, { icon: typeof MessageSquare; label: string;
 export function RecentActivity({ entries }: Props) {
   return (
     <div className="space-y-3">
-      {entries.map((entry, index) => {
+      {entries
+        // Never show commitment entries in the dashboard recent activity list
+        .filter((entry) => entry.kind !== "commitment")
+        .map((entry, index) => {
         const config = kindConfig[entry.kind] || kindConfig.note;
         const Icon = config.icon;
 

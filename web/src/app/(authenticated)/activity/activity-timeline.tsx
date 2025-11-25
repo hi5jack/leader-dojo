@@ -89,7 +89,8 @@ const kindConfig: Record<EntryKind, { icon: typeof MessageSquare; label: string;
   },
 };
 
-const ENTRY_KINDS: EntryKind[] = ["meeting", "update", "decision", "note", "prep", "reflection", "commitment"];
+// Available filters in the UI (commitment entries are intentionally excluded)
+const ENTRY_KINDS: EntryKind[] = ["meeting", "update", "decision", "note", "prep", "reflection"];
 
 function getDateGroup(date: Date): string {
   if (isToday(date)) return "Today";
@@ -120,6 +121,10 @@ export function ActivityTimeline({ initialEntries, projects }: Props) {
 
   const filteredEntries = useMemo(() => {
     return initialEntries.filter((entry) => {
+      // Never show commitment entries in the activity timeline
+      if (entry.kind === "commitment") {
+        return false;
+      }
       if (projectFilter !== "all" && entry.projectId !== projectFilter) {
         return false;
       }

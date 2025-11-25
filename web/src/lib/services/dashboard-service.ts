@@ -121,7 +121,10 @@ export class DashboardService {
   }
 
   async getRecentEntries(userId: string, limit = 5) {
-    const entries = await this.entriesRepo.listForUser(userId, {});
+    // Exclude commitment entries from dashboard recent activity
+    const entries = await this.entriesRepo.listForUser(userId, {
+      kinds: ["meeting", "update", "decision", "note", "prep", "reflection"],
+    });
     
     // Get project info for each entry
     const entriesWithProjects = await Promise.all(

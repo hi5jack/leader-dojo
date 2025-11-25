@@ -51,18 +51,20 @@ export function TopCommitments({ items }: Props) {
             variant="interactive"
             className="border-0 shadow-none hover:shadow-none active:shadow-none"
           >
-            <CardContent className="p-4">
+            <CardContent className="px-3 py-2">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium mb-1 line-clamp-2">{item.title}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0 space-y-1">
+                  <p className="font-medium text-sm leading-snug line-clamp-2">
+                    {item.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground leading-snug line-clamp-1">
                     {item.counterparty || "No counterparty"}
                   </p>
                 </div>
                 <Badge
                   variant={item.direction === "i_owe" ? "i-owe" : "waiting-for"}
-                  size="lg"
-                  className="shrink-0"
+                  size="sm"
+                  className="shrink-0 text-[10px] px-2 py-0.5"
                 >
                   {item.direction === "i_owe" ? "I Owe" : "Waiting"}
                 </Badge>

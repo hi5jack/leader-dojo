@@ -77,8 +77,11 @@ export const ProjectTimeline = ({ entries, projectId }: Props) => {
   const [filter, setFilter] = useState<(typeof entryKinds)[number]["value"]>("all");
 
   const filteredEntries = useMemo(() => {
-    if (filter === "all") return entries;
-    return entries.filter((entry) => entry.kind === filter);
+    // Never show commitment entries in the project timeline
+    const nonCommitmentEntries = entries.filter((entry) => entry.kind !== "commitment");
+
+    if (filter === "all") return nonCommitmentEntries;
+    return nonCommitmentEntries.filter((entry) => entry.kind === filter);
   }, [entries, filter]);
 
   return (

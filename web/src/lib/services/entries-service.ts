@@ -92,5 +92,47 @@ export class EntriesService {
 
     return this.commitmentsRepo.createMany(payload);
   }
+
+  /**
+   * Get all entries for a user with their project information
+   * Used for the cross-project activity timeline
+   */
+  async getAllEntriesWithProjects(
+    userId: string,
+    filters?: {
+      projectId?: string;
+      kinds?: ProjectEntry["kind"][];
+      limit?: number;
+    }
+  ) {
+    const entries = await this.entriesRepo.listForUser(userId, {
+      projectId: filters?.projectId,
+      kinds: filters?.kinds,
+    });
+
+    // Get unique project IDs
+    const projectIds = [...new Set(entries.map((e) => e.projectId))];
+    
+    // Fetch all projects in parallel
+    const projectsMap = new Map<string, { name: string; id: string }>();
+    await Promise.all(
+      projectIds.map(async (projectId) => {
+        const project = await this.projectsRepo.findById(userId, projectId);
+        if (project) {
+          projectsMap.set(projectId, { name: project.name, id: project.id });
+        }
+      })
+    );
+
+    // Combine entries with project info
+    const entriesWithProjects = entries
+      .map((entry) => ({
+        ...entry,
+        projectName: projectsMap.get(entry.projectId)?.name ?? "Unknown Project",
+      }))
+      .slice(0, filters?.limit ?? 50);
+
+    return entriesWithProjects;
+  }
 }
 

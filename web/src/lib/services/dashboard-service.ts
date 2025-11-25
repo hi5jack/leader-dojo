@@ -1,5 +1,12 @@
 import { CommitmentsRepository, EntriesRepository, ProjectsRepository, ReflectionsRepository } from "@/lib/repositories";
 
+export type DashboardStats = {
+  openIOwe: number;
+  waitingFor: number;
+  activeProjects: number;
+  daysSinceReflection: number | null;
+};
+
 export class DashboardService {
   constructor(
     private readonly commitmentsRepo = new CommitmentsRepository(),
@@ -81,17 +88,70 @@ export class DashboardService {
     };
   }
 
+  async getStats(userId: string): Promise<DashboardStats> {
+    const [iOweCommitments, waitingForCommitments, activeProjects, reflections] = await Promise.all([
+      this.commitmentsRepo.listCommitments(userId, {
+        directions: ["i_owe"],
+        statuses: ["open"],
+      }),
+      this.commitmentsRepo.listCommitments(userId, {
+        directions: ["waiting_for"],
+        statuses: ["open"],
+      }),
+      this.projectsRepo.listByUser(userId, { status: ["active"] }),
+      this.reflectionsRepo.listReflections(userId, {}),
+    ]);
+
+    // Calculate days since last reflection
+    let daysSinceReflection: number | null = null;
+    if (reflections.length > 0) {
+      const lastReflection = reflections[0]; // Already sorted by createdAt desc
+      const daysDiff = Math.floor(
+        (Date.now() - new Date(lastReflection.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      daysSinceReflection = daysDiff;
+    }
+
+    return {
+      openIOwe: iOweCommitments.length,
+      waitingFor: waitingForCommitments.length,
+      activeProjects: activeProjects.length,
+      daysSinceReflection,
+    };
+  }
+
+  async getRecentEntries(userId: string, limit = 5) {
+    const entries = await this.entriesRepo.listForUser(userId, {});
+    
+    // Get project info for each entry
+    const entriesWithProjects = await Promise.all(
+      entries.slice(0, limit).map(async (entry) => {
+        const project = await this.projectsRepo.findById(userId, entry.projectId);
+        return {
+          ...entry,
+          projectName: project?.name ?? "Unknown Project",
+        };
+      })
+    );
+
+    return entriesWithProjects;
+  }
+
   async getDashboardData(userId: string) {
-    const [weeklyFocus, idleProjects, pending] = await Promise.all([
+    const [weeklyFocus, idleProjects, pending, stats, recentEntries] = await Promise.all([
       this.getWeeklyFocus(userId),
       this.getIdleProjects(userId),
       this.getPendingReviews(userId),
+      this.getStats(userId),
+      this.getRecentEntries(userId, 5),
     ]);
 
     return {
       weeklyFocus,
       idleProjects,
       pending,
+      stats,
+      recentEntries,
     };
   }
 }

@@ -13,6 +13,7 @@ import {
   ChevronRight,
   LogOut,
   User,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
@@ -29,6 +30,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/activity", label: "Activity", icon: Activity },
   { href: "/projects", label: "Projects", icon: FolderOpen },
   { href: "/capture", label: "Capture", icon: Plus },
   { href: "/commitments", label: "Commitments", icon: CheckSquare, badge: 0 },

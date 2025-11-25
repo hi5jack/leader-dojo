@@ -3,15 +3,15 @@
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, FolderOpen, Plus, CheckSquare, BookOpen } from "lucide-react";
+import { Home, FolderOpen, Plus, CheckSquare, Activity } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: Home },
-  { href: "/projects", label: "Projects", icon: FolderOpen },
+  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/activity", label: "Activity", icon: Activity },
   { href: "/capture", label: "Capture", icon: Plus, isCenter: true },
-  { href: "/commitments", label: "Commitments", icon: CheckSquare },
-  { href: "/reflections", label: "Reflections", icon: BookOpen },
+  { href: "/projects", label: "Projects", icon: FolderOpen },
+  { href: "/commitments", label: "Tasks", icon: CheckSquare },
 ] satisfies Array<{
   href: Route;
   label: string;

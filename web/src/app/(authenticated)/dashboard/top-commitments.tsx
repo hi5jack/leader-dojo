@@ -63,7 +63,7 @@ export function TopCommitments({ items }: Props) {
                 </div>
                 <Badge
                   variant={item.direction === "i_owe" ? "i-owe" : "waiting-for"}
-                  size="sm"
+                  size="default"
                   className="shrink-0 text-[10px] px-2 py-0.5"
                 >
                   {item.direction === "i_owe" ? "I Owe" : "Waiting"}

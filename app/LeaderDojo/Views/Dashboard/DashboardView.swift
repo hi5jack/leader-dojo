@@ -1,0 +1,388 @@
+import SwiftUI
+import SwiftData
+
+struct DashboardView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(sort: \Commitment.dueDate)
+    private var allCommitments: [Commitment]
+    
+    @Query(sort: \Project.lastActiveAt)
+    private var allProjects: [Project]
+    
+    @Query(sort: \Reflection.createdAt, order: .reverse)
+    private var reflections: [Reflection]
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                LazyVStack(spacing: 24) {
+                    // Weekly Focus Section
+                    weeklyFocusSection
+                    
+                    // Projects Needing Attention
+                    attentionProjectsSection
+                    
+                    // Reflection Prompt
+                    reflectionSection
+                    
+                    // Quick Stats
+                    quickStatsSection
+                }
+                .padding()
+            }
+            .navigationTitle("Dashboard")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.large)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    NavigationLink {
+                        CaptureView()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Weekly Focus Section
+    
+    private var weeklyFocusSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Weekly Focus", icon: "target", color: .orange)
+            
+            if topCommitments.isEmpty {
+                EmptyStateCard(
+                    icon: "checkmark.circle",
+                    title: "All Clear",
+                    message: "No open commitments. Great job staying on top of things!"
+                )
+            } else {
+                ForEach(topCommitments) { commitment in
+                    CommitmentRow(commitment: commitment) {
+                        markCommitmentDone(commitment)
+                    }
+                }
+                
+                if openIOweCommitments.count > 5 {
+                    NavigationLink {
+                        CommitmentsListView()
+                    } label: {
+                        Text("View all \(openIOweCommitments.count) commitments")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Attention Projects Section
+    
+    private var attentionProjectsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Needs Attention", icon: "exclamationmark.triangle.fill", color: .red)
+            
+            if projectsNeedingAttention.isEmpty {
+                EmptyStateCard(
+                    icon: "hand.thumbsup.fill",
+                    title: "Looking Good",
+                    message: "All high-priority projects are active."
+                )
+            } else {
+                ForEach(projectsNeedingAttention) { project in
+                    NavigationLink {
+                        ProjectDetailView(project: project)
+                    } label: {
+                        ProjectAttentionRow(project: project)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Reflection Section
+    
+    private var reflectionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Reflect", icon: "brain.head.profile", color: .purple)
+            
+            if shouldPromptWeeklyReflection {
+                NavigationLink {
+                    NewReflectionView(periodType: .week)
+                } label: {
+                    ReflectionPromptCard(
+                        title: "Weekly Reflection",
+                        message: "Take a few minutes to reflect on your week.",
+                        icon: "calendar.badge.clock"
+                    )
+                }
+                .buttonStyle(.plain)
+            } else if let lastReflection = reflections.first {
+                ReflectionSummaryCard(reflection: lastReflection)
+            } else {
+                EmptyStateCard(
+                    icon: "lightbulb",
+                    title: "Start Reflecting",
+                    message: "Create your first reflection to track your growth."
+                )
+            }
+        }
+    }
+    
+    // MARK: - Quick Stats Section
+    
+    private var quickStatsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(title: "Overview", icon: "chart.bar.fill", color: .cyan)
+            
+            LazyVGrid(columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible())
+            ], spacing: 12) {
+                StatCard(title: "Active Projects", value: "\(activeProjects.count)", icon: "folder.fill", color: .blue)
+                StatCard(title: "I Owe", value: "\(openIOweCommitments.count)", icon: "arrow.up.right", color: .orange)
+                StatCard(title: "Waiting For", value: "\(waitingForCount)", icon: "arrow.down.left", color: .green)
+                StatCard(title: "This Week", value: "\(entriesThisWeek)", icon: "doc.text.fill", color: .purple)
+            }
+        }
+    }
+    
+    // MARK: - Computed Properties
+    
+    private var openIOweCommitments: [Commitment] {
+        allCommitments.filter { $0.direction == .iOwe && $0.status == .open }
+    }
+    
+    private var topCommitments: [Commitment] {
+        Array(openIOweCommitments.sorted { $0.priorityScore > $1.priorityScore }.prefix(5))
+    }
+    
+    private var activeProjects: [Project] {
+        allProjects.filter { $0.status == .active }
+    }
+    
+    private var projectsNeedingAttention: [Project] {
+        activeProjects.filter { $0.needsAttention }.prefix(3).map { $0 }
+    }
+    
+    private var shouldPromptWeeklyReflection: Bool {
+        guard let lastReflection = reflections.first(where: { $0.periodType == .week }) else {
+            return true
+        }
+        
+        let calendar = Calendar.current
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date()
+        return lastReflection.createdAt < weekAgo
+    }
+    
+    private var waitingForCount: Int {
+        // This would need a separate query in real implementation
+        0
+    }
+    
+    private var entriesThisWeek: Int {
+        // This would need a separate query in real implementation
+        0
+    }
+    
+    // MARK: - Actions
+    
+    private func markCommitmentDone(_ commitment: Commitment) {
+        commitment.markDone()
+        try? modelContext.save()
+    }
+}
+
+// MARK: - Supporting Views
+
+struct SectionHeader: View {
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        Label(title, systemImage: icon)
+            .font(.headline)
+            .foregroundStyle(color)
+    }
+}
+
+struct EmptyStateCard: View {
+    let icon: String
+    let title: String
+    let message: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.largeTitle)
+                .foregroundStyle(.secondary)
+            Text(title)
+                .font(.headline)
+            Text(message)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct CommitmentRow: View {
+    let commitment: Commitment
+    let onComplete: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onComplete) {
+                Image(systemName: "circle")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(commitment.title)
+                    .font(.subheadline)
+                    .lineLimit(2)
+                
+                HStack(spacing: 8) {
+                    if let projectName = commitment.project?.name {
+                        Text(projectName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    if let dueDate = commitment.dueDate {
+                        Text(dueDate, style: .date)
+                            .font(.caption)
+                            .foregroundStyle(commitment.isOverdue ? .red : .secondary)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            if commitment.isOverdue {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundStyle(.red)
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct ProjectAttentionRow: View {
+    let project: Project
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(project.name)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                
+                if let days = project.daysSinceLastActive {
+                    Text("\(days) days since last activity")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct ReflectionPromptCard: View {
+    let title: String
+    let message: String
+    let icon: String
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.title)
+                .foregroundStyle(.purple)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                Text(message)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.purple.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct ReflectionSummaryCard: View {
+    let reflection: Reflection
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(reflection.periodDisplay)
+                .font(.subheadline)
+                .fontWeight(.medium)
+            
+            Text("\(reflection.answeredCount)/\(reflection.questionsAnswers.count) questions answered")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundStyle(color)
+                Spacer()
+            }
+            
+            Text(value)
+                .font(.title)
+                .fontWeight(.bold)
+            
+            Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+#Preview {
+    DashboardView()
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
+}
+

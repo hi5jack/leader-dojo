@@ -1,0 +1,529 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		001000000001 /* LeaderDojoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000001 /* LeaderDojoApp.swift */; };
+		001000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000002 /* ContentView.swift */; };
+		001000000003 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000003 /* Project.swift */; };
+		001000000004 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000004 /* Entry.swift */; };
+		001000000005 /* Commitment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000005 /* Commitment.swift */; };
+		001000000006 /* Reflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000006 /* Reflection.swift */; };
+		001000000007 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000007 /* DashboardView.swift */; };
+		001000000008 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000008 /* ProjectsListView.swift */; };
+		001000000009 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000009 /* ProjectDetailView.swift */; };
+		001000000010 /* NewEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000010 /* NewEntryView.swift */; };
+		001000000011 /* EntryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000011 /* EntryDetailView.swift */; };
+		001000000012 /* PrepBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000012 /* PrepBriefingView.swift */; };
+		001000000013 /* CommitmentsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000013 /* CommitmentsListView.swift */; };
+		001000000014 /* CommitmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000014 /* CommitmentDetailView.swift */; };
+		001000000015 /* ReflectionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000015 /* ReflectionsListView.swift */; };
+		001000000016 /* NewReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000016 /* NewReflectionView.swift */; };
+		001000000017 /* ReflectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000017 /* ReflectionDetailView.swift */; };
+		001000000018 /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000018 /* CaptureView.swift */; };
+		001000000019 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000019 /* SettingsView.swift */; };
+		001000000020 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000020 /* AIService.swift */; };
+		001000000021 /* DataImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000021 /* DataImportService.swift */; };
+		001000000022 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000022 /* KeychainManager.swift */; };
+		001000000023 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000023 /* Extensions.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		002000000001 /* LeaderDojoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderDojoApp.swift; sourceTree = "<group>"; };
+		002000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		002000000003 /* Project.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Project.swift; sourceTree = "<group>"; };
+		002000000004 /* Entry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entry.swift; sourceTree = "<group>"; };
+		002000000005 /* Commitment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Commitment.swift; sourceTree = "<group>"; };
+		002000000006 /* Reflection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reflection.swift; sourceTree = "<group>"; };
+		002000000007 /* DashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardView.swift; sourceTree = "<group>"; };
+		002000000008 /* ProjectsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectsListView.swift; sourceTree = "<group>"; };
+		002000000009 /* ProjectDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectDetailView.swift; sourceTree = "<group>"; };
+		002000000010 /* NewEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewEntryView.swift; sourceTree = "<group>"; };
+		002000000011 /* EntryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryDetailView.swift; sourceTree = "<group>"; };
+		002000000012 /* PrepBriefingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrepBriefingView.swift; sourceTree = "<group>"; };
+		002000000013 /* CommitmentsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitmentsListView.swift; sourceTree = "<group>"; };
+		002000000014 /* CommitmentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommitmentDetailView.swift; sourceTree = "<group>"; };
+		002000000015 /* ReflectionsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionsListView.swift; sourceTree = "<group>"; };
+		002000000016 /* NewReflectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewReflectionView.swift; sourceTree = "<group>"; };
+		002000000017 /* ReflectionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionDetailView.swift; sourceTree = "<group>"; };
+		002000000018 /* CaptureView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureView.swift; sourceTree = "<group>"; };
+		002000000019 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		002000000020 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		002000000021 /* DataImportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataImportService.swift; sourceTree = "<group>"; };
+		002000000022 /* KeychainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainManager.swift; sourceTree = "<group>"; };
+		002000000023 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		002000000024 /* LeaderDojo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LeaderDojo.entitlements; sourceTree = "<group>"; };
+		002000000025 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		003000000001 /* LeaderDojo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LeaderDojo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		004000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		005000000001 = {
+			isa = PBXGroup;
+			children = (
+				005000000002 /* LeaderDojo */,
+				005000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		005000000002 /* LeaderDojo */ = {
+			isa = PBXGroup;
+			children = (
+				005000000004 /* App */,
+				005000000005 /* Models */,
+				005000000006 /* Views */,
+				005000000011 /* Services */,
+				005000000012 /* Utilities */,
+				002000000024 /* LeaderDojo.entitlements */,
+				002000000025 /* Info.plist */,
+			);
+			sourceTree = "<group>";
+		};
+		005000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				003000000001 /* LeaderDojo.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		005000000004 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				002000000001 /* LeaderDojoApp.swift */,
+				002000000002 /* ContentView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		005000000005 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				002000000003 /* Project.swift */,
+				002000000004 /* Entry.swift */,
+				002000000005 /* Commitment.swift */,
+				002000000006 /* Reflection.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		005000000006 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				005000000007 /* Dashboard */,
+				005000000008 /* Projects */,
+				005000000009 /* Entries */,
+				00500000000A /* Commitments */,
+				00500000000B /* Reflections */,
+				00500000000C /* Capture */,
+				00500000000D /* Settings */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		005000000007 /* Dashboard */ = {
+			isa = PBXGroup;
+			children = (
+				002000000007 /* DashboardView.swift */,
+			);
+			path = Dashboard;
+			sourceTree = "<group>";
+		};
+		005000000008 /* Projects */ = {
+			isa = PBXGroup;
+			children = (
+				002000000008 /* ProjectsListView.swift */,
+				002000000009 /* ProjectDetailView.swift */,
+			);
+			path = Projects;
+			sourceTree = "<group>";
+		};
+		005000000009 /* Entries */ = {
+			isa = PBXGroup;
+			children = (
+				002000000010 /* NewEntryView.swift */,
+				002000000011 /* EntryDetailView.swift */,
+				002000000012 /* PrepBriefingView.swift */,
+			);
+			path = Entries;
+			sourceTree = "<group>";
+		};
+		00500000000A /* Commitments */ = {
+			isa = PBXGroup;
+			children = (
+				002000000013 /* CommitmentsListView.swift */,
+				002000000014 /* CommitmentDetailView.swift */,
+			);
+			path = Commitments;
+			sourceTree = "<group>";
+		};
+		00500000000B /* Reflections */ = {
+			isa = PBXGroup;
+			children = (
+				002000000015 /* ReflectionsListView.swift */,
+				002000000016 /* NewReflectionView.swift */,
+				002000000017 /* ReflectionDetailView.swift */,
+			);
+			path = Reflections;
+			sourceTree = "<group>";
+		};
+		00500000000C /* Capture */ = {
+			isa = PBXGroup;
+			children = (
+				002000000018 /* CaptureView.swift */,
+			);
+			path = Capture;
+			sourceTree = "<group>";
+		};
+		00500000000D /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				002000000019 /* SettingsView.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
+		005000000011 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				002000000020 /* AIService.swift */,
+				002000000021 /* DataImportService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		005000000012 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				002000000022 /* KeychainManager.swift */,
+				002000000023 /* Extensions.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		006000000001 /* LeaderDojo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 007000000001 /* Build configuration list for PBXNativeTarget "LeaderDojo" */;
+			buildPhases = (
+				008000000001 /* Sources */,
+				004000000001 /* Frameworks */,
+				009000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LeaderDojo;
+			productName = LeaderDojo;
+			productReference = 003000000001 /* LeaderDojo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		00A000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					006000000001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = 00B000000001 /* Build configuration list for PBXProject "LeaderDojo" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 005000000001;
+			productRefGroup = 005000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				006000000001 /* LeaderDojo */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		009000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		008000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				001000000001 /* LeaderDojoApp.swift in Sources */,
+				001000000002 /* ContentView.swift in Sources */,
+				001000000003 /* Project.swift in Sources */,
+				001000000004 /* Entry.swift in Sources */,
+				001000000005 /* Commitment.swift in Sources */,
+				001000000006 /* Reflection.swift in Sources */,
+				001000000007 /* DashboardView.swift in Sources */,
+				001000000008 /* ProjectsListView.swift in Sources */,
+				001000000009 /* ProjectDetailView.swift in Sources */,
+				001000000010 /* NewEntryView.swift in Sources */,
+				001000000011 /* EntryDetailView.swift in Sources */,
+				001000000012 /* PrepBriefingView.swift in Sources */,
+				001000000013 /* CommitmentsListView.swift in Sources */,
+				001000000014 /* CommitmentDetailView.swift in Sources */,
+				001000000015 /* ReflectionsListView.swift in Sources */,
+				001000000016 /* NewReflectionView.swift in Sources */,
+				001000000017 /* ReflectionDetailView.swift in Sources */,
+				001000000018 /* CaptureView.swift in Sources */,
+				001000000019 /* SettingsView.swift in Sources */,
+				001000000020 /* AIService.swift in Sources */,
+				001000000021 /* DataImportService.swift in Sources */,
+				001000000022 /* KeychainManager.swift in Sources */,
+				001000000023 /* Extensions.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		00C000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		00C000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		00D000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LeaderDojo.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Leader Dojo";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.joinleaderdojo.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		00D000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = LeaderDojo.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Leader Dojo";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				NEW_SETTING = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.joinleaderdojo.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		007000000001 /* Build configuration list for PBXNativeTarget "LeaderDojo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00D000000001 /* Debug */,
+				00D000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		00B000000001 /* Build configuration list for PBXProject "LeaderDojo" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				00C000000001 /* Debug */,
+				00C000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 00A000000001 /* Project object */;
+}

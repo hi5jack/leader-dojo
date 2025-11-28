@@ -363,3 +363,4 @@ struct NewProjectView: View {
         .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
 }
 
+

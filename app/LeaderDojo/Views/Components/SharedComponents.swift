@@ -190,3 +190,4 @@ struct EntryRowView: View {
     .padding()
 }
 
+

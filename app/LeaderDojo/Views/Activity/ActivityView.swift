@@ -358,3 +358,4 @@ struct ActivityEntryRowView: View {
         .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
 }
 
+

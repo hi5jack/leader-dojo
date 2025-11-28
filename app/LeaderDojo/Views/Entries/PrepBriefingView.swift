@@ -159,8 +159,7 @@ struct PrepBriefingView: View {
                 .font(.headline)
                 .foregroundStyle(.purple)
             
-            Text(briefing)
-                .font(.body)
+            MarkdownText(briefing)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

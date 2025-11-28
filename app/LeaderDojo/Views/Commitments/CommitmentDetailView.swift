@@ -216,8 +216,7 @@ struct CommitmentDetailView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             
-            Text(notes)
-                .font(.body)
+            MarkdownText(notes)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

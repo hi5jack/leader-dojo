@@ -183,8 +183,7 @@ struct ReflectionDetailView: View {
                     )
             } else {
                 if hasAnswer {
-                    Text(qa.answer)
-                        .font(.body)
+                    MarkdownText(qa.answer)
                 } else {
                     Text("No answer provided")
                         .font(.body)

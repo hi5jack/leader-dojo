@@ -86,8 +86,7 @@ struct ProjectDetailView: View {
                     Text("My Notes")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text(notes)
-                        .font(.subheadline)
+                    MarkdownText(notes, font: .subheadline)
                 }
                 .padding()
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -56,6 +56,8 @@
 		43EA48B82ED97B440006D0E9 /* ActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48B52ED97B440006D0E9 /* ActivityView.swift */; };
 		43EA48BB2ED97B5D0006D0E9 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */; };
 		43EA48BC2ED97B5D0006D0E9 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */; };
+		43EA48BE2ED989710006D0E9 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48BD2ED989710006D0E9 /* MarkdownText.swift */; };
+		43EA48BF2ED989710006D0E9 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48BD2ED989710006D0E9 /* MarkdownText.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -107,6 +109,7 @@
 		430C0B2B2ED95F380035BE62 /* LeaderDojoMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LeaderDojoMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		43EA48B52ED97B440006D0E9 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
 		43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
+		43EA48BD2ED989710006D0E9 /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -309,6 +312,7 @@
 		43EA48BA2ED97B5D0006D0E9 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				43EA48BD2ED989710006D0E9 /* MarkdownText.swift */,
 				43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */,
 			);
 			path = Components;
@@ -498,6 +502,7 @@
 				001000000009 /* ProjectDetailView.swift in Sources */,
 				001000000010 /* NewEntryView.swift in Sources */,
 				001000000011 /* EntryDetailView.swift in Sources */,
+				43EA48BF2ED989710006D0E9 /* MarkdownText.swift in Sources */,
 				001000000012 /* PrepBriefingView.swift in Sources */,
 				001000000013 /* CommitmentsListView.swift in Sources */,
 				001000000014 /* CommitmentDetailView.swift in Sources */,
@@ -529,6 +534,7 @@
 				430C0B452ED9618B0035BE62 /* PrepBriefingView.swift in Sources */,
 				430C0B462ED9618B0035BE62 /* EntryDetailView.swift in Sources */,
 				430C0B412ED9617E0035BE62 /* DashboardView.swift in Sources */,
+				43EA48BE2ED989710006D0E9 /* MarkdownText.swift in Sources */,
 				430C0B4C2ED9619F0035BE62 /* CaptureView.swift in Sources */,
 				430C0B492ED961990035BE62 /* NewReflectionView.swift in Sources */,
 				430C0B4A2ED961990035BE62 /* ReflectionsListView.swift in Sources */,

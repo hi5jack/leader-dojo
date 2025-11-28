@@ -12,12 +12,19 @@ struct CaptureView: View {
     }
     
     @State private var selectedProject: Project?
+    @State private var selectedEntryKind: EntryKind = .note
+    @State private var entryTitle: String = ""
     @State private var noteContent: String = ""
     @State private var isSaving: Bool = false
     @State private var showToast: Bool = false
     @State private var toastMessage: String = ""
     
     @FocusState private var isTextEditorFocused: Bool
+    
+    /// Entry kinds available for quick capture (excluding prep which needs more context)
+    private var captureEntryKinds: [EntryKind] {
+        [.note, .meeting, .update, .decision, .commitment, .reflection, .prep]
+    }
     
     var body: some View {
         NavigationStack {
@@ -27,6 +34,12 @@ struct CaptureView: View {
                     VStack(spacing: 24) {
                         // Project selector
                         projectSelector
+                        
+                        // Entry type selector
+                        entryTypeSelector
+                        
+                        // Title input
+                        titleInput
                         
                         // Text input
                         textInput
@@ -113,12 +126,80 @@ struct CaptureView: View {
         }
     }
     
+    // MARK: - Entry Type Selector
+    
+    private var entryTypeSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Entry Type")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            Menu {
+                ForEach(captureEntryKinds, id: \.self) { kind in
+                    Button {
+                        selectedEntryKind = kind
+                    } label: {
+                        HStack {
+                            Label(kind.displayName, systemImage: kind.icon)
+                            if selectedEntryKind == kind {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack {
+                    Image(systemName: selectedEntryKind.icon)
+                        .foregroundStyle(entryKindColor(selectedEntryKind))
+                    Text(selectedEntryKind.displayName)
+                        .foregroundStyle(.primary)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding()
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+    
+    private func entryKindColor(_ kind: EntryKind) -> Color {
+        switch kind {
+        case .meeting: return .blue
+        case .update: return .green
+        case .decision: return .purple
+        case .note: return .orange
+        case .prep: return .cyan
+        case .reflection: return .pink
+        case .commitment: return .indigo
+        }
+    }
+    
+    // MARK: - Title Input
+    
+    private var titleInput: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Title")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            
+            TextField("Brief title for this entry", text: $entryTitle)
+                .textFieldStyle(.plain)
+                .padding()
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        }
+    }
+    
     // MARK: - Text Input
     
     private var textInput: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text("Note")
+                Text(contentLabel)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 
@@ -136,13 +217,32 @@ struct CaptureView: View {
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 .overlay(alignment: .topLeading) {
                     if noteContent.isEmpty {
-                        Text("What's on your mind? Quick thoughts, observations, follow-ups...")
+                        Text(contentPlaceholder)
                             .foregroundStyle(.secondary)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 28)
                             .allowsHitTesting(false)
                     }
                 }
+        }
+    }
+    
+    private var contentLabel: String {
+        switch selectedEntryKind {
+        case .commitment: return "Description"
+        default: return "Content"
+        }
+    }
+    
+    private var contentPlaceholder: String {
+        switch selectedEntryKind {
+        case .meeting: return "Meeting notes and key takeaways..."
+        case .update: return "What's the latest update?"
+        case .decision: return "What was decided and why?"
+        case .commitment: return "Details about this commitment..."
+        case .reflection: return "Your thoughts and reflections..."
+        case .prep: return "What do you need to prepare?"
+        case .note: return "What's on your mind? Quick thoughts, observations, follow-ups..."
         }
     }
     
@@ -195,7 +295,7 @@ struct CaptureView: View {
                     } else {
                         Image(systemName: "checkmark.circle.fill")
                     }
-                    Text(isSaving ? "Saving..." : "Save Note")
+                    Text(isSaving ? "Saving..." : "Capture \(selectedEntryKind.displayName)")
                         .fontWeight(.semibold)
                 }
                 .frame(maxWidth: .infinity)
@@ -240,7 +340,7 @@ struct CaptureView: View {
         
         // Create the entry
         let entry = Entry(
-            kind: .note,
+            kind: selectedEntryKind,
             title: generateTitle(),
             occurredAt: Date(),
             rawContent: noteContent
@@ -256,13 +356,15 @@ struct CaptureView: View {
             try modelContext.save()
             
             // Show success toast
-            toastMessage = "Note saved to \(project.name)"
+            toastMessage = "\(selectedEntryKind.displayName) saved to \(project.name)"
             withAnimation {
                 showToast = true
             }
             
             // Clear the form
+            entryTitle = ""
             noteContent = ""
+            selectedEntryKind = .note
             
             // Hide toast after delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -281,6 +383,12 @@ struct CaptureView: View {
     }
     
     private func generateTitle() -> String {
+        // Use provided title if available
+        let trimmedTitle = entryTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedTitle.isEmpty {
+            return trimmedTitle
+        }
+        
         // Generate a title from the first line or first few words
         let firstLine = noteContent
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -296,7 +404,7 @@ struct CaptureView: View {
             let formatter = DateFormatter()
             formatter.dateStyle = .short
             formatter.timeStyle = .short
-            title = "Note - \(formatter.string(from: Date()))"
+            title = "\(selectedEntryKind.displayName) - \(formatter.string(from: Date()))"
         }
         
         return title

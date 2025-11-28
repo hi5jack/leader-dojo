@@ -131,8 +131,7 @@ struct EntryDetailView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.purple)
             
-            Text(summary)
-                .font(.body)
+            MarkdownText(summary)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -148,8 +147,7 @@ struct EntryDetailView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.secondary)
             
-            Text(content)
-                .font(.body)
+            MarkdownText(content)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -165,8 +163,7 @@ struct EntryDetailView: View {
                 .fontWeight(.semibold)
                 .foregroundStyle(.green)
             
-            Text(decisions)
-                .font(.body)
+            MarkdownText(decisions)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

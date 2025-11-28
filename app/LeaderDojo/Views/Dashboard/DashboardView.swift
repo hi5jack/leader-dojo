@@ -198,41 +198,6 @@ struct DashboardView: View {
 
 // MARK: - Supporting Views
 
-struct SectionHeader: View {
-    let title: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        Label(title, systemImage: icon)
-            .font(.headline)
-            .foregroundStyle(color)
-    }
-}
-
-struct EmptyStateCard: View {
-    let icon: String
-    let title: String
-    let message: String
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.largeTitle)
-                .foregroundStyle(.secondary)
-            Text(title)
-                .font(.headline)
-            Text(message)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-    }
-}
-
 struct CommitmentRow: View {
     let commitment: Commitment
     let onComplete: () -> Void

@@ -4,6 +4,7 @@ import SwiftData
 /// Main navigation tabs
 enum AppTab: String, CaseIterable, Identifiable {
     case dashboard = "Dashboard"
+    case activity = "Activity"
     case projects = "Projects"
     case commitments = "Commitments"
     case reflections = "Reflections"
@@ -14,6 +15,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .dashboard: return "rectangle.3.group.fill"
+        case .activity: return "clock.arrow.circlepath"
         case .projects: return "folder.fill"
         case .commitments: return "checklist"
         case .reflections: return "brain.head.profile"
@@ -57,6 +59,12 @@ struct ContentView: View {
                     Label(AppTab.dashboard.label, systemImage: AppTab.dashboard.icon)
                 }
                 .tag(AppTab.dashboard)
+            
+            tabContent(for: .activity)
+                .tabItem {
+                    Label(AppTab.activity.label, systemImage: AppTab.activity.icon)
+                }
+                .tag(AppTab.activity)
             
             tabContent(for: .projects)
                 .tabItem {
@@ -116,6 +124,7 @@ struct ContentView: View {
         List {
             Section {
                 sidebarRow(for: .dashboard)
+                sidebarRow(for: .activity)
                 sidebarRow(for: .projects)
                 sidebarRow(for: .commitments)
                 sidebarRow(for: .reflections)
@@ -164,6 +173,8 @@ struct ContentView: View {
         switch tab {
         case .dashboard:
             DashboardView()
+        case .activity:
+            ActivityView()
         case .projects:
             ProjectsListView()
         case .commitments:

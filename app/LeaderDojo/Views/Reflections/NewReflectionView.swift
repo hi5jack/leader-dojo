@@ -194,7 +194,10 @@ struct NewReflectionView: View {
             TextEditor(text: qa.answer)
                 .frame(minHeight: 100)
                 .padding(8)
-                .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
+                .background(
+                    Color.gray.opacity(0.12),
+                    in: RoundedRectangle(cornerRadius: 8)
+                )
         }
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))

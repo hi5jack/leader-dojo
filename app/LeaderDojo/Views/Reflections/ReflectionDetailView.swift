@@ -144,7 +144,24 @@ struct ReflectionDetailView: View {
     // MARK: - QA Card
     
     private func qaCard(qa: ReflectionQA, index: Int) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let answerBinding = Binding<String>(
+            get: { qa.answer },
+            set: { newValue in
+                var updatedQA = reflection.questionsAnswers
+                updatedQA[index].answer = newValue
+                reflection.questionsAnswers = updatedQA
+            }
+        )
+        
+        let hasAnswer = !qa.answer.isEmpty
+        let backgroundColor: Color = hasAnswer
+            ? Color.purple.opacity(0.05)
+            : Color.orange.opacity(0.05)
+        let borderColor: Color = hasAnswer
+            ? Color.purple.opacity(0.2)
+            : Color.orange.opacity(0.2)
+        
+        return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 Text("\(index + 1).")
                     .font(.headline)
@@ -157,45 +174,34 @@ struct ReflectionDetailView: View {
             }
             
             if isEditing {
-                TextEditor(text: Binding(
-                    get: { qa.answer },
-                    set: { newValue in
-                        var updatedQA = reflection.questionsAnswers
-                        updatedQA[index].answer = newValue
-                        reflection.questionsAnswers = updatedQA
-                    }
-                ))
-                .frame(minHeight: 100)
-                .padding(8)
-                .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 8))
+                TextEditor(text: answerBinding)
+                    .frame(minHeight: 100)
+                    .padding(8)
+                    .background(
+                        Color.gray.opacity(0.12),
+                        in: RoundedRectangle(cornerRadius: 8)
+                    )
             } else {
-                if qa.answer.isEmpty {
+                if hasAnswer {
+                    Text(qa.answer)
+                        .font(.body)
+                } else {
                     Text("No answer provided")
                         .font(.body)
                         .foregroundStyle(.secondary)
                         .italic()
-                } else {
-                    Text(qa.answer)
-                        .font(.body)
                 }
             }
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            qa.answer.isEmpty
-                ? Color.orange.opacity(0.05)
-                : Color.purple.opacity(0.05),
+            backgroundColor,
             in: RoundedRectangle(cornerRadius: 12)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(
-                    qa.answer.isEmpty
-                        ? Color.orange.opacity(0.2)
-                        : Color.purple.opacity(0.2),
-                    lineWidth: 1
-                )
+                .stroke(borderColor, lineWidth: 1)
         )
     }
     

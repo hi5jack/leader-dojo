@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -30,7 +30,46 @@
 		001000000021 /* DataImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000021 /* DataImportService.swift */; };
 		001000000022 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000022 /* KeychainManager.swift */; };
 		001000000023 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000023 /* Extensions.swift */; };
+		430C0B3C2ED961460035BE62 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000002 /* ContentView.swift */; };
+		430C0B3D2ED961680035BE62 /* Reflection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000006 /* Reflection.swift */; };
+		430C0B3E2ED961680035BE62 /* Commitment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000005 /* Commitment.swift */; };
+		430C0B3F2ED961680035BE62 /* Project.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000003 /* Project.swift */; };
+		430C0B402ED961680035BE62 /* Entry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000004 /* Entry.swift */; };
+		430C0B412ED9617E0035BE62 /* DashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000007 /* DashboardView.swift */; };
+		430C0B422ED961850035BE62 /* ProjectsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000008 /* ProjectsListView.swift */; };
+		430C0B432ED961850035BE62 /* ProjectDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000009 /* ProjectDetailView.swift */; };
+		430C0B442ED9618B0035BE62 /* NewEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000010 /* NewEntryView.swift */; };
+		430C0B452ED9618B0035BE62 /* PrepBriefingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000012 /* PrepBriefingView.swift */; };
+		430C0B462ED9618B0035BE62 /* EntryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000011 /* EntryDetailView.swift */; };
+		430C0B472ED961920035BE62 /* CommitmentsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000013 /* CommitmentsListView.swift */; };
+		430C0B482ED961920035BE62 /* CommitmentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000014 /* CommitmentDetailView.swift */; };
+		430C0B492ED961990035BE62 /* NewReflectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000016 /* NewReflectionView.swift */; };
+		430C0B4A2ED961990035BE62 /* ReflectionsListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000015 /* ReflectionsListView.swift */; };
+		430C0B4B2ED961990035BE62 /* ReflectionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000017 /* ReflectionDetailView.swift */; };
+		430C0B4C2ED9619F0035BE62 /* CaptureView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000018 /* CaptureView.swift */; };
+		430C0B4D2ED961A50035BE62 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000019 /* SettingsView.swift */; };
+		430C0B4E2ED961B00035BE62 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000020 /* AIService.swift */; };
+		430C0B4F2ED961B00035BE62 /* DataImportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000021 /* DataImportService.swift */; };
+		430C0B502ED961B70035BE62 /* KeychainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000022 /* KeychainManager.swift */; };
+		430C0B512ED961B70035BE62 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 002000000023 /* Extensions.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		430C0B222ED95F380035BE62 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00A000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 430C0B142ED95F370035BE62;
+			remoteInfo = LeaderDojoMac;
+		};
+		430C0B2C2ED95F380035BE62 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 00A000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 430C0B142ED95F370035BE62;
+			remoteInfo = LeaderDojoMac;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		002000000001 /* LeaderDojoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderDojoApp.swift; sourceTree = "<group>"; };
@@ -59,10 +98,40 @@
 		002000000024 /* LeaderDojo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LeaderDojo.entitlements; sourceTree = "<group>"; };
 		002000000025 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		003000000001 /* LeaderDojo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LeaderDojo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		430C0B152ED95F370035BE62 /* LeaderDojoMac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LeaderDojoMac.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		430C0B212ED95F380035BE62 /* LeaderDojoMacTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LeaderDojoMacTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		430C0B2B2ED95F380035BE62 /* LeaderDojoMacUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LeaderDojoMacUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		430C0B162ED95F370035BE62 /* LeaderDojoMac */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LeaderDojoMac; sourceTree = "<group>"; };
+		430C0B242ED95F380035BE62 /* LeaderDojoMacTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LeaderDojoMacTests; sourceTree = "<group>"; };
+		430C0B2E2ED95F380035BE62 /* LeaderDojoMacUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = LeaderDojoMacUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		004000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B122ED95F370035BE62 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B1E2ED95F380035BE62 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B282ED95F380035BE62 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -75,12 +144,15 @@
 		005000000001 = {
 			isa = PBXGroup;
 			children = (
-				005000000002 /* LeaderDojo */,
+				005000000002,
+				430C0B162ED95F370035BE62 /* LeaderDojoMac */,
+				430C0B242ED95F380035BE62 /* LeaderDojoMacTests */,
+				430C0B2E2ED95F380035BE62 /* LeaderDojoMacUITests */,
 				005000000003 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		005000000002 /* LeaderDojo */ = {
+		005000000002 = {
 			isa = PBXGroup;
 			children = (
 				005000000004 /* App */,
@@ -97,6 +169,9 @@
 			isa = PBXGroup;
 			children = (
 				003000000001 /* LeaderDojo.app */,
+				430C0B152ED95F370035BE62 /* LeaderDojoMac.app */,
+				430C0B212ED95F380035BE62 /* LeaderDojoMacTests.xctest */,
+				430C0B2B2ED95F380035BE62 /* LeaderDojoMacUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -235,6 +310,74 @@
 			productReference = 003000000001 /* LeaderDojo.app */;
 			productType = "com.apple.product-type.application";
 		};
+		430C0B142ED95F370035BE62 /* LeaderDojoMac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 430C0B392ED95F380035BE62 /* Build configuration list for PBXNativeTarget "LeaderDojoMac" */;
+			buildPhases = (
+				430C0B112ED95F370035BE62 /* Sources */,
+				430C0B122ED95F370035BE62 /* Frameworks */,
+				430C0B132ED95F370035BE62 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				430C0B162ED95F370035BE62 /* LeaderDojoMac */,
+			);
+			name = LeaderDojoMac;
+			packageProductDependencies = (
+			);
+			productName = LeaderDojoMac;
+			productReference = 430C0B152ED95F370035BE62 /* LeaderDojoMac.app */;
+			productType = "com.apple.product-type.application";
+		};
+		430C0B202ED95F380035BE62 /* LeaderDojoMacTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 430C0B3A2ED95F380035BE62 /* Build configuration list for PBXNativeTarget "LeaderDojoMacTests" */;
+			buildPhases = (
+				430C0B1D2ED95F380035BE62 /* Sources */,
+				430C0B1E2ED95F380035BE62 /* Frameworks */,
+				430C0B1F2ED95F380035BE62 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				430C0B232ED95F380035BE62 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				430C0B242ED95F380035BE62 /* LeaderDojoMacTests */,
+			);
+			name = LeaderDojoMacTests;
+			packageProductDependencies = (
+			);
+			productName = LeaderDojoMacTests;
+			productReference = 430C0B212ED95F380035BE62 /* LeaderDojoMacTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		430C0B2A2ED95F380035BE62 /* LeaderDojoMacUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 430C0B3B2ED95F380035BE62 /* Build configuration list for PBXNativeTarget "LeaderDojoMacUITests" */;
+			buildPhases = (
+				430C0B272ED95F380035BE62 /* Sources */,
+				430C0B282ED95F380035BE62 /* Frameworks */,
+				430C0B292ED95F380035BE62 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				430C0B2D2ED95F380035BE62 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				430C0B2E2ED95F380035BE62 /* LeaderDojoMacUITests */,
+			);
+			name = LeaderDojoMacUITests;
+			packageProductDependencies = (
+			);
+			productName = LeaderDojoMacUITests;
+			productReference = 430C0B2B2ED95F380035BE62 /* LeaderDojoMacUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -242,11 +385,22 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1500;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					006000000001 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					430C0B142ED95F370035BE62 = {
+						CreatedOnToolsVersion = 26.1;
+					};
+					430C0B202ED95F380035BE62 = {
+						CreatedOnToolsVersion = 26.1;
+						TestTargetID = 430C0B142ED95F370035BE62;
+					};
+					430C0B2A2ED95F380035BE62 = {
+						CreatedOnToolsVersion = 26.1;
+						TestTargetID = 430C0B142ED95F370035BE62;
 					};
 				};
 			};
@@ -264,12 +418,36 @@
 			projectRoot = "";
 			targets = (
 				006000000001 /* LeaderDojo */,
+				430C0B142ED95F370035BE62 /* LeaderDojoMac */,
+				430C0B202ED95F380035BE62 /* LeaderDojoMacTests */,
+				430C0B2A2ED95F380035BE62 /* LeaderDojoMacUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		009000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B132ED95F370035BE62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B1F2ED95F380035BE62 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B292ED95F380035BE62 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -309,7 +487,63 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		430C0B112ED95F370035BE62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				430C0B3C2ED961460035BE62 /* ContentView.swift in Sources */,
+				430C0B422ED961850035BE62 /* ProjectsListView.swift in Sources */,
+				430C0B432ED961850035BE62 /* ProjectDetailView.swift in Sources */,
+				430C0B472ED961920035BE62 /* CommitmentsListView.swift in Sources */,
+				430C0B482ED961920035BE62 /* CommitmentDetailView.swift in Sources */,
+				430C0B3D2ED961680035BE62 /* Reflection.swift in Sources */,
+				430C0B442ED9618B0035BE62 /* NewEntryView.swift in Sources */,
+				430C0B452ED9618B0035BE62 /* PrepBriefingView.swift in Sources */,
+				430C0B462ED9618B0035BE62 /* EntryDetailView.swift in Sources */,
+				430C0B412ED9617E0035BE62 /* DashboardView.swift in Sources */,
+				430C0B4C2ED9619F0035BE62 /* CaptureView.swift in Sources */,
+				430C0B492ED961990035BE62 /* NewReflectionView.swift in Sources */,
+				430C0B4A2ED961990035BE62 /* ReflectionsListView.swift in Sources */,
+				430C0B4B2ED961990035BE62 /* ReflectionDetailView.swift in Sources */,
+				430C0B3E2ED961680035BE62 /* Commitment.swift in Sources */,
+				430C0B502ED961B70035BE62 /* KeychainManager.swift in Sources */,
+				430C0B512ED961B70035BE62 /* Extensions.swift in Sources */,
+				430C0B3F2ED961680035BE62 /* Project.swift in Sources */,
+				430C0B4E2ED961B00035BE62 /* AIService.swift in Sources */,
+				430C0B4F2ED961B00035BE62 /* DataImportService.swift in Sources */,
+				430C0B402ED961680035BE62 /* Entry.swift in Sources */,
+				430C0B4D2ED961A50035BE62 /* SettingsView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B1D2ED95F380035BE62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		430C0B272ED95F380035BE62 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		430C0B232ED95F380035BE62 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 430C0B142ED95F370035BE62 /* LeaderDojoMac */;
+			targetProxy = 430C0B222ED95F380035BE62 /* PBXContainerItemProxy */;
+		};
+		430C0B2D2ED95F380035BE62 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 430C0B142ED95F370035BE62 /* LeaderDojoMac */;
+			targetProxy = 430C0B2C2ED95F380035BE62 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		00C000000001 /* Debug */ = {
@@ -502,6 +736,160 @@
 			};
 			name = Release;
 		};
+		430C0B332ED95F380035BE62 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eventalyllc.LeaderDojoMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		430C0B342ED95F380035BE62 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SELECTED_FILES = readonly;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eventalyllc.LeaderDojoMac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		430C0B352ED95F380035BE62 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eventalyllc.LeaderDojoMacTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LeaderDojoMac.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LeaderDojoMac";
+			};
+			name = Debug;
+		};
+		430C0B362ED95F380035BE62 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eventalyllc.LeaderDojoMacTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LeaderDojoMac.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LeaderDojoMac";
+			};
+			name = Release;
+		};
+		430C0B372ED95F380035BE62 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eventalyllc.LeaderDojoMacUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = LeaderDojoMac;
+			};
+			name = Debug;
+		};
+		430C0B382ED95F380035BE62 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 8M9N7XR977;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.eventalyllc.LeaderDojoMacUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = LeaderDojoMac;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -519,6 +907,33 @@
 			buildConfigurations = (
 				00C000000001 /* Debug */,
 				00C000000002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		430C0B392ED95F380035BE62 /* Build configuration list for PBXNativeTarget "LeaderDojoMac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				430C0B332ED95F380035BE62 /* Debug */,
+				430C0B342ED95F380035BE62 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		430C0B3A2ED95F380035BE62 /* Build configuration list for PBXNativeTarget "LeaderDojoMacTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				430C0B352ED95F380035BE62 /* Debug */,
+				430C0B362ED95F380035BE62 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		430C0B3B2ED95F380035BE62 /* Build configuration list for PBXNativeTarget "LeaderDojoMacUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				430C0B372ED95F380035BE62 /* Debug */,
+				430C0B382ED95F380035BE62 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

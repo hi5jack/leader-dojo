@@ -90,7 +90,11 @@ struct ReflectionsListView: View {
                 }
             }
         }
+        #if os(iOS)
         .listStyle(.insetGrouped)
+        #else
+        .listStyle(.inset)
+        #endif
     }
     
     // MARK: - Computed Properties

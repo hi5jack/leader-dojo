@@ -183,7 +183,11 @@ struct CommitmentsListView: View {
                 }
             }
         }
+        #if os(iOS)
         .listStyle(.insetGrouped)
+        #else
+        .listStyle(.inset)
+        #endif
     }
     
     // MARK: - Empty State

@@ -25,7 +25,9 @@ final class KeychainManager {
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
-            kSecAttrAccount as String: key.rawValue
+            kSecAttrAccount as String: key.rawValue,
+            // Ensure we also match synchronizable items
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
         ]
         SecItemDelete(deleteQuery as CFDictionary)
         
@@ -36,12 +38,28 @@ final class KeychainManager {
             kSecAttrAccount as String: key.rawValue,
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlocked,
-            kSecAttrSynchronizable as String: true // Sync via iCloud Keychain
+            // Store in iCloud Keychain when available
+            kSecAttrSynchronizable as String: kCFBooleanTrue as Any
         ]
         
         let status = SecItemAdd(addQuery as CFDictionary, nil)
         
-        guard status == errSecSuccess else {
+        // If the item somehow already exists, fall back to an update
+        if status == errSecDuplicateItem {
+            let updateQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: key.rawValue,
+                kSecAttrSynchronizable as String: kSecAttrSynchronizableAny
+            ]
+            let attributesToUpdate: [String: Any] = [
+                kSecValueData as String: data
+            ]
+            let updateStatus = SecItemUpdate(updateQuery as CFDictionary, attributesToUpdate as CFDictionary)
+            guard updateStatus == errSecSuccess else {
+                throw KeychainError.unhandledError(status: updateStatus)
+            }
+        } else if status != errSecSuccess {
             throw KeychainError.unhandledError(status: status)
         }
     }
@@ -52,6 +70,8 @@ final class KeychainManager {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key.rawValue,
+            // Match both local and synchronizable items
+            kSecAttrSynchronizable as String: kSecAttrSynchronizableAny,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]

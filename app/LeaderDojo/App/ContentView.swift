@@ -27,17 +27,25 @@ enum AppTab: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @State private var selectedTab: AppTab = .dashboard
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var showingSettings: Bool = false
     
     var body: some View {
-        #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            iPadLayout
-        } else {
-            iPhoneLayout
+        Group {
+            #if os(iOS)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+            #else
+            macOSLayout
+            #endif
         }
-        #else
-        macOSLayout
-        #endif
+        .sheet(isPresented: $showingSettings) {
+            NavigationStack {
+                SettingsView()
+            }
+        }
     }
     
     // MARK: - iPhone Layout (Tab Bar)
@@ -119,8 +127,8 @@ struct ContentView: View {
             }
             
             Section {
-                NavigationLink {
-                    SettingsView()
+                Button {
+                    showingSettings = true
                 } label: {
                     Label("Settings", systemImage: "gear")
                 }

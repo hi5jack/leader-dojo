@@ -5,13 +5,20 @@ struct NewReflectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    @Query private var allEntries: [Entry]
+    @Query private var allCommitments: [Commitment]
+    @Query private var allProjects: [Project]
+    
     let periodType: ReflectionPeriodType
     
     @State private var isLoadingQuestions: Bool = true
     @State private var questionsAnswers: [ReflectionQA] = []
+    @State private var suggestions: [String] = []
     @State private var stats: ReflectionStats = ReflectionStats()
     @State private var error: String? = nil
     @State private var currentQuestionIndex: Int = 0
+    @State private var periodStart: Date = Date()
+    @State private var showingDatePicker: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -120,8 +127,16 @@ struct NewReflectionView: View {
     private var questionAnswerView: some View {
         ScrollView {
             VStack(spacing: 24) {
+                // Period Selection
+                periodSelection
+                
                 // Stats Summary
                 statsSummary
+                
+                // AI Suggestions (if any)
+                if !suggestions.isEmpty {
+                    suggestionsSection
+                }
                 
                 // Progress indicator
                 progressIndicator
@@ -133,6 +148,79 @@ struct NewReflectionView: View {
             }
             .padding()
         }
+    }
+    
+    // MARK: - Period Selection
+    
+    private var periodSelection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Period Start", systemImage: "calendar")
+                .font(.headline)
+            
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(periodStart, style: .date)
+                        .font(.body)
+                    if let endDate = periodEndDate {
+                        Text("to \(endDate, style: .date)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                Button {
+                    showingDatePicker.toggle()
+                } label: {
+                    Text("Change")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+            }
+            
+            if showingDatePicker {
+                DatePicker(
+                    "Start Date",
+                    selection: $periodStart,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.graphical)
+                .onChange(of: periodStart) { _, _ in
+                    Task {
+                        await recalculateStatsAndQuestions()
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+    
+    // MARK: - Suggestions Section
+    
+    private var suggestionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("AI Suggestions", systemImage: "lightbulb.fill")
+                .font(.headline)
+                .foregroundStyle(.orange)
+            
+            ForEach(suggestions, id: \.self) { suggestion in
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .foregroundStyle(.orange)
+                        .font(.caption)
+                        .padding(.top, 2)
+                    
+                    Text(suggestion)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
     }
     
     // MARK: - Stats Summary
@@ -209,24 +297,57 @@ struct NewReflectionView: View {
         questionsAnswers.filter { !$0.answer.isEmpty }.count
     }
     
+    private var periodEndDate: Date? {
+        let calendar = Calendar.current
+        switch periodType {
+        case .week:
+            return calendar.date(byAdding: .day, value: 6, to: periodStart)
+        case .month:
+            guard let nextMonth = calendar.date(byAdding: .month, value: 1, to: periodStart) else { return nil }
+            return calendar.date(byAdding: .day, value: -1, to: nextMonth)
+        case .quarter:
+            guard let nextQuarter = calendar.date(byAdding: .month, value: 3, to: periodStart) else { return nil }
+            return calendar.date(byAdding: .day, value: -1, to: nextQuarter)
+        }
+    }
+    
+    private var periodStartDateNormalized: Date {
+        let calendar = Calendar.current
+        
+        switch periodType {
+        case .week:
+            return calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: periodStart)) ?? periodStart
+        case .month:
+            return calendar.date(from: calendar.dateComponents([.year, .month], from: periodStart)) ?? periodStart
+        case .quarter:
+            let month = calendar.component(.month, from: periodStart)
+            let quarterStart = ((month - 1) / 3) * 3 + 1
+            var components = calendar.dateComponents([.year], from: periodStart)
+            components.month = quarterStart
+            components.day = 1
+            return calendar.date(from: components) ?? periodStart
+        }
+    }
+    
     // MARK: - Actions
     
     private func loadQuestionsAndStats() async {
         isLoadingQuestions = true
         error = nil
         
-        // Calculate stats
-        await calculateStats()
+        // Calculate stats from actual data
+        calculateStats()
         
-        // Generate AI questions
+        // Generate AI questions and suggestions
         do {
-            let questions = try await AIService.shared.generateReflectionQuestions(
+            let result = try await AIService.shared.generateReflectionQuestions(
                 periodType: periodType,
                 stats: stats
             )
             
             await MainActor.run {
-                questionsAnswers = questions.map { ReflectionQA(question: $0) }
+                questionsAnswers = result.questions.map { ReflectionQA(question: $0) }
+                suggestions = result.suggestions
                 isLoadingQuestions = false
             }
         } catch {
@@ -237,21 +358,66 @@ struct NewReflectionView: View {
         }
     }
     
-    private func calculateStats() async {
-        // This would need to query the model context for actual stats
-        // For now, using placeholder logic
-        await MainActor.run {
-            stats = ReflectionStats(
-                entriesCreated: 0,
-                commitmentsCreated: 0,
-                commitmentsCompleted: 0,
-                iOweOpen: 0,
-                waitingForOpen: 0,
-                projectsActive: 0,
-                meetingsHeld: 0,
-                decisionsRecorded: 0
+    private func recalculateStatsAndQuestions() async {
+        isLoadingQuestions = true
+        error = nil
+        
+        // Recalculate stats with new period
+        calculateStats()
+        
+        // Regenerate AI questions and suggestions
+        do {
+            let result = try await AIService.shared.generateReflectionQuestions(
+                periodType: periodType,
+                stats: stats
             )
+            
+            await MainActor.run {
+                questionsAnswers = result.questions.map { ReflectionQA(question: $0) }
+                suggestions = result.suggestions
+                isLoadingQuestions = false
+            }
+        } catch {
+            await MainActor.run {
+                self.error = error.localizedDescription
+                isLoadingQuestions = false
+            }
         }
+    }
+    
+    private func calculateStats() {
+        guard let endDate = periodEndDate else { return }
+        let startDate = periodStartDateNormalized
+        
+        // Filter entries in the period
+        let periodEntries = allEntries.filter { entry in
+            entry.occurredAt >= startDate && entry.occurredAt <= endDate
+        }
+        
+        // Filter commitments in the period
+        let periodCommitments = allCommitments.filter { commitment in
+            if let dueDate = commitment.dueDate {
+                return dueDate >= startDate && dueDate <= endDate
+            }
+            return commitment.createdAt >= startDate && commitment.createdAt <= endDate
+        }
+        
+        // Count active projects
+        let activeProjects = allProjects.filter { project in
+            project.status == .active
+        }
+        
+        // Calculate stats
+        stats = ReflectionStats(
+            entriesCreated: periodEntries.count,
+            commitmentsCreated: periodCommitments.count,
+            commitmentsCompleted: periodCommitments.filter { $0.status == .done }.count,
+            iOweOpen: allCommitments.filter { $0.direction == .iOwe && $0.status == .open }.count,
+            waitingForOpen: allCommitments.filter { $0.direction == .waitingFor && $0.status == .open }.count,
+            projectsActive: activeProjects.count,
+            meetingsHeld: periodEntries.filter { $0.kind == .meeting }.count,
+            decisionsRecorded: periodEntries.filter { $0.isDecision }.count
+        )
     }
     
     private func useDefaultQuestions() {
@@ -284,49 +450,27 @@ struct NewReflectionView: View {
         }
         
         questionsAnswers = defaultQuestions.map { ReflectionQA(question: $0) }
+        suggestions = []
         isLoadingQuestions = false
         error = nil
     }
     
     private func saveReflection() {
-        let (periodStart, periodEnd) = calculatePeriodDates()
+        let startDate = periodStartDateNormalized
+        guard let endDate = periodEndDate else { return }
         
         let reflection = Reflection(
             periodType: periodType,
-            periodStart: periodStart,
-            periodEnd: periodEnd,
+            periodStart: startDate,
+            periodEnd: endDate,
             questionsAnswers: questionsAnswers
         )
         reflection.stats = stats
+        reflection.aiQuestions = questionsAnswers.map { $0.question }
         
         modelContext.insert(reflection)
         try? modelContext.save()
         dismiss()
-    }
-    
-    private func calculatePeriodDates() -> (Date, Date) {
-        let calendar = Calendar.current
-        let now = Date()
-        
-        switch periodType {
-        case .week:
-            let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-            let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek)!
-            return (startOfWeek, endOfWeek)
-        case .month:
-            let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-            let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
-            return (startOfMonth, endOfMonth)
-        case .quarter:
-            let month = calendar.component(.month, from: now)
-            let quarterStart = ((month - 1) / 3) * 3 + 1
-            var components = calendar.dateComponents([.year], from: now)
-            components.month = quarterStart
-            components.day = 1
-            let startOfQuarter = calendar.date(from: components)!
-            let endOfQuarter = calendar.date(byAdding: DateComponents(month: 3, day: -1), to: startOfQuarter)!
-            return (startOfQuarter, endOfQuarter)
-        }
     }
 }
 

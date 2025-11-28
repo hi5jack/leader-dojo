@@ -120,24 +120,26 @@ actor AIService {
         return PrepBriefingResult(briefing: response)
     }
     
-    /// Generate reflection questions based on period statistics
+    /// Generate reflection questions and suggestions based on period statistics
     func generateReflectionQuestions(
         periodType: ReflectionPeriodType,
         stats: ReflectionStats
-    ) async throws -> [String] {
+    ) async throws -> ReflectionPromptsResult {
         guard let apiKey = apiKey, !apiKey.isEmpty else {
             throw AIServiceError.apiKeyNotConfigured
         }
         
         let systemPrompt = """
         You are a leadership coach helping a leader reflect on their recent work.
-        Based on their activity statistics, generate 3-5 thoughtful reflection questions.
-        Questions should help them:
-        - Recognize patterns in their behavior
-        - Learn from successes and challenges
-        - Improve their leadership and decision-making
+        Based on their activity statistics:
+        1. Generate 3-5 thoughtful reflection questions that help them recognize patterns, learn from experiences, and improve decision-making
+        2. Provide 2-3 actionable suggestions for improvement based on the stats
         
-        Return only the questions as a JSON array of strings.
+        Return as JSON with structure:
+        {
+            "questions": ["question1", "question2", ...],
+            "suggestions": ["suggestion1", "suggestion2", ...]
+        }
         """
         
         let userPrompt = """
@@ -160,7 +162,7 @@ actor AIService {
             apiKey: apiKey
         )
         
-        return try parseQuestionsResponse(response)
+        return try parseReflectionPromptsResponse(response)
     }
     
     // MARK: - Private Methods
@@ -246,18 +248,22 @@ actor AIService {
         return EntrySummaryResult(summary: summary, suggestedActions: actions)
     }
     
-    private func parseQuestionsResponse(_ response: String) throws -> [String] {
+    private func parseReflectionPromptsResponse(_ response: String) throws -> ReflectionPromptsResult {
         let jsonString = extractJSON(from: response)
         
         guard let data = jsonString.data(using: .utf8),
-              let questions = try? JSONSerialization.jsonObject(with: data) as? [String] else {
-            // If parsing fails, split by newlines
-            return response.components(separatedBy: "\n")
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            // If parsing fails, try to extract questions from plain text
+            let questions = response.components(separatedBy: "\n")
                 .map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty && $0.first != "{" && $0.first != "[" }
+            return ReflectionPromptsResult(questions: questions, suggestions: [])
         }
         
-        return questions
+        let questions = json["questions"] as? [String] ?? []
+        let suggestions = json["suggestions"] as? [String] ?? []
+        
+        return ReflectionPromptsResult(questions: questions, suggestions: suggestions)
     }
     
     private func extractJSON(from text: String) -> String {
@@ -283,6 +289,11 @@ struct EntrySummaryResult {
 
 struct PrepBriefingResult {
     let briefing: String
+}
+
+struct ReflectionPromptsResult {
+    let questions: [String]
+    let suggestions: [String]
 }
 
 // MARK: - Errors

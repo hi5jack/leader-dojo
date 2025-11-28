@@ -58,6 +58,8 @@
 		43EA48BC2ED97B5D0006D0E9 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */; };
 		43EA48BE2ED989710006D0E9 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48BD2ED989710006D0E9 /* MarkdownText.swift */; };
 		43EA48BF2ED989710006D0E9 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48BD2ED989710006D0E9 /* MarkdownText.swift */; };
+		43EA48CE2ED99E450006D0E9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43EA48CD2ED99E450006D0E9 /* Assets.xcassets */; };
+		43EA48CF2ED99E450006D0E9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43EA48CD2ED99E450006D0E9 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -110,6 +112,7 @@
 		43EA48B52ED97B440006D0E9 /* ActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivityView.swift; sourceTree = "<group>"; };
 		43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		43EA48BD2ED989710006D0E9 /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
+		43EA48CD2ED99E450006D0E9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -153,6 +156,7 @@
 		005000000001 = {
 			isa = PBXGroup;
 			children = (
+				43EA48CD2ED99E450006D0E9 /* Assets.xcassets */,
 				005000000002,
 				430C0B162ED95F370035BE62 /* LeaderDojoMac */,
 				430C0B242ED95F380035BE62 /* LeaderDojoMacTests */,
@@ -458,6 +462,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43EA48CF2ED99E450006D0E9 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -465,6 +470,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43EA48CE2ED99E450006D0E9 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -699,6 +705,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = LeaderDojo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -737,6 +744,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = LeaderDojo.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;

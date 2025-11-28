@@ -14,6 +14,7 @@ import {
   LogOut,
   User,
   Activity,
+  Download,
 } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
@@ -152,6 +153,31 @@ export const DesktopSidebar = ({ userName, userEmail }: DesktopSidebarProps) => 
             <DropdownMenuItem>
               <User className="w-4 h-4 mr-2" />
               Profile
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/secure/export");
+                  if (!res.ok) throw new Error("Export failed");
+                  const data = await res.json();
+                  const blob = new Blob([JSON.stringify(data, null, 2)], {
+                    type: "application/json",
+                  });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `leader-dojo-export-${new Date().toISOString().split("T")[0]}.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                } catch (err) {
+                  console.error("Export failed:", err);
+                }
+              }}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export Data
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem

@@ -9,49 +9,57 @@ struct ReflectionsListView: View {
     @State private var selectedPeriodType: ReflectionPeriodType = .week
     
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            Group {
-                if reflections.isEmpty {
-                    emptyState
-                } else {
-                    reflectionsList
-                }
+            reflectionsContent
+        }
+        #else
+        reflectionsContent
+        #endif
+    }
+    
+    private var reflectionsContent: some View {
+        Group {
+            if reflections.isEmpty {
+                emptyState
+            } else {
+                reflectionsList
             }
-            .navigationTitle("Reflections")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Menu {
-                        Button {
-                            selectedPeriodType = .week
-                            showingNewReflection = true
-                        } label: {
-                            Label("Weekly Reflection", systemImage: "calendar.badge.clock")
-                        }
-                        
-                        Button {
-                            selectedPeriodType = .month
-                            showingNewReflection = true
-                        } label: {
-                            Label("Monthly Reflection", systemImage: "calendar")
-                        }
-                        
-                        Button {
-                            selectedPeriodType = .quarter
-                            showingNewReflection = true
-                        } label: {
-                            Label("Quarterly Reflection", systemImage: "calendar.badge.plus")
-                        }
+        }
+        .navigationTitle("Reflections")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Menu {
+                    Button {
+                        selectedPeriodType = .week
+                        showingNewReflection = true
                     } label: {
-                        Image(systemName: "plus")
+                        Label("Weekly Reflection", systemImage: "calendar.badge.clock")
                     }
+                    
+                    Button {
+                        selectedPeriodType = .month
+                        showingNewReflection = true
+                    } label: {
+                        Label("Monthly Reflection", systemImage: "calendar")
+                    }
+                    
+                    Button {
+                        selectedPeriodType = .quarter
+                        showingNewReflection = true
+                    } label: {
+                        Label("Quarterly Reflection", systemImage: "calendar.badge.plus")
+                    }
+                } label: {
+                    Image(systemName: "plus")
                 }
             }
-            .sheet(isPresented: $showingNewReflection) {
-                NewReflectionView(periodType: selectedPeriodType)
-            }
+        }
+        .sheet(isPresented: $showingNewReflection) {
+            NewReflectionView(periodType: selectedPeriodType)
         }
     }
     

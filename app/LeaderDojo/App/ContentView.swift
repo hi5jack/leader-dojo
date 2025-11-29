@@ -9,6 +9,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     case commitments = "Commitments"
     case reflections = "Reflections"
     case capture = "Capture"
+    case settings = "Settings"
     
     var id: String { rawValue }
     
@@ -20,16 +21,21 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .commitments: return "checklist"
         case .reflections: return "brain.head.profile"
         case .capture: return "plus.circle.fill"
+        case .settings: return "gear"
         }
     }
     
     var label: String { rawValue }
+    
+    /// Tabs shown in the main navigation (excludes settings on iPhone)
+    static var mainTabs: [AppTab] {
+        [.dashboard, .activity, .projects, .commitments, .reflections, .capture]
+    }
 }
 
 struct ContentView: View {
     @State private var selectedTab: AppTab = .dashboard
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
-    @State private var showingSettings: Bool = false
     
     var body: some View {
         Group {
@@ -43,15 +49,11 @@ struct ContentView: View {
             macOSLayout
             #endif
         }
-        .sheet(isPresented: $showingSettings) {
-            NavigationStack {
-                SettingsView()
-            }
-        }
     }
     
     // MARK: - iPhone Layout (Tab Bar)
     
+    #if os(iOS)
     private var iPhoneLayout: some View {
         TabView(selection: $selectedTab) {
             tabContent(for: .dashboard)
@@ -89,34 +91,48 @@ struct ContentView: View {
                     Label(AppTab.capture.label, systemImage: AppTab.capture.icon)
                 }
                 .tag(AppTab.capture)
+            
+            // Settings tab for iPhone (will appear in "More" section automatically if > 5 tabs)
+            tabContent(for: .settings)
+                .tabItem {
+                    Label(AppTab.settings.label, systemImage: AppTab.settings.icon)
+                }
+                .tag(AppTab.settings)
         }
     }
+    #endif
     
     // MARK: - iPad Layout (Sidebar + Content)
     
+    #if os(iOS)
     private var iPadLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebar
         } detail: {
-            tabContent(for: selectedTab)
+            NavigationStack {
+                tabContent(for: selectedTab)
+            }
+            .id(selectedTab) // Reset navigation stack when tab changes
         }
     }
+    #endif
     
     // MARK: - macOS Layout (Sidebar + Content)
     
+    #if os(macOS)
     private var macOSLayout: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             sidebar
-                #if os(macOS)
                 .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
-                #endif
         } detail: {
-            tabContent(for: selectedTab)
+            NavigationStack {
+                tabContent(for: selectedTab)
+            }
+            .id(selectedTab) // reset stack when switching tabs
         }
-        #if os(macOS)
         .frame(minWidth: 900, minHeight: 600)
-        #endif
     }
+    #endif
     
     // MARK: - Sidebar
     
@@ -136,11 +152,7 @@ struct ContentView: View {
             }
             
             Section {
-                Button {
-                    showingSettings = true
-                } label: {
-                    Label("Settings", systemImage: "gear")
-                }
+                sidebarRow(for: .settings)
             }
         }
         .listStyle(.sidebar)
@@ -183,6 +195,8 @@ struct ContentView: View {
             ReflectionsListView()
         case .capture:
             CaptureView()
+        case .settings:
+            SettingsView()
         }
     }
 }

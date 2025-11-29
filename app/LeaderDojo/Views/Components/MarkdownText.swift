@@ -16,6 +16,7 @@ struct MarkdownText: View {
                 renderBlock(block)
             }
         }
+        .textSelection(.enabled)
     }
     
     // MARK: - Block Types

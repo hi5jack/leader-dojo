@@ -26,38 +26,46 @@ struct CommitmentsListView: View {
     }
     
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            VStack(spacing: 0) {
-                // Direction Tabs
-                directionTabs
-                
-                // Content
-                if filteredCommitments.isEmpty {
-                    emptyState
-                } else {
-                    commitmentsList
+            commitmentsContent
+        }
+        #else
+        commitmentsContent
+        #endif
+    }
+    
+    private var commitmentsContent: some View {
+        VStack(spacing: 0) {
+            // Direction Tabs
+            directionTabs
+            
+            // Content
+            if filteredCommitments.isEmpty {
+                emptyState
+            } else {
+                commitmentsList
+            }
+        }
+        .navigationTitle("Commitments")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingNewCommitment = true
+                } label: {
+                    Image(systemName: "plus")
                 }
             }
-            .navigationTitle("Commitments")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingNewCommitment = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-                
-                ToolbarItem(placement: .secondaryAction) {
-                    filterMenu
-                }
+            
+            ToolbarItem(placement: .secondaryAction) {
+                filterMenu
             }
-            .sheet(isPresented: $showingNewCommitment) {
-                NewCommitmentView(project: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
-            }
+        }
+        .sheet(isPresented: $showingNewCommitment) {
+            NewCommitmentView(project: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
         }
     }
     

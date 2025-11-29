@@ -13,19 +13,27 @@ struct ActivityView: View {
     private let filterableKinds: [EntryKind] = [.meeting, .update, .decision, .note, .prep, .reflection]
     
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            Group {
-                if filteredEntries.isEmpty {
-                    emptyState
-                } else {
-                    activityList
-                }
-            }
-            .navigationTitle("Activity")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
-            #endif
+            activityContent
         }
+        #else
+        activityContent
+        #endif
+    }
+    
+    private var activityContent: some View {
+        Group {
+            if filteredEntries.isEmpty {
+                emptyState
+            } else {
+                activityList
+            }
+        }
+        .navigationTitle("Activity")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
     }
     
     // MARK: - Filtered Entries

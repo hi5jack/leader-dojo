@@ -13,34 +13,42 @@ struct DashboardView: View {
     private var reflections: [Reflection]
     
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            ScrollView {
-                LazyVStack(spacing: 24) {
-                    // Weekly Focus Section
-                    weeklyFocusSection
-                    
-                    // Projects Needing Attention
-                    attentionProjectsSection
-                    
-                    // Reflection Prompt
-                    reflectionSection
-                    
-                    // Quick Stats
-                    quickStatsSection
-                }
-                .padding()
+            dashboardContent
+        }
+        #else
+        dashboardContent
+        #endif
+    }
+    
+    private var dashboardContent: some View {
+        ScrollView {
+            LazyVStack(spacing: 24) {
+                // Weekly Focus Section
+                weeklyFocusSection
+                
+                // Projects Needing Attention
+                attentionProjectsSection
+                
+                // Reflection Prompt
+                reflectionSection
+                
+                // Quick Stats
+                quickStatsSection
             }
-            .navigationTitle("Dashboard")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    NavigationLink {
-                        CaptureView()
-                    } label: {
-                        Image(systemName: "plus.circle.fill")
-                    }
+            .padding()
+        }
+        .navigationTitle("Dashboard")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                NavigationLink {
+                    CaptureView()
+                } label: {
+                    Image(systemName: "plus.circle.fill")
                 }
             }
         }

@@ -27,47 +27,55 @@ struct CaptureView: View {
     }
     
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            VStack(spacing: 0) {
-                // Content area
-                ScrollView {
-                    VStack(spacing: 24) {
-                        // Project selector
-                        projectSelector
-                        
-                        // Entry type selector
-                        entryTypeSelector
-                        
-                        // Title input
-                        titleInput
-                        
-                        // Text input
-                        textInput
-                        
-                        // Quick tips
-                        quickTips
-                    }
-                    .padding()
+            captureContent
+        }
+        #else
+        captureContent
+        #endif
+    }
+    
+    private var captureContent: some View {
+        VStack(spacing: 0) {
+            // Content area
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Project selector
+                    projectSelector
+                    
+                    // Entry type selector
+                    entryTypeSelector
+                    
+                    // Title input
+                    titleInput
+                    
+                    // Text input
+                    textInput
+                    
+                    // Quick tips
+                    quickTips
                 }
-                
-                // Save button (fixed at bottom)
-                saveButton
+                .padding()
             }
-            .navigationTitle("Quick Capture")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.large)
-            #endif
-            .onAppear {
-                // Auto-select most recent project
-                if selectedProject == nil {
-                    selectedProject = activeProjects.first
-                }
+            
+            // Save button (fixed at bottom)
+            saveButton
+        }
+        .navigationTitle("Quick Capture")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
+        .onAppear {
+            // Auto-select most recent project
+            if selectedProject == nil {
+                selectedProject = activeProjects.first
             }
-            .overlay(alignment: .top) {
-                if showToast {
-                    toastView
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                }
+        }
+        .overlay(alignment: .top) {
+            if showToast {
+                toastView
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
     }

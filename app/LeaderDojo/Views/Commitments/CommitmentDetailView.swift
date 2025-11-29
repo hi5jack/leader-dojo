@@ -381,71 +381,377 @@ struct NewCommitmentView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TextField("What's the commitment?", text: $title)
-                    
-                    Picker("Direction", selection: $direction) {
-                        ForEach(CommitmentDirection.allCases, id: \.self) { dir in
-                            Label(dir.displayName, systemImage: dir.icon)
-                                .tag(dir)
-                        }
+            #if os(macOS)
+            macOSLayout
+            #else
+            iOSLayout
+            #endif
+        }
+    }
+    
+    // MARK: - iOS Layout
+    
+    #if os(iOS)
+    private var iOSLayout: some View {
+        Form {
+            Section {
+                TextField("What's the commitment?", text: $title)
+                
+                Picker("Direction", selection: $direction) {
+                    ForEach(CommitmentDirection.allCases, id: \.self) { dir in
+                        Label(dir.displayName, systemImage: dir.icon)
+                            .tag(dir)
                     }
-                    
-                    TextField("Counterparty (optional)", text: $counterparty)
                 }
                 
-                Section {
-                    if project == nil {
-                        Picker("Project", selection: $selectedProject) {
+                TextField("Counterparty (optional)", text: $counterparty)
+            }
+            
+            Section {
+                if project == nil {
+                    Picker("Project", selection: $selectedProject) {
+                        Text("None").tag(nil as Project?)
+                        ForEach(activeProjects) { proj in
+                            Text(proj.name).tag(proj as Project?)
+                        }
+                    }
+                }
+                
+                Toggle("Set Due Date", isOn: $hasDueDate)
+                
+                if hasDueDate {
+                    DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                }
+            }
+            
+            Section("Priority") {
+                Stepper("Importance: \(importance)", value: $importance, in: 1...5)
+                Stepper("Urgency: \(urgency)", value: $urgency, in: 1...5)
+            }
+            
+            Section("Notes") {
+                TextEditor(text: $notes)
+                    .frame(minHeight: 80)
+            }
+        }
+        .navigationTitle("New Commitment")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+            
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Create") {
+                    createCommitment()
+                }
+                .disabled(title.isEmpty)
+            }
+        }
+        .onAppear {
+            direction = preselectedDirection
+            selectedProject = project
+        }
+    }
+    #endif
+    
+    // MARK: - macOS Layout
+    
+    #if os(macOS)
+    private var macOSLayout: some View {
+        VStack(spacing: 0) {
+            // Header
+            macOSHeader
+            
+            ScrollView {
+                HStack(alignment: .top, spacing: 24) {
+                    // Left Column - Main Content
+                    VStack(spacing: 20) {
+                        commitmentInfoCard
+                        notesCard
+                    }
+                    .frame(minWidth: 350, maxWidth: .infinity)
+                    
+                    // Right Column - Settings
+                    VStack(spacing: 20) {
+                        contextCard
+                        priorityCard
+                    }
+                    .frame(width: 260)
+                }
+                .padding(24)
+            }
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+        .navigationTitle("New Commitment")
+        .onAppear {
+            direction = preselectedDirection
+            selectedProject = project
+        }
+    }
+    
+    private var macOSHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("New Commitment")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                if let projectName = project?.name ?? selectedProject?.name {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder.fill")
+                            .font(.caption)
+                        Text(projectName)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+                
+                Button("Create Commitment") {
+                    createCommitment()
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(title.isEmpty)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(.ultraThinMaterial)
+    }
+    
+    private var commitmentInfoCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Commitment", systemImage: "checkmark.circle")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.indigo)
+            
+            VStack(alignment: .leading, spacing: 14) {
+                // Title
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("What's the commitment?")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    TextField("Describe the commitment...", text: $title)
+                        .textFieldStyle(.plain)
+                        .font(.body)
+                        .padding(10)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                }
+                
+                Divider()
+                
+                // Direction
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Direction")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    HStack(spacing: 12) {
+                        ForEach(CommitmentDirection.allCases, id: \.self) { dir in
+                            Button {
+                                direction = dir
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: dir.icon)
+                                    Text(dir.displayName)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    direction == dir
+                                        ? (dir == .iOwe ? Color.orange : Color.blue).opacity(0.2)
+                                        : Color(nsColor: .controlBackgroundColor),
+                                    in: RoundedRectangle(cornerRadius: 8)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(
+                                            direction == dir ? (dir == .iOwe ? Color.orange : Color.blue) : .clear,
+                                            lineWidth: 2
+                                        )
+                                )
+                                .foregroundStyle(direction == dir ? (dir == .iOwe ? .orange : .blue) : .primary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // Counterparty
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Counterparty")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    TextField("Who is involved? (optional)", text: $counterparty)
+                        .textFieldStyle(.plain)
+                        .font(.body)
+                        .padding(10)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                }
+            }
+        }
+        .padding(20)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Notes", systemImage: "note.text")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            MacTextEditor(text: $notes, placeholder: "Additional context or details...")
+                .frame(minHeight: 100)
+        }
+        .padding(20)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var contextCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Context", systemImage: "link")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            VStack(alignment: .leading, spacing: 14) {
+                // Project Picker (if not preset)
+                if project == nil {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Project")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        Picker("", selection: $selectedProject) {
                             Text("None").tag(nil as Project?)
                             ForEach(activeProjects) { proj in
                                 Text(proj.name).tag(proj as Project?)
                             }
                         }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
                     }
                     
-                    Toggle("Set Due Date", isOn: $hasDueDate)
+                    Divider()
+                }
+                
+                // Due Date
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle(isOn: $hasDueDate) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Due Date")
+                                .font(.subheadline)
+                            if !hasDueDate {
+                                Text("No deadline set")
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    .toggleStyle(.switch)
                     
                     if hasDueDate {
-                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                        DatePicker("", selection: $dueDate, displayedComponents: .date)
+                            .labelsHidden()
                     }
                 }
-                
-                Section("Priority") {
-                    Stepper("Importance: \(importance)", value: $importance, in: 1...5)
-                    Stepper("Urgency: \(urgency)", value: $urgency, in: 1...5)
-                }
-                
-                Section("Notes") {
-                    TextEditor(text: $notes)
-                        .frame(minHeight: 80)
-                }
-            }
-            .navigationTitle("New Commitment")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        createCommitment()
-                    }
-                    .disabled(title.isEmpty)
-                }
-            }
-            .onAppear {
-                direction = preselectedDirection
-                selectedProject = project
             }
         }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
     }
+    
+    private var priorityCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Priority", systemImage: "flag.fill")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            VStack(alignment: .leading, spacing: 14) {
+                // Importance
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Importance")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(importance)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.yellow)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        ForEach(1...5, id: \.self) { i in
+                            Button {
+                                importance = i
+                            } label: {
+                                Image(systemName: i <= importance ? "star.fill" : "star")
+                                    .font(.body)
+                                    .foregroundStyle(i <= importance ? .yellow : .secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // Urgency
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Urgency")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(urgency)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.orange)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        ForEach(1...5, id: \.self) { i in
+                            Button {
+                                urgency = i
+                            } label: {
+                                Image(systemName: i <= urgency ? "bolt.fill" : "bolt")
+                                    .font(.body)
+                                    .foregroundStyle(i <= urgency ? .orange : .secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    #endif
     
     private func createCommitment() {
         let commitment = Commitment(
@@ -479,70 +785,408 @@ struct EditCommitmentView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    TextField("Title", text: $commitment.title)
+            #if os(macOS)
+            macOSLayout
+            #else
+            iOSLayout
+            #endif
+        }
+    }
+    
+    // MARK: - iOS Layout
+    
+    #if os(iOS)
+    private var iOSLayout: some View {
+        Form {
+            Section {
+                TextField("Title", text: $commitment.title)
+                
+                Picker("Direction", selection: $commitment.direction) {
+                    ForEach(CommitmentDirection.allCases, id: \.self) { dir in
+                        Label(dir.displayName, systemImage: dir.icon)
+                            .tag(dir)
+                    }
+                }
+                
+                TextField("Counterparty", text: Binding(
+                    get: { commitment.counterparty ?? "" },
+                    set: { commitment.counterparty = $0.isEmpty ? nil : $0 }
+                ))
+            }
+            
+            Section {
+                Toggle("Set Due Date", isOn: $hasDueDate)
+                
+                if hasDueDate {
+                    DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                }
+            }
+            
+            Section("Priority") {
+                Stepper("Importance: \(commitment.importance)", value: $commitment.importance, in: 1...5)
+                Stepper("Urgency: \(commitment.urgency)", value: $commitment.urgency, in: 1...5)
+            }
+            
+            Section("Notes") {
+                TextEditor(text: Binding(
+                    get: { commitment.notes ?? "" },
+                    set: { commitment.notes = $0.isEmpty ? nil : $0 }
+                ))
+                .frame(minHeight: 80)
+            }
+        }
+        .navigationTitle("Edit Commitment")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+            
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    commitment.dueDate = hasDueDate ? dueDate : nil
+                    commitment.updatedAt = Date()
+                    try? modelContext.save()
+                    dismiss()
+                }
+            }
+        }
+        .onAppear {
+            hasDueDate = commitment.dueDate != nil
+            dueDate = commitment.dueDate ?? Date()
+        }
+    }
+    #endif
+    
+    // MARK: - macOS Layout
+    
+    #if os(macOS)
+    private var macOSLayout: some View {
+        VStack(spacing: 0) {
+            // Header
+            macOSHeader
+            
+            ScrollView {
+                HStack(alignment: .top, spacing: 24) {
+                    // Left Column - Main Content
+                    VStack(spacing: 20) {
+                        commitmentInfoCard
+                        notesCard
+                    }
+                    .frame(minWidth: 350, maxWidth: .infinity)
                     
-                    Picker("Direction", selection: $commitment.direction) {
+                    // Right Column - Settings
+                    VStack(spacing: 20) {
+                        contextCard
+                        priorityCard
+                        metadataCard
+                    }
+                    .frame(width: 260)
+                }
+                .padding(24)
+            }
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+        .navigationTitle("Edit Commitment")
+        .onAppear {
+            hasDueDate = commitment.dueDate != nil
+            dueDate = commitment.dueDate ?? Date()
+        }
+    }
+    
+    private var macOSHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Edit Commitment")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                if let projectName = commitment.project?.name {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder.fill")
+                            .font(.caption)
+                        Text(projectName)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+                
+                Button("Save Changes") {
+                    commitment.dueDate = hasDueDate ? dueDate : nil
+                    commitment.updatedAt = Date()
+                    try? modelContext.save()
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(.ultraThinMaterial)
+    }
+    
+    private var commitmentInfoCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Commitment", systemImage: "checkmark.circle")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.indigo)
+            
+            VStack(alignment: .leading, spacing: 14) {
+                // Title
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Title")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    TextField("Describe the commitment...", text: $commitment.title)
+                        .textFieldStyle(.plain)
+                        .font(.body)
+                        .padding(10)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                }
+                
+                Divider()
+                
+                // Direction
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Direction")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    HStack(spacing: 12) {
                         ForEach(CommitmentDirection.allCases, id: \.self) { dir in
-                            Label(dir.displayName, systemImage: dir.icon)
-                                .tag(dir)
+                            Button {
+                                commitment.direction = dir
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: dir.icon)
+                                    Text(dir.displayName)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 10)
+                                .background(
+                                    commitment.direction == dir
+                                        ? (dir == .iOwe ? Color.orange : Color.blue).opacity(0.2)
+                                        : Color(nsColor: .controlBackgroundColor),
+                                    in: RoundedRectangle(cornerRadius: 8)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .stroke(
+                                            commitment.direction == dir ? (dir == .iOwe ? Color.orange : Color.blue) : .clear,
+                                            lineWidth: 2
+                                        )
+                                )
+                                .foregroundStyle(commitment.direction == dir ? (dir == .iOwe ? .orange : .blue) : .primary)
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
+                }
+                
+                Divider()
+                
+                // Counterparty
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Counterparty")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     
-                    TextField("Counterparty", text: Binding(
+                    TextField("Who is involved? (optional)", text: Binding(
                         get: { commitment.counterparty ?? "" },
                         set: { commitment.counterparty = $0.isEmpty ? nil : $0 }
                     ))
+                    .textFieldStyle(.plain)
+                    .font(.body)
+                    .padding(10)
+                    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
                 }
-                
-                Section {
-                    Toggle("Set Due Date", isOn: $hasDueDate)
-                    
-                    if hasDueDate {
-                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
-                    }
-                }
-                
-                Section("Priority") {
-                    Stepper("Importance: \(commitment.importance)", value: $commitment.importance, in: 1...5)
-                    Stepper("Urgency: \(commitment.urgency)", value: $commitment.urgency, in: 1...5)
-                }
-                
-                Section("Notes") {
-                    TextEditor(text: Binding(
-                        get: { commitment.notes ?? "" },
-                        set: { commitment.notes = $0.isEmpty ? nil : $0 }
-                    ))
-                    .frame(minHeight: 80)
-                }
-            }
-            .navigationTitle("Edit Commitment")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        commitment.dueDate = hasDueDate ? dueDate : nil
-                        commitment.updatedAt = Date()
-                        try? modelContext.save()
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                hasDueDate = commitment.dueDate != nil
-                dueDate = commitment.dueDate ?? Date()
             }
         }
+        .padding(20)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
     }
+    
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Notes", systemImage: "note.text")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            MacTextEditor(
+                text: Binding(
+                    get: { commitment.notes ?? "" },
+                    set: { commitment.notes = $0.isEmpty ? nil : $0 }
+                ),
+                placeholder: "Additional context or details..."
+            )
+            .frame(minHeight: 100)
+        }
+        .padding(20)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var contextCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Due Date", systemImage: "calendar")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle(isOn: $hasDueDate) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Has Deadline")
+                            .font(.subheadline)
+                        if !hasDueDate {
+                            Text("No deadline set")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .toggleStyle(.switch)
+                
+                if hasDueDate {
+                    DatePicker("", selection: $dueDate, displayedComponents: .date)
+                        .labelsHidden()
+                }
+            }
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var priorityCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Priority", systemImage: "flag.fill")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            VStack(alignment: .leading, spacing: 14) {
+                // Importance
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Importance")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(commitment.importance)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.yellow)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        ForEach(1...5, id: \.self) { i in
+                            Button {
+                                commitment.importance = i
+                            } label: {
+                                Image(systemName: i <= commitment.importance ? "star.fill" : "star")
+                                    .font(.body)
+                                    .foregroundStyle(i <= commitment.importance ? .yellow : .secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // Urgency
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Urgency")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(commitment.urgency)")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.orange)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        ForEach(1...5, id: \.self) { i in
+                            Button {
+                                commitment.urgency = i
+                            } label: {
+                                Image(systemName: i <= commitment.urgency ? "bolt.fill" : "bolt")
+                                    .font(.body)
+                                    .foregroundStyle(i <= commitment.urgency ? .orange : .secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var metadataCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Info", systemImage: "info.circle")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                LabeledContent("Created") {
+                    Text(commitment.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption)
+                }
+                .font(.caption)
+                
+                LabeledContent("Updated") {
+                    Text(commitment.updatedAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption)
+                }
+                .font(.caption)
+                
+                if let completedAt = commitment.completedAt {
+                    LabeledContent("Completed") {
+                        Text(completedAt.formatted(date: .abbreviated, time: .shortened))
+                            .font(.caption)
+                    }
+                    .font(.caption)
+                }
+                
+                if commitment.aiGenerated {
+                    HStack {
+                        Image(systemName: "sparkles")
+                        Text("AI Generated")
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.purple)
+                }
+            }
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+    #endif
 }
 
 #Preview {

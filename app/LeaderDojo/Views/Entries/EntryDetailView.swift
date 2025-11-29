@@ -227,6 +227,7 @@ struct EntryDetailView: View {
             LabeledContent("ID", value: entry.id.uuidString.prefix(8).description)
                 .font(.caption)
         }
+        .textSelection(.enabled)
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
@@ -256,63 +257,310 @@ struct EditEntryView: View {
     
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
-                    Picker("Type", selection: $entry.kind) {
+            #if os(macOS)
+            macOSEditLayout
+            #else
+            iOSEditLayout
+            #endif
+        }
+    }
+    
+    // MARK: - iOS Layout
+    
+    #if os(iOS)
+    private var iOSEditLayout: some View {
+        Form {
+            Section {
+                Picker("Type", selection: $entry.kind) {
+                    ForEach(EntryKind.allCases, id: \.self) { kind in
+                        Label(kind.displayName, systemImage: kind.icon)
+                            .tag(kind)
+                    }
+                }
+                
+                DatePicker("Date", selection: $entry.occurredAt, displayedComponents: [.date, .hourAndMinute])
+            }
+            
+            Section("Content") {
+                TextField("Title", text: $entry.title)
+                
+                TextEditor(text: Binding(
+                    get: { entry.rawContent ?? "" },
+                    set: { entry.rawContent = $0.isEmpty ? nil : $0 }
+                ))
+                .frame(minHeight: 150)
+            }
+            
+            Section {
+                Toggle("Key Decision", isOn: $entry.isDecision)
+            }
+            
+            if entry.aiSummary != nil {
+                Section("AI Summary") {
+                    TextEditor(text: Binding(
+                        get: { entry.aiSummary ?? "" },
+                        set: { entry.aiSummary = $0.isEmpty ? nil : $0 }
+                    ))
+                    .frame(minHeight: 100)
+                }
+            }
+        }
+        .navigationTitle("Edit Entry")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+            
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    entry.updatedAt = Date()
+                    try? modelContext.save()
+                    dismiss()
+                }
+            }
+        }
+    }
+    #endif
+    
+    // MARK: - macOS Layout
+    
+    #if os(macOS)
+    private var macOSEditLayout: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                // Header Bar
+                macOSEditHeader
+                
+                // Main Content
+                HStack(alignment: .top, spacing: 24) {
+                    // Left Column - Main Content
+                    VStack(spacing: 20) {
+                        editContentCard
+                        
+                        if entry.aiSummary != nil {
+                            editSummaryCard
+                        }
+                    }
+                    .frame(minWidth: 400, maxWidth: .infinity)
+                    
+                    // Right Column - Metadata
+                    VStack(spacing: 20) {
+                        editMetadataCard
+                        editOptionsCard
+                    }
+                    .frame(width: 280)
+                }
+                .padding(24)
+            }
+        }
+        .background(Color(nsColor: .windowBackgroundColor))
+        .navigationTitle("Edit Entry")
+    }
+    
+    private var macOSEditHeader: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Edit Entry")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+                
+                if let project = entry.project {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder.fill")
+                            .font(.caption)
+                        Text(project.name)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .keyboardShortcut(.cancelAction)
+                
+                Button("Save Changes") {
+                    entry.updatedAt = Date()
+                    try? modelContext.save()
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .background(.ultraThinMaterial)
+    }
+    
+    private var editContentCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Title Field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Title")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                
+                TextField("What happened?", text: $entry.title)
+                    .textFieldStyle(.plain)
+                    .font(.title3)
+                    .padding(12)
+                    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+            }
+            
+            Divider()
+            
+            // Content Field
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Notes")
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .foregroundStyle(.secondary)
+                
+                MacTextEditor(
+                    text: Binding(
+                        get: { entry.rawContent ?? "" },
+                        set: { entry.rawContent = $0.isEmpty ? nil : $0 }
+                    ),
+                    placeholder: "Add your notes or content here..."
+                )
+                .frame(minHeight: 200)
+            }
+        }
+        .padding(20)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var editSummaryCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Label("AI Summary", systemImage: "sparkles")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.purple)
+                
+                Spacer()
+                
+                Button {
+                    entry.aiSummary = nil
+                } label: {
+                    Text("Remove")
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            MacTextEditor(
+                text: Binding(
+                    get: { entry.aiSummary ?? "" },
+                    set: { entry.aiSummary = $0.isEmpty ? nil : $0 }
+                ),
+                placeholder: "AI-generated summary..."
+            )
+            .frame(minHeight: 120)
+        }
+        .padding(20)
+        .background(.purple.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(.purple.opacity(0.2), lineWidth: 1)
+        )
+    }
+    
+    private var editMetadataCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Details", systemImage: "info.circle")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Entry Type Picker
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Type")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    Picker("", selection: $entry.kind) {
                         ForEach(EntryKind.allCases, id: \.self) { kind in
                             Label(kind.displayName, systemImage: kind.icon)
                                 .tag(kind)
                         }
                     }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                }
+                
+                Divider()
+                
+                // Date Picker
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Date & Time")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     
-                    DatePicker("Date", selection: $entry.occurredAt, displayedComponents: [.date, .hourAndMinute])
+                    DatePicker("", selection: $entry.occurredAt, displayedComponents: [.date, .hourAndMinute])
+                        .labelsHidden()
                 }
                 
-                Section("Content") {
-                    TextField("Title", text: $entry.title)
-                    
-                    TextEditor(text: Binding(
-                        get: { entry.rawContent ?? "" },
-                        set: { entry.rawContent = $0.isEmpty ? nil : $0 }
-                    ))
-                    .frame(minHeight: 150)
+                Divider()
+                
+                // Metadata
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Created")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(entry.createdAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption)
                 }
                 
-                Section {
-                    Toggle("Key Decision", isOn: $entry.isDecision)
-                }
-                
-                if entry.aiSummary != nil {
-                    Section("AI Summary") {
-                        TextEditor(text: Binding(
-                            get: { entry.aiSummary ?? "" },
-                            set: { entry.aiSummary = $0.isEmpty ? nil : $0 }
-                        ))
-                        .frame(minHeight: 100)
-                    }
-                }
-            }
-            .navigationTitle("Edit Entry")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        entry.updatedAt = Date()
-                        try? modelContext.save()
-                        dismiss()
-                    }
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Last Modified")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(entry.updatedAt.formatted(date: .abbreviated, time: .shortened))
+                        .font(.caption)
                 }
             }
         }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
     }
+    
+    private var editOptionsCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Options", systemImage: "slider.horizontal.3")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            Toggle(isOn: $entry.isDecision) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Key Decision")
+                        .font(.subheadline)
+                    Text("Track for future reflection")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .toggleStyle(.switch)
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    #endif
 }
 
 #Preview {

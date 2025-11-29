@@ -165,6 +165,87 @@ struct EntryRowView: View {
     }
 }
 
+// MARK: - macOS Components
+
+#if os(macOS)
+/// A styled text editor for macOS with placeholder support
+struct MacTextEditor: View {
+    @Binding var text: String
+    let placeholder: String
+    
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundStyle(.tertiary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 8)
+            }
+            
+            TextEditor(text: $text)
+                .font(.body)
+                .scrollContentBackground(.hidden)
+                .padding(4)
+        }
+        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+/// A styled card container for macOS forms
+struct MacFormCard<Content: View>: View {
+    let title: String?
+    let icon: String?
+    let iconColor: Color
+    @ViewBuilder let content: () -> Content
+    
+    init(
+        title: String? = nil,
+        icon: String? = nil,
+        iconColor: Color = .secondary,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.icon = icon
+        self.iconColor = iconColor
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            if let title = title {
+                if let icon = icon {
+                    Label(title, systemImage: icon)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(iconColor)
+                } else {
+                    Text(title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(iconColor)
+                }
+            }
+            
+            content()
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+}
+
+/// Styled form field for macOS
+struct MacFormField: View {
+    let label: String
+    
+    var body: some View {
+        Text(label)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+}
+#endif
+
 // MARK: - Previews
 
 #Preview("Badge") {

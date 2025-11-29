@@ -36,6 +36,13 @@ enum AppTab: String, CaseIterable, Identifiable {
 struct ContentView: View {
     @State private var selectedTab: AppTab = .dashboard
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    #if os(macOS)
+    /// Shared navigation path for the detail column on macOS.
+    @State private var navigationPath = NavigationPath()
+    /// We inject the model context so we can resolve `AppRoute` identifiers
+    /// back into SwiftData models.
+    @Environment(\.modelContext) private var modelContext
+    #endif
     
     var body: some View {
         Group {
@@ -125,10 +132,13 @@ struct ContentView: View {
             sidebar
                 .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
         } detail: {
-            NavigationStack {
+            NavigationStack(path: $navigationPath) {
                 tabContent(for: selectedTab)
+                    .navigationDestination(for: AppRoute.self) { route in
+                        destinationView(for: route)
+                    }
             }
-            .id(selectedTab) // reset stack when switching tabs
+            .id(selectedTab) // reset root when switching tabs
         }
         .frame(minWidth: 900, minHeight: 600)
     }
@@ -164,6 +174,13 @@ struct ContentView: View {
     
     private func sidebarRow(for tab: AppTab) -> some View {
         Button {
+            #if os(macOS)
+            if selectedTab != tab {
+                // When switching tabs on macOS, clear the NavigationStack path
+                // so any pushed detail views are dismissed.
+                navigationPath = NavigationPath()
+            }
+            #endif
             selectedTab = tab
         } label: {
             HStack {
@@ -177,6 +194,36 @@ struct ContentView: View {
         }
         .buttonStyle(.plain)
     }
+    
+    // MARK: - macOS Route Resolution
+    
+    #if os(macOS)
+    @ViewBuilder
+    private func destinationView(for route: AppRoute) -> some View {
+        switch route {
+        case .project(let id):
+            if let project = modelContext.model(for: id) as? Project {
+                ProjectDetailView(project: project)
+            }
+        case .projectEntries(let id):
+            if let project = modelContext.model(for: id) as? Project {
+                ProjectEntriesListView(project: project)
+            }
+        case .entry(let id):
+            if let entry = modelContext.model(for: id) as? Entry {
+                EntryDetailView(entry: entry)
+            }
+        case .commitment(let id):
+            if let commitment = modelContext.model(for: id) as? Commitment {
+                CommitmentDetailView(commitment: commitment)
+            }
+        case .reflection(let id):
+            if let reflection = modelContext.model(for: id) as? Reflection {
+                ReflectionDetailView(reflection: reflection)
+            }
+        }
+    }
+    #endif
     
     // MARK: - Tab Content
     

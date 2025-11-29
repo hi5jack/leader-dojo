@@ -60,6 +60,8 @@
 		43EA48BF2ED989710006D0E9 /* MarkdownText.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA48BD2ED989710006D0E9 /* MarkdownText.swift */; };
 		43EA48CE2ED99E450006D0E9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43EA48CD2ED99E450006D0E9 /* Assets.xcassets */; };
 		43EA48CF2ED99E450006D0E9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 43EA48CD2ED99E450006D0E9 /* Assets.xcassets */; };
+		43EA49022EDA92140006D0E9 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49012EDA92140006D0E9 /* AppRoute.swift */; };
+		43EA49032EDA92140006D0E9 /* AppRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49012EDA92140006D0E9 /* AppRoute.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +115,7 @@
 		43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
 		43EA48BD2ED989710006D0E9 /* MarkdownText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownText.swift; sourceTree = "<group>"; };
 		43EA48CD2ED99E450006D0E9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		43EA49012EDA92140006D0E9 /* AppRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRoute.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -192,6 +195,7 @@
 		005000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				43EA49012EDA92140006D0E9 /* AppRoute.swift */,
 				002000000001 /* LeaderDojoApp.swift */,
 				002000000002 /* ContentView.swift */,
 			);
@@ -506,6 +510,7 @@
 				001000000007 /* DashboardView.swift in Sources */,
 				001000000008 /* ProjectsListView.swift in Sources */,
 				001000000009 /* ProjectDetailView.swift in Sources */,
+				43EA49032EDA92140006D0E9 /* AppRoute.swift in Sources */,
 				001000000010 /* NewEntryView.swift in Sources */,
 				001000000011 /* EntryDetailView.swift in Sources */,
 				43EA48BF2ED989710006D0E9 /* MarkdownText.swift in Sources */,
@@ -539,6 +544,7 @@
 				430C0B442ED9618B0035BE62 /* NewEntryView.swift in Sources */,
 				430C0B452ED9618B0035BE62 /* PrepBriefingView.swift in Sources */,
 				430C0B462ED9618B0035BE62 /* EntryDetailView.swift in Sources */,
+				43EA49022EDA92140006D0E9 /* AppRoute.swift in Sources */,
 				430C0B412ED9617E0035BE62 /* DashboardView.swift in Sources */,
 				43EA48BE2ED989710006D0E9 /* MarkdownText.swift in Sources */,
 				430C0B4C2ED9619F0035BE62 /* CaptureView.swift in Sources */,

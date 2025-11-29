@@ -111,11 +111,17 @@ struct ActivityView: View {
             ForEach(groupedEntries, id: \.0) { dateGroup, entries in
                 Section {
                     ForEach(entries) { entry in
+                        #if os(macOS)
+                        NavigationLink(value: AppRoute.entry(entry.persistentModelID)) {
+                            ActivityEntryRowView(entry: entry)
+                        }
+                        #else
                         NavigationLink {
                             EntryDetailView(entry: entry)
                         } label: {
                             ActivityEntryRowView(entry: entry)
                         }
+                        #endif
                     }
                 } header: {
                     Text(dateGroup)

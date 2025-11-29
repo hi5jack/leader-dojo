@@ -86,11 +86,17 @@ struct ReflectionsListView: View {
             ForEach(groupedReflections, id: \.0) { month, items in
                 Section(month) {
                     ForEach(items) { reflection in
+                        #if os(macOS)
+                        NavigationLink(value: AppRoute.reflection(reflection.persistentModelID)) {
+                            ReflectionRowView(reflection: reflection)
+                        }
+                        #else
                         NavigationLink {
                             ReflectionDetailView(reflection: reflection)
                         } label: {
                             ReflectionRowView(reflection: reflection)
                         }
+                        #endif
                     }
                     .onDelete { indexSet in
                         deleteReflections(at: indexSet, from: items)

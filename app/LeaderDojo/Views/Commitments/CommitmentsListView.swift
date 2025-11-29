@@ -157,6 +157,7 @@ struct CommitmentsListView: View {
     
     // MARK: - Commitments List
     
+    #if os(iOS)
     private var commitmentsList: some View {
         List {
             ForEach(groupedCommitments, id: \.0) { group, items in
@@ -191,12 +192,44 @@ struct CommitmentsListView: View {
                 }
             }
         }
-        #if os(iOS)
         .listStyle(.insetGrouped)
-        #else
-        .listStyle(.inset)
-        #endif
     }
+    #else
+    private var commitmentsList: some View {
+        List {
+            ForEach(groupedCommitments, id: \.0) { group, items in
+                Section(group) {
+                    ForEach(items) { commitment in
+                        NavigationLink(value: AppRoute.commitment(commitment.persistentModelID)) {
+                            CommitmentRowView(commitment: commitment) {
+                                toggleStatus(commitment)
+                            }
+                        }
+                        .swipeActions(edge: .leading) {
+                            Button {
+                                toggleStatus(commitment)
+                            } label: {
+                                Label(
+                                    commitment.status == .done ? "Reopen" : "Done",
+                                    systemImage: commitment.status == .done ? "arrow.uturn.backward" : "checkmark"
+                                )
+                            }
+                            .tint(commitment.status == .done ? .orange : .green)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                deleteCommitment(commitment)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.inset)
+    }
+    #endif
     
     // MARK: - Empty State
     

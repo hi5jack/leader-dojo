@@ -100,12 +100,19 @@ struct DashboardView: View {
                 )
             } else {
                 ForEach(projectsNeedingAttention) { project in
+                    #if os(macOS)
+                    NavigationLink(value: AppRoute.project(project.persistentModelID)) {
+                        ProjectAttentionRow(project: project)
+                    }
+                    .buttonStyle(.plain)
+                    #else
                     NavigationLink {
                         ProjectDetailView(project: project)
                     } label: {
                         ProjectAttentionRow(project: project)
                     }
                     .buttonStyle(.plain)
+                    #endif
                 }
             }
         }

@@ -243,6 +243,15 @@ struct ProjectsListView: View {
             spacing: 16
         ) {
             ForEach(filteredProjects) { project in
+                #if os(macOS)
+                NavigationLink(value: AppRoute.project(project.persistentModelID)) {
+                    ProjectCardView(project: project)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    projectContextMenu(for: project)
+                }
+                #else
                 NavigationLink {
                     ProjectDetailView(project: project)
                 } label: {
@@ -252,6 +261,7 @@ struct ProjectsListView: View {
                 .contextMenu {
                     projectContextMenu(for: project)
                 }
+                #endif
             }
         }
         .padding(24)
@@ -260,6 +270,15 @@ struct ProjectsListView: View {
     private var projectsList: some View {
         LazyVStack(spacing: 8) {
             ForEach(filteredProjects) { project in
+                #if os(macOS)
+                NavigationLink(value: AppRoute.project(project.persistentModelID)) {
+                    ProjectListRowView(project: project)
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    projectContextMenu(for: project)
+                }
+                #else
                 NavigationLink {
                     ProjectDetailView(project: project)
                 } label: {
@@ -269,6 +288,7 @@ struct ProjectsListView: View {
                 .contextMenu {
                     projectContextMenu(for: project)
                 }
+                #endif
             }
         }
         .padding(24)

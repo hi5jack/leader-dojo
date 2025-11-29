@@ -194,15 +194,29 @@ struct ProjectDetailView: View {
                 )
             } else {
                 ForEach(entries.prefix(10)) { entry in
+                    #if os(macOS)
+                    NavigationLink(value: AppRoute.entry(entry.persistentModelID)) {
+                        EntryRowView(entry: entry)
+                    }
+                    .buttonStyle(.plain)
+                    #else
                     NavigationLink {
                         EntryDetailView(entry: entry)
                     } label: {
                         EntryRowView(entry: entry)
                     }
                     .buttonStyle(.plain)
+                    #endif
                 }
                 
                 if entries.count > 10 {
+                    #if os(macOS)
+                    NavigationLink(value: AppRoute.projectEntries(project.persistentModelID)) {
+                        Text("View all \(entries.count) entries")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
+                    #else
                     NavigationLink {
                         ProjectEntriesListView(project: project)
                     } label: {
@@ -210,6 +224,7 @@ struct ProjectDetailView: View {
                             .font(.subheadline)
                             .foregroundStyle(.blue)
                     }
+                    #endif
                 }
             }
         }

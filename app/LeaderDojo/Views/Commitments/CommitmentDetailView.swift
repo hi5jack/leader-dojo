@@ -233,6 +233,21 @@ struct CommitmentDetailView: View {
             
             // Project
             if let project = commitment.project {
+                #if os(macOS)
+                NavigationLink(value: AppRoute.project(project.persistentModelID)) {
+                    HStack {
+                        Image(systemName: "folder.fill")
+                            .foregroundStyle(.blue)
+                        Text(project.name)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                #else
                 NavigationLink {
                     ProjectDetailView(project: project)
                 } label: {
@@ -248,10 +263,31 @@ struct CommitmentDetailView: View {
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
+                #endif
             }
             
             // Source Entry
             if let entry = commitment.sourceEntry {
+                #if os(macOS)
+                NavigationLink(value: AppRoute.entry(entry.persistentModelID)) {
+                    HStack {
+                        Image(systemName: entry.kind.icon)
+                            .foregroundStyle(.purple)
+                        VStack(alignment: .leading) {
+                            Text("Source Entry")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(entry.title)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                .buttonStyle(.plain)
+                #else
                 NavigationLink {
                     EntryDetailView(entry: entry)
                 } label: {
@@ -272,6 +308,7 @@ struct CommitmentDetailView: View {
                     .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
                 .buttonStyle(.plain)
+                #endif
             }
             
             if commitment.project == nil && commitment.sourceEntry == nil {

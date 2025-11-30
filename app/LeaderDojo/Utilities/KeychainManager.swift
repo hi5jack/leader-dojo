@@ -2,8 +2,9 @@ import Foundation
 import Security
 
 /// Manages secure storage of sensitive data like API keys in the Keychain
-final class KeychainManager {
-    static let shared = KeychainManager()
+/// Thread-safe: Keychain APIs are inherently thread-safe
+final class KeychainManager: @unchecked Sendable {
+    nonisolated(unsafe) static let shared = KeychainManager()
     
     private let service = "com.joinleaderdojo.app"
     
@@ -11,14 +12,14 @@ final class KeychainManager {
     
     // MARK: - Keys
     
-    enum Key: String {
+    enum Key: String, Sendable {
         case openAIAPIKey = "openai_api_key"
     }
     
     // MARK: - Public Methods
     
     /// Save a string value to the Keychain
-    func save(_ value: String, for key: Key) throws {
+    nonisolated func save(_ value: String, for key: Key) throws {
         let data = Data(value.utf8)
         
         // Delete any existing item
@@ -65,7 +66,7 @@ final class KeychainManager {
     }
     
     /// Retrieve a string value from the Keychain
-    func retrieve(for key: Key) throws -> String? {
+    nonisolated func retrieve(for key: Key) throws -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -96,7 +97,7 @@ final class KeychainManager {
     }
     
     /// Delete a value from the Keychain
-    func delete(for key: Key) throws {
+    nonisolated func delete(for key: Key) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -111,7 +112,7 @@ final class KeychainManager {
     }
     
     /// Check if a key exists in the Keychain
-    func exists(for key: Key) -> Bool {
+    nonisolated func exists(for key: Key) -> Bool {
         do {
             return try retrieve(for: key) != nil
         } catch {

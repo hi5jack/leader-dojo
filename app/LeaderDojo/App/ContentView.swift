@@ -6,6 +6,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     case dashboard = "Dashboard"
     case activity = "Activity"
     case projects = "Projects"
+    case people = "People"
     case commitments = "Commitments"
     case reflections = "Reflections"
     case capture = "Capture"
@@ -18,6 +19,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .dashboard: return "rectangle.3.group.fill"
         case .activity: return "clock.arrow.circlepath"
         case .projects: return "folder.fill"
+        case .people: return "person.2.fill"
         case .commitments: return "checklist"
         case .reflections: return "brain.head.profile"
         case .capture: return "plus.circle.fill"
@@ -29,7 +31,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     
     /// Tabs shown in the main navigation (excludes settings on iPhone)
     static var mainTabs: [AppTab] {
-        [.dashboard, .activity, .projects, .commitments, .reflections, .capture]
+        [.dashboard, .activity, .projects, .people, .commitments, .reflections, .capture]
     }
 }
 
@@ -80,6 +82,12 @@ struct ContentView: View {
                     Label(AppTab.projects.label, systemImage: AppTab.projects.icon)
                 }
                 .tag(AppTab.projects)
+            
+            tabContent(for: .people)
+                .tabItem {
+                    Label(AppTab.people.label, systemImage: AppTab.people.icon)
+                }
+                .tag(AppTab.people)
             
             tabContent(for: .commitments)
                 .tabItem {
@@ -152,6 +160,7 @@ struct ContentView: View {
                 sidebarRow(for: .dashboard)
                 sidebarRow(for: .activity)
                 sidebarRow(for: .projects)
+                sidebarRow(for: .people)
                 sidebarRow(for: .commitments)
                 sidebarRow(for: .reflections)
                 sidebarRow(for: .capture)
@@ -221,6 +230,10 @@ struct ContentView: View {
             if let reflection = modelContext.model(for: id) as? Reflection {
                 ReflectionDetailView(reflection: reflection)
             }
+        case .person(let id):
+            if let person = modelContext.model(for: id) as? Person {
+                PersonDetailView(person: person)
+            }
         }
     }
     #endif
@@ -236,6 +249,8 @@ struct ContentView: View {
             ActivityView()
         case .projects:
             ProjectsListView()
+        case .people:
+            PeopleListView()
         case .commitments:
             CommitmentsListView()
         case .reflections:
@@ -250,6 +265,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
 

@@ -2,12 +2,12 @@ import Foundation
 import SwiftData
 
 /// Reflection period type
-enum ReflectionPeriodType: String, Codable, CaseIterable {
+enum ReflectionPeriodType: String, Codable, CaseIterable, Sendable {
     case week = "week"
     case month = "month"
     case quarter = "quarter"
     
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .week: return "Weekly"
         case .month: return "Monthly"
@@ -15,7 +15,7 @@ enum ReflectionPeriodType: String, Codable, CaseIterable {
         }
     }
     
-    var icon: String {
+    nonisolated var icon: String {
         switch self {
         case .week: return "calendar.badge.clock"
         case .month: return "calendar"
@@ -25,12 +25,12 @@ enum ReflectionPeriodType: String, Codable, CaseIterable {
 }
 
 /// Question and answer pair for reflections
-struct ReflectionQA: Codable, Identifiable {
+struct ReflectionQA: Codable, Identifiable, Sendable {
     var id: UUID
     var question: String
     var answer: String
     
-    init(id: UUID = UUID(), question: String, answer: String = "") {
+    nonisolated init(id: UUID = UUID(), question: String, answer: String = "") {
         self.id = id
         self.question = question
         self.answer = answer
@@ -38,7 +38,7 @@ struct ReflectionQA: Codable, Identifiable {
 }
 
 /// Statistics snapshot for a reflection period
-struct ReflectionStats: Codable {
+struct ReflectionStats: Codable, Sendable {
     var entriesCreated: Int
     var commitmentsCreated: Int
     var commitmentsCompleted: Int
@@ -48,7 +48,7 @@ struct ReflectionStats: Codable {
     var meetingsHeld: Int
     var decisionsRecorded: Int
     
-    init(
+    nonisolated init(
         entriesCreated: Int = 0,
         commitmentsCreated: Int = 0,
         commitmentsCompleted: Int = 0,

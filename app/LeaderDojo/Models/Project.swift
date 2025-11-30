@@ -2,12 +2,12 @@ import Foundation
 import SwiftData
 
 /// Project types matching the web app schema
-enum ProjectType: String, Codable, CaseIterable {
+enum ProjectType: String, Codable, CaseIterable, Sendable {
     case project = "project"
     case relationship = "relationship"
     case area = "area"
     
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .project: return "Project"
         case .relationship: return "Relationship"
@@ -15,7 +15,7 @@ enum ProjectType: String, Codable, CaseIterable {
         }
     }
     
-    var icon: String {
+    nonisolated var icon: String {
         switch self {
         case .project: return "folder.fill"
         case .relationship: return "person.2.fill"
@@ -25,13 +25,13 @@ enum ProjectType: String, Codable, CaseIterable {
 }
 
 /// Project status
-enum ProjectStatus: String, Codable, CaseIterable {
+enum ProjectStatus: String, Codable, CaseIterable, Sendable {
     case active = "active"
     case onHold = "on_hold"
     case completed = "completed"
     case archived = "archived"
     
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .active: return "Active"
         case .onHold: return "On Hold"
@@ -40,7 +40,7 @@ enum ProjectStatus: String, Codable, CaseIterable {
         }
     }
     
-    var icon: String {
+    nonisolated var icon: String {
         switch self {
         case .active: return "circle.fill"
         case .onHold: return "pause.circle.fill"
@@ -49,7 +49,7 @@ enum ProjectStatus: String, Codable, CaseIterable {
         }
     }
     
-    var color: String {
+    nonisolated var color: String {
         switch self {
         case .active: return "green"
         case .onHold: return "orange"

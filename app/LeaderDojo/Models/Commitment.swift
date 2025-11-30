@@ -2,25 +2,25 @@ import Foundation
 import SwiftData
 
 /// Commitment direction - who owes whom
-enum CommitmentDirection: String, Codable, CaseIterable {
+enum CommitmentDirection: String, Codable, CaseIterable, Sendable {
     case iOwe = "i_owe"
     case waitingFor = "waiting_for"
     
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .iOwe: return "I Owe"
         case .waitingFor: return "Waiting For"
         }
     }
     
-    var icon: String {
+    nonisolated var icon: String {
         switch self {
         case .iOwe: return "arrow.up.right.circle.fill"
         case .waitingFor: return "arrow.down.left.circle.fill"
         }
     }
     
-    var color: String {
+    nonisolated var color: String {
         switch self {
         case .iOwe: return "orange"
         case .waitingFor: return "blue"
@@ -29,13 +29,13 @@ enum CommitmentDirection: String, Codable, CaseIterable {
 }
 
 /// Commitment status
-enum CommitmentStatus: String, Codable, CaseIterable {
+enum CommitmentStatus: String, Codable, CaseIterable, Sendable {
     case open = "open"
     case done = "done"
     case blocked = "blocked"
     case dropped = "dropped"
     
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .open: return "Open"
         case .done: return "Done"
@@ -44,7 +44,7 @@ enum CommitmentStatus: String, Codable, CaseIterable {
         }
     }
     
-    var icon: String {
+    nonisolated var icon: String {
         switch self {
         case .open: return "circle"
         case .done: return "checkmark.circle.fill"
@@ -53,7 +53,7 @@ enum CommitmentStatus: String, Codable, CaseIterable {
         }
     }
     
-    var color: String {
+    nonisolated var color: String {
         switch self {
         case .open: return "blue"
         case .done: return "green"
@@ -62,7 +62,7 @@ enum CommitmentStatus: String, Codable, CaseIterable {
         }
     }
     
-    var isActive: Bool {
+    nonisolated var isActive: Bool {
         self == .open || self == .blocked
     }
 }
@@ -73,7 +73,6 @@ final class Commitment {
     var title: String = ""
     var direction: CommitmentDirection = CommitmentDirection.iOwe
     var status: CommitmentStatus = CommitmentStatus.open
-    var counterparty: String?
     var dueDate: Date?
     var importance: Int = 3 // 1-5
     var urgency: Int = 3 // 1-5
@@ -86,13 +85,13 @@ final class Commitment {
     // Relationships
     var project: Project?
     var sourceEntry: Entry?
+    var person: Person?
     
     init(
         id: UUID = UUID(),
         title: String,
         direction: CommitmentDirection = .iOwe,
         status: CommitmentStatus = .open,
-        counterparty: String? = nil,
         dueDate: Date? = nil,
         importance: Int = 3,
         urgency: Int = 3,
@@ -105,7 +104,6 @@ final class Commitment {
         self.title = title
         self.direction = direction
         self.status = status
-        self.counterparty = counterparty
         self.dueDate = dueDate
         self.importance = importance
         self.urgency = urgency
@@ -113,6 +111,11 @@ final class Commitment {
         self.aiGenerated = aiGenerated
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+    }
+    
+    /// Display name for the person involved (for UI convenience)
+    var personDisplayName: String? {
+        person?.displayName
     }
     
     /// Mark the commitment as done

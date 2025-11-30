@@ -11,7 +11,8 @@ struct LeaderDojoApp: App {
             Project.self,
             Entry.self,
             Commitment.self,
-            Reflection.self
+            Reflection.self,
+            Person.self
         ])
         
         let modelConfiguration = ModelConfiguration(

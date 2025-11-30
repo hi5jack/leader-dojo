@@ -77,7 +77,6 @@ actor DataImportService {
                 title: webCommitment.title,
                 direction: CommitmentDirection(rawValue: webCommitment.direction ?? "i_owe") ?? .iOwe,
                 status: CommitmentStatus(rawValue: webCommitment.status ?? "open") ?? .open,
-                counterparty: webCommitment.counterparty,
                 dueDate: webCommitment.dueDate,
                 importance: webCommitment.importance ?? 3,
                 urgency: webCommitment.urgency ?? 3,
@@ -86,6 +85,9 @@ actor DataImportService {
                 createdAt: webCommitment.createdAt ?? Date(),
                 updatedAt: webCommitment.updatedAt ?? Date()
             )
+            
+            // Note: counterparty string from web import is not migrated to Person
+            // Users can manually add Person relationships after import
             
             if let projectId = webCommitment.projectId, let project = projectMap[projectId] {
                 commitment.project = project
@@ -134,14 +136,14 @@ actor DataImportService {
 
 // MARK: - Web App Export Types
 
-struct WebAppExport: Codable {
+struct WebAppExport: Codable, Sendable {
     var projects: [WebProject]?
     var entries: [WebEntry]?
     var commitments: [WebCommitment]?
     var reflections: [WebReflection]?
 }
 
-struct WebProject: Codable {
+struct WebProject: Codable, Sendable {
     var id: String
     var name: String
     var description: String?
@@ -154,7 +156,7 @@ struct WebProject: Codable {
     var updatedAt: Date?
 }
 
-struct WebEntry: Codable {
+struct WebEntry: Codable, Sendable {
     var id: String
     var projectId: String?
     var kind: String?
@@ -168,7 +170,7 @@ struct WebEntry: Codable {
     var updatedAt: Date?
 }
 
-struct WebCommitment: Codable {
+struct WebCommitment: Codable, Sendable {
     var id: String
     var projectId: String?
     var entryId: String?
@@ -185,7 +187,7 @@ struct WebCommitment: Codable {
     var updatedAt: Date?
 }
 
-struct WebReflection: Codable {
+struct WebReflection: Codable, Sendable {
     var id: String
     var projectId: String?
     var periodType: String?
@@ -195,7 +197,7 @@ struct WebReflection: Codable {
     var createdAt: Date?
 }
 
-struct WebQA: Codable {
+struct WebQA: Codable, Sendable {
     var question: String
     var answer: String
 }

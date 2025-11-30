@@ -504,9 +504,10 @@ struct NewEntryView: View {
             let commitment = Commitment(
                 title: action.title,
                 direction: action.direction,
-                counterparty: action.counterparty,
                 aiGenerated: true
             )
+            // Note: AI-suggested counterparty is displayed but not linked to a Person
+            // Users can manually assign a Person relationship after creation
             commitment.project = project
             commitment.sourceEntry = entry
             modelContext.insert(commitment)

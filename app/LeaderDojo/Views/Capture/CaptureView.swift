@@ -18,6 +18,7 @@ struct CaptureView: View {
     @State private var isSaving: Bool = false
     @State private var showToast: Bool = false
     @State private var toastMessage: String = ""
+    @State private var selectedParticipants: [Person] = []
     
     @FocusState private var isTextEditorFocused: Bool
     
@@ -46,6 +47,11 @@ struct CaptureView: View {
                     
                     // Entry type selector
                     entryTypeSelector
+                    
+                    // Participants picker (for meetings and updates)
+                    if selectedEntryKind == .meeting || selectedEntryKind == .update {
+                        participantsSelector
+                    }
                     
                     // Title input
                     titleInput
@@ -185,6 +191,16 @@ struct CaptureView: View {
         case .reflection: return .pink
         case .commitment: return .indigo
         }
+    }
+    
+    // MARK: - Participants Selector
+    
+    private var participantsSelector: some View {
+        MultiPersonPicker(
+            selection: $selectedParticipants,
+            label: "Participants",
+            placeholder: "Add participants (optional)"
+        )
     }
     
     // MARK: - Title Input
@@ -355,6 +371,11 @@ struct CaptureView: View {
         )
         entry.project = project
         
+        // Add participants if any
+        if !selectedParticipants.isEmpty {
+            entry.participants = selectedParticipants
+        }
+        
         modelContext.insert(entry)
         
         // Update project's last active timestamp
@@ -373,6 +394,7 @@ struct CaptureView: View {
             entryTitle = ""
             noteContent = ""
             selectedEntryKind = .note
+            selectedParticipants = []
             
             // Hide toast after delay
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
@@ -421,6 +443,6 @@ struct CaptureView: View {
 
 #Preview {
     CaptureView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Person.self], inMemory: true)
 }
 

@@ -38,6 +38,7 @@ struct CommitmentsListView: View {
         case dueDate = "Due Date"
         case importance = "Importance"
         case project = "Project"
+        case person = "Person"
         case created = "Created"
         
         var icon: String {
@@ -45,6 +46,7 @@ struct CommitmentsListView: View {
             case .dueDate: return "calendar"
             case .importance: return "flag.fill"
             case .project: return "folder"
+            case .person: return "person.2"
             case .created: return "clock"
             }
         }
@@ -709,7 +711,7 @@ struct CommitmentsListView: View {
         if !searchText.isEmpty {
             result = result.filter { commitment in
                 commitment.title.localizedCaseInsensitiveContains(searchText) ||
-                (commitment.counterparty?.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                (commitment.person?.name.localizedCaseInsensitiveContains(searchText) ?? false) ||
                 (commitment.notes?.localizedCaseInsensitiveContains(searchText) ?? false)
             }
         }
@@ -722,6 +724,8 @@ struct CommitmentsListView: View {
             result.sort { $0.importance > $1.importance }
         case .project:
             result.sort { ($0.project?.name ?? "") < ($1.project?.name ?? "") }
+        case .person:
+            result.sort { ($0.person?.name ?? "zzz") < ($1.person?.name ?? "zzz") }
         case .created:
             result.sort { $0.createdAt > $1.createdAt }
         }
@@ -749,6 +753,8 @@ struct CommitmentsListView: View {
                 }
             case .project:
                 return commitment.project?.name ?? "No Project"
+            case .person:
+                return commitment.person?.name ?? "No Person"
             case .created:
                 let formatter = DateFormatter()
                 formatter.dateStyle = .medium
@@ -764,6 +770,13 @@ struct CommitmentsListView: View {
         case .importance:
             let order = ["Critical", "High", "Medium", "Low", "Minimal"]
             sortedKeys = grouped.keys.sorted { order.firstIndex(of: $0) ?? 99 < order.firstIndex(of: $1) ?? 99 }
+        case .person:
+            // Put "No Person" at the end
+            sortedKeys = grouped.keys.sorted { a, b in
+                if a == "No Person" { return false }
+                if b == "No Person" { return true }
+                return a < b
+            }
         default:
             sortedKeys = grouped.keys.sorted()
         }
@@ -873,10 +886,10 @@ struct CommitmentRowView: View {
                             .foregroundStyle(.secondary)
                     }
                     
-                    if let counterparty = commitment.counterparty {
+                    if let person = commitment.person {
                         Text("•")
                             .foregroundStyle(.secondary)
-                        Text(counterparty)
+                        Text(person.name)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -975,11 +988,11 @@ struct MacCommitmentRow: View {
                         .background(.blue.opacity(0.1), in: Capsule())
                     }
                     
-                    if let counterparty = commitment.counterparty {
+                    if let person = commitment.person {
                         HStack(spacing: 3) {
                             Image(systemName: "person.fill")
                                 .font(.system(size: 9))
-                            Text(counterparty)
+                            Text(person.name)
                         }
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -1207,11 +1220,11 @@ struct KanbanCard: View {
                     .background(.blue.opacity(0.1), in: Capsule())
                 }
                 
-                if let counterparty = commitment.counterparty {
+                if let person = commitment.person {
                     HStack(spacing: 2) {
                         Image(systemName: "person.fill")
                             .font(.system(size: 8))
-                        Text(counterparty)
+                        Text(person.name)
                     }
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -1252,5 +1265,5 @@ struct KanbanCard: View {
 
 #Preview {
     CommitmentsListView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Person.self], inMemory: true)
 }

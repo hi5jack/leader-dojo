@@ -108,7 +108,7 @@ actor AIService {
         \(iOweCommitments.map { "- \($0.title)" }.joined(separator: "\n"))
         
         Waiting For (\(waitingForCommitments.count)):
-        \(waitingForCommitments.map { "- \($0.title) (from \($0.counterparty ?? "unknown"))" }.joined(separator: "\n"))
+        \(waitingForCommitments.map { "- \($0.title) (from \($0.person?.name ?? "unknown"))" }.joined(separator: "\n"))
         """
         
         let response = try await sendChatCompletion(

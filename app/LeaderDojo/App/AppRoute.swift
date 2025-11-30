@@ -10,6 +10,7 @@ enum AppRoute: Hashable {
     case entry(PersistentIdentifier)
     case commitment(PersistentIdentifier)
     case reflection(PersistentIdentifier)
+    case person(PersistentIdentifier)
 }
 
 

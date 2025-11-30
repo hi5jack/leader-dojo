@@ -163,15 +163,20 @@ struct CommitmentDetailView: View {
                 }
             }
             
-            // Counterparty
+            // Person
             HStack {
-                Label("Counterparty", systemImage: "person.fill")
+                Label("Person", systemImage: "person.fill")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text(commitment.counterparty ?? "Not specified")
-                    .font(.subheadline)
-                    .foregroundStyle(commitment.counterparty != nil ? .primary : .secondary)
+                if let person = commitment.person {
+                    Text(person.displayName)
+                        .font(.subheadline)
+                } else {
+                    Text("Not specified")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
             
             // Importance
@@ -401,7 +406,7 @@ struct NewCommitmentView: View {
     
     @State private var title: String = ""
     @State private var direction: CommitmentDirection = .iOwe
-    @State private var counterparty: String = ""
+    @State private var selectedPerson: Person? = nil
     @State private var dueDate: Date = Date()
     @State private var hasDueDate: Bool = false
     @State private var importance: Int = 3
@@ -411,6 +416,9 @@ struct NewCommitmentView: View {
     
     @Query(sort: \Project.name)
     private var allProjects: [Project]
+    
+    @Query(sort: \Person.name)
+    private var allPeople: [Person]
     
     private var activeProjects: [Project] {
         allProjects.filter { $0.status == .active }
@@ -440,8 +448,14 @@ struct NewCommitmentView: View {
                             .tag(dir)
                     }
                 }
-                
-                TextField("Counterparty (optional)", text: $counterparty)
+            }
+            
+            Section {
+                PersonPicker(
+                    selection: $selectedPerson,
+                    label: "",
+                    placeholder: "Select person (optional)"
+                )
             }
             
             Section {
@@ -630,18 +644,12 @@ struct NewCommitmentView: View {
                 
                 Divider()
                 
-                // Counterparty
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Counterparty")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    
-                    TextField("Who is involved? (optional)", text: $counterparty)
-                        .textFieldStyle(.plain)
-                        .font(.body)
-                        .padding(10)
-                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
-                }
+                // Person
+                PersonPicker(
+                    selection: $selectedPerson,
+                    label: "Person",
+                    placeholder: "Select person (optional)"
+                )
             }
         }
         .padding(20)
@@ -794,7 +802,6 @@ struct NewCommitmentView: View {
         let commitment = Commitment(
             title: title,
             direction: direction,
-            counterparty: counterparty.isEmpty ? nil : counterparty,
             dueDate: hasDueDate ? dueDate : nil,
             importance: importance,
             urgency: urgency,
@@ -803,6 +810,7 @@ struct NewCommitmentView: View {
         
         commitment.project = project ?? selectedProject
         commitment.sourceEntry = sourceEntry
+        commitment.person = selectedPerson
         
         modelContext.insert(commitment)
         try? modelContext.save()
@@ -844,11 +852,14 @@ struct EditCommitmentView: View {
                             .tag(dir)
                     }
                 }
-                
-                TextField("Counterparty", text: Binding(
-                    get: { commitment.counterparty ?? "" },
-                    set: { commitment.counterparty = $0.isEmpty ? nil : $0 }
-                ))
+            }
+            
+            Section {
+                PersonPicker(
+                    selection: $commitment.person,
+                    label: "",
+                    placeholder: "Select person (optional)"
+                )
             }
             
             Section {
@@ -1036,21 +1047,12 @@ struct EditCommitmentView: View {
                 
                 Divider()
                 
-                // Counterparty
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Counterparty")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    
-                    TextField("Who is involved? (optional)", text: Binding(
-                        get: { commitment.counterparty ?? "" },
-                        set: { commitment.counterparty = $0.isEmpty ? nil : $0 }
-                    ))
-                    .textFieldStyle(.plain)
-                    .font(.body)
-                    .padding(10)
-                    .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
-                }
+                // Person
+                PersonPicker(
+                    selection: $commitment.person,
+                    label: "Person",
+                    placeholder: "Select person (optional)"
+                )
             }
         }
         .padding(20)

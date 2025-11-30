@@ -2,7 +2,7 @@ import Foundation
 import SwiftData
 
 /// Entry types (timeline card kinds)
-enum EntryKind: String, Codable, CaseIterable {
+enum EntryKind: String, Codable, CaseIterable, Sendable {
     case meeting = "meeting"
     case update = "update"
     case decision = "decision"
@@ -11,7 +11,7 @@ enum EntryKind: String, Codable, CaseIterable {
     case reflection = "reflection"
     case commitment = "commitment"
     
-    var displayName: String {
+    nonisolated var displayName: String {
         switch self {
         case .meeting: return "Meeting"
         case .update: return "Update"
@@ -23,7 +23,7 @@ enum EntryKind: String, Codable, CaseIterable {
         }
     }
     
-    var icon: String {
+    nonisolated var icon: String {
         switch self {
         case .meeting: return "person.2.fill"
         case .update: return "arrow.up.circle.fill"
@@ -35,7 +35,7 @@ enum EntryKind: String, Codable, CaseIterable {
         }
     }
     
-    var color: String {
+    nonisolated var color: String {
         switch self {
         case .meeting: return "blue"
         case .update: return "green"
@@ -48,7 +48,7 @@ enum EntryKind: String, Codable, CaseIterable {
     }
     
     /// Whether this entry type supports AI summarization
-    var supportsAISummary: Bool {
+    nonisolated var supportsAISummary: Bool {
         switch self {
         case .meeting, .update: return true
         default: return false
@@ -57,14 +57,14 @@ enum EntryKind: String, Codable, CaseIterable {
 }
 
 /// AI suggested action from entry analysis
-struct SuggestedAction: Codable, Identifiable {
+struct SuggestedAction: Codable, Identifiable, Sendable {
     var id: UUID
     var direction: CommitmentDirection
     var title: String
     var counterparty: String?
     var isSelected: Bool
     
-    init(
+    nonisolated init(
         id: UUID = UUID(),
         direction: CommitmentDirection,
         title: String,
@@ -102,6 +102,9 @@ final class Entry {
     
     @Relationship(deleteRule: .nullify, inverse: \Reflection.sourceEntry)
     var reflections: [Reflection]?
+    
+    @Relationship(deleteRule: .nullify, inverse: \Person.entries)
+    var participants: [Person]?
     
     init(
         id: UUID = UUID(),

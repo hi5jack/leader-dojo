@@ -39,7 +39,7 @@ struct NewEntryView: View {
             // Entry Type Section
             Section {
                 Picker("Type", selection: $kind) {
-                    ForEach(EntryKind.allCases, id: \.self) { entryKind in
+                    ForEach(EntryKind.activeCases, id: \.self) { entryKind in
                         Label(entryKind.displayName, systemImage: entryKind.icon)
                             .tag(entryKind)
                     }
@@ -300,7 +300,7 @@ struct NewEntryView: View {
                         .foregroundStyle(.secondary)
                     
                     Picker("", selection: $kind) {
-                        ForEach(EntryKind.allCases, id: \.self) { entryKind in
+                        ForEach(EntryKind.activeCases, id: \.self) { entryKind in
                             Label(entryKind.displayName, systemImage: entryKind.icon)
                                 .tag(entryKind)
                         }

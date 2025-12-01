@@ -675,7 +675,7 @@ struct ActivityView: View {
         case .meeting: return .blue
         case .update: return .green
         case .decision: return .purple
-        case .note: return .orange
+        case .note, ._legacyCommitment: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
         }
@@ -756,7 +756,7 @@ struct ActivityEntryRowView: View {
         case .meeting: return .blue
         case .update: return .green
         case .decision: return .purple
-        case .note: return .orange
+        case .note, ._legacyCommitment: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
         }
@@ -863,7 +863,7 @@ struct MacTimelineRow: View {
         case .meeting: return .blue
         case .update: return .green
         case .decision: return .purple
-        case .note: return .orange
+        case .note, ._legacyCommitment: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
         }

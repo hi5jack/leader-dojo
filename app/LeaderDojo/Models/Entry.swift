@@ -2,8 +2,9 @@ import Foundation
 import SwiftData
 
 /// Entry types (timeline card kinds)
-/// Note: Commitments are tracked separately in the Commitment model, not as entries
-enum EntryKind: String, Codable, CaseIterable, Sendable {
+/// Note: Commitments are tracked separately in the Commitment model, not as entries.
+/// We keep a hidden legacy case to be able to decode and clean up old data.
+enum EntryKind: String, CaseIterable, Sendable {
     case meeting = "meeting"
     case update = "update"
     case decision = "decision"
@@ -11,12 +12,21 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
     case prep = "prep"
     case reflection = "reflection"
     
+    /// Legacy value used by older builds before commitments were a separate model.
+    /// Kept only so we can decode and delete those entries from existing stores.
+    case _legacyCommitment = "commitment"
+    
+    /// Cases that should be shown in UI pickers.
+    static var activeCases: [EntryKind] {
+        [.meeting, .update, .decision, .note, .prep, .reflection]
+    }
+    
     nonisolated var displayName: String {
         switch self {
         case .meeting: return "Meeting"
         case .update: return "Update"
         case .decision: return "Decision"
-        case .note: return "Note"
+        case .note, ._legacyCommitment: return "Note"
         case .prep: return "Prep"
         case .reflection: return "Reflection"
         }
@@ -27,7 +37,7 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
         case .meeting: return "person.2.fill"
         case .update: return "arrow.up.circle.fill"
         case .decision: return "checkmark.seal.fill"
-        case .note: return "note.text"
+        case .note, ._legacyCommitment: return "note.text"
         case .prep: return "doc.text.fill"
         case .reflection: return "brain.head.profile"
         }
@@ -38,7 +48,7 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
         case .meeting: return "blue"
         case .update: return "green"
         case .decision: return "purple"
-        case .note: return "orange"
+        case .note, ._legacyCommitment: return "orange"
         case .prep: return "cyan"
         case .reflection: return "pink"
         }
@@ -48,8 +58,22 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
     nonisolated var supportsAISummary: Bool {
         switch self {
         case .meeting, .update: return true
-        default: return false
+        case .decision, .note, .prep, .reflection, ._legacyCommitment: return false
         }
+    }
+}
+
+// Custom Codable conformance so that unknown future values don't crash decoding.
+extension EntryKind: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = EntryKind(rawValue: rawValue) ?? .note
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
     }
 }
 

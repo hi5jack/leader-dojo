@@ -710,7 +710,7 @@ struct ProjectEntriesListView: View {
                         }
                     }
                     
-                    ForEach(EntryKind.allCases, id: \.self) { kind in
+                    ForEach(EntryKind.activeCases, id: \.self) { kind in
                         Button {
                             selectedKind = kind
                         } label: {

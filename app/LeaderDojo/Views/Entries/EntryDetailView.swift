@@ -240,7 +240,7 @@ struct EntryDetailView: View {
         case .meeting: return .blue
         case .update: return .green
         case .decision: return .purple
-        case .note: return .orange
+        case .note, ._legacyCommitment: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
         }
@@ -271,7 +271,7 @@ struct EditEntryView: View {
         Form {
             Section {
                 Picker("Type", selection: $entry.kind) {
-                    ForEach(EntryKind.allCases, id: \.self) { kind in
+                    ForEach(EntryKind.activeCases, id: \.self) { kind in
                         Label(kind.displayName, systemImage: kind.icon)
                             .tag(kind)
                     }
@@ -491,7 +491,7 @@ struct EditEntryView: View {
                         .foregroundStyle(.secondary)
                     
                     Picker("", selection: $entry.kind) {
-                        ForEach(EntryKind.allCases, id: \.self) { kind in
+                        ForEach(EntryKind.activeCases, id: \.self) { kind in
                             Label(kind.displayName, systemImage: kind.icon)
                                 .tag(kind)
                         }

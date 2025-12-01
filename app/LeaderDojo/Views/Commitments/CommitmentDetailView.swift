@@ -401,6 +401,7 @@ struct NewCommitmentView: View {
     @Environment(\.dismiss) private var dismiss
     
     let project: Project?
+    let person: Person?
     let sourceEntry: Entry?
     var preselectedDirection: CommitmentDirection = .iOwe
     
@@ -413,6 +414,7 @@ struct NewCommitmentView: View {
     @State private var urgency: Int = 3
     @State private var notes: String = ""
     @State private var selectedProject: Project?
+    @State private var showingValidationError: Bool = false
     
     @Query(sort: \Project.name)
     private var allProjects: [Project]
@@ -422,6 +424,16 @@ struct NewCommitmentView: View {
     
     private var activeProjects: [Project] {
         allProjects.filter { $0.status == .active }
+    }
+    
+    /// Whether the form has required context (project or person)
+    private var hasRequiredContext: Bool {
+        (project != nil || selectedProject != nil) || (person != nil || selectedPerson != nil)
+    }
+    
+    /// Whether the form can be saved
+    private var canSave: Bool {
+        !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && hasRequiredContext
     }
     
     var body: some View {
@@ -451,11 +463,21 @@ struct NewCommitmentView: View {
             }
             
             Section {
-                PersonPicker(
-                    selection: $selectedPerson,
-                    label: "",
-                    placeholder: "Select person (optional)"
-                )
+                if person != nil {
+                    // Person is locked from context
+                    HStack {
+                        Text("Person")
+                        Spacer()
+                        Text(person?.displayName ?? "")
+                            .foregroundStyle(.secondary)
+                    }
+                } else {
+                    PersonPicker(
+                        selection: $selectedPerson,
+                        label: "",
+                        placeholder: "Select person"
+                    )
+                }
             }
             
             Section {
@@ -466,12 +488,33 @@ struct NewCommitmentView: View {
                             Text(proj.name).tag(proj as Project?)
                         }
                     }
+                } else {
+                    // Project is locked from context
+                    HStack {
+                        Text("Project")
+                        Spacer()
+                        Text(project?.name ?? "")
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 
                 Toggle("Set Due Date", isOn: $hasDueDate)
                 
                 if hasDueDate {
                     DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
+                }
+            }
+            
+            // Validation hint
+            if !hasRequiredContext {
+                Section {
+                    HStack {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text("A commitment requires either a project or a person")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             }
             
@@ -498,12 +541,13 @@ struct NewCommitmentView: View {
                 Button("Create") {
                     createCommitment()
                 }
-                .disabled(title.isEmpty)
+                .disabled(!canSave)
             }
         }
         .onAppear {
             direction = preselectedDirection
             selectedProject = project
+            selectedPerson = person
         }
     }
     #endif
@@ -529,6 +573,19 @@ struct NewCommitmentView: View {
                     VStack(spacing: 20) {
                         contextCard
                         priorityCard
+                        
+                        // Validation hint
+                        if !hasRequiredContext {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                Text("A commitment requires either a project or a person")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .padding(12)
+                            .background(.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                        }
                     }
                     .frame(width: 260)
                 }
@@ -540,6 +597,7 @@ struct NewCommitmentView: View {
         .onAppear {
             direction = preselectedDirection
             selectedProject = project
+            selectedPerson = person
         }
     }
     
@@ -558,6 +616,14 @@ struct NewCommitmentView: View {
                             .font(.caption)
                     }
                     .foregroundStyle(.secondary)
+                } else if let personName = person?.displayName ?? selectedPerson?.displayName {
+                    HStack(spacing: 6) {
+                        Image(systemName: "person.fill")
+                            .font(.caption)
+                        Text(personName)
+                            .font(.caption)
+                    }
+                    .foregroundStyle(.secondary)
                 }
             }
             
@@ -573,7 +639,7 @@ struct NewCommitmentView: View {
                     createCommitment()
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(title.isEmpty)
+                .disabled(!canSave)
                 .keyboardShortcut(.defaultAction)
             }
         }
@@ -645,11 +711,32 @@ struct NewCommitmentView: View {
                 Divider()
                 
                 // Person
-                PersonPicker(
-                    selection: $selectedPerson,
-                    label: "Person",
-                    placeholder: "Select person (optional)"
-                )
+                if person != nil {
+                    // Person is locked from context
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Person")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack {
+                            Image(systemName: "person.fill")
+                                .foregroundStyle(.secondary)
+                            Text(person?.displayName ?? "")
+                            Spacer()
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(10)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                    }
+                } else {
+                    PersonPicker(
+                        selection: $selectedPerson,
+                        label: "Person",
+                        placeholder: "Select person"
+                    )
+                }
             }
         }
         .padding(20)
@@ -695,6 +782,27 @@ struct NewCommitmentView: View {
                         }
                         .labelsHidden()
                         .pickerStyle(.menu)
+                    }
+                    
+                    Divider()
+                } else {
+                    // Project is locked from context
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Project")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack {
+                            Image(systemName: "folder.fill")
+                                .foregroundStyle(.blue)
+                            Text(project?.name ?? "")
+                            Spacer()
+                            Image(systemName: "lock.fill")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(8)
+                        .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
                     }
                     
                     Divider()
@@ -800,7 +908,7 @@ struct NewCommitmentView: View {
     
     private func createCommitment() {
         let commitment = Commitment(
-            title: title,
+            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
             direction: direction,
             dueDate: hasDueDate ? dueDate : nil,
             importance: importance,
@@ -810,7 +918,7 @@ struct NewCommitmentView: View {
         
         commitment.project = project ?? selectedProject
         commitment.sourceEntry = sourceEntry
-        commitment.person = selectedPerson
+        commitment.person = person ?? selectedPerson
         
         modelContext.insert(commitment)
         try? modelContext.save()

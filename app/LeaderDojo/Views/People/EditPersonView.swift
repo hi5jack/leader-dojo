@@ -367,3 +367,4 @@ struct EditPersonView: View {
     .modelContainer(for: [Person.self, Commitment.self, Entry.self], inMemory: true)
 }
 
+

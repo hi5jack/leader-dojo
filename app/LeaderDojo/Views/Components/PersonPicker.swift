@@ -572,3 +572,4 @@ struct QuickNewPersonView: View {
         .modelContainer(for: [Person.self, Commitment.self, Entry.self], inMemory: true)
 }
 
+

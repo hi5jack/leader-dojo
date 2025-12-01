@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 
 /// Entry types (timeline card kinds)
+/// Note: Commitments are tracked separately in the Commitment model, not as entries
 enum EntryKind: String, Codable, CaseIterable, Sendable {
     case meeting = "meeting"
     case update = "update"
@@ -9,7 +10,6 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
     case note = "note"
     case prep = "prep"
     case reflection = "reflection"
-    case commitment = "commitment"
     
     nonisolated var displayName: String {
         switch self {
@@ -19,7 +19,6 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
         case .note: return "Note"
         case .prep: return "Prep"
         case .reflection: return "Reflection"
-        case .commitment: return "Commitment"
         }
     }
     
@@ -31,7 +30,6 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
         case .note: return "note.text"
         case .prep: return "doc.text.fill"
         case .reflection: return "brain.head.profile"
-        case .commitment: return "handshake.fill"
         }
     }
     
@@ -43,7 +41,6 @@ enum EntryKind: String, Codable, CaseIterable, Sendable {
         case .note: return "orange"
         case .prep: return "cyan"
         case .reflection: return "pink"
-        case .commitment: return "indigo"
         }
     }
     

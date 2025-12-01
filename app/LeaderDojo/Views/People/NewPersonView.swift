@@ -275,3 +275,4 @@ struct NewPersonView: View {
         .modelContainer(for: [Person.self, Commitment.self, Entry.self], inMemory: true)
 }
 
+

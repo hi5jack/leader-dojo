@@ -95,7 +95,7 @@ struct CommitmentsListView: View {
                 }
             }
             .sheet(isPresented: $showingNewCommitment) {
-                NewCommitmentView(project: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
+                NewCommitmentView(project: nil, person: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
             }
         }
     }
@@ -181,7 +181,7 @@ struct CommitmentsListView: View {
             }
         }
         .sheet(isPresented: $showingNewCommitment) {
-            NewCommitmentView(project: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
+            NewCommitmentView(project: nil, person: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
         }
     }
     
@@ -309,7 +309,7 @@ struct CommitmentsListView: View {
         }
         .navigationTitle("Commitments")
         .sheet(isPresented: $showingNewCommitment) {
-            NewCommitmentView(project: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
+            NewCommitmentView(project: nil, person: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
         }
         .onDeleteCommand {
             if let commitment = selectedCommitment {

@@ -71,7 +71,7 @@ struct EntryDetailView: View {
             EditEntryView(entry: entry)
         }
         .sheet(isPresented: $showingNewCommitment) {
-            NewCommitmentView(project: entry.project, sourceEntry: entry)
+            NewCommitmentView(project: entry.project, person: nil, sourceEntry: entry)
         }
         .alert("Delete Entry", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
@@ -243,7 +243,6 @@ struct EntryDetailView: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
-        case .commitment: return .indigo
         }
     }
 }

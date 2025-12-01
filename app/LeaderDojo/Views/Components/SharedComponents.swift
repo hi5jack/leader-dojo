@@ -87,23 +87,47 @@ struct QuickActionButton: View {
 
 // MARK: - Mini Commitment Row
 
-/// A compact commitment row for inline display
+/// A compact commitment row for inline display with optional toggle action
 struct MiniCommitmentRow: View {
     let commitment: Commitment
+    var onToggle: (() -> Void)? = nil
     
     var body: some View {
-        HStack {
+        HStack(spacing: 8) {
+            // Toggle button
+            if let onToggle = onToggle {
+                Button(action: onToggle) {
+                    Image(systemName: commitment.status == .done ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(commitment.status == .done ? .green : .secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            
             Text(commitment.title)
                 .font(.caption)
                 .lineLimit(1)
+                .strikethrough(commitment.status == .done)
+                .foregroundStyle(commitment.status == .done ? .secondary : .primary)
             
             Spacer()
+            
+            // Person indicator
+            if let person = commitment.person {
+                Text(person.name)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
             
             if let due = commitment.dueDate {
                 Text(due, style: .date)
                     .font(.caption2)
                     .foregroundStyle(commitment.isOverdue ? .red : .secondary)
             }
+            
+            Image(systemName: "chevron.right")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -160,7 +184,6 @@ struct EntryRowView: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
-        case .commitment: return .indigo
         }
     }
 }

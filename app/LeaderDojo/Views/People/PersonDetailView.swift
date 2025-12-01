@@ -71,9 +71,11 @@ struct PersonDetailView: View {
             EditPersonView(person: person)
         }
         .sheet(isPresented: $showingNewCommitment) {
-            NewCommitmentForPersonView(
+            NewCommitmentView(
+                project: nil,
                 person: person,
-                direction: selectedCommitmentDirection
+                sourceEntry: nil,
+                preselectedDirection: selectedCommitmentDirection
             )
         }
     }
@@ -489,101 +491,7 @@ struct PersonEntryRow: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
-        case .commitment: return .indigo
         }
-    }
-}
-
-// MARK: - New Commitment for Person View
-
-struct NewCommitmentForPersonView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
-    
-    let person: Person
-    let direction: CommitmentDirection
-    
-    @Query(sort: \Project.name)
-    private var allProjects: [Project]
-    
-    @State private var title: String = ""
-    @State private var selectedProject: Project? = nil
-    @State private var dueDate: Date = Date()
-    @State private var hasDueDate: Bool = false
-    @State private var importance: Int = 3
-    
-    private var activeProjects: [Project] {
-        allProjects.filter { $0.status == .active }
-    }
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    HStack {
-                        Image(systemName: direction.icon)
-                            .foregroundStyle(direction == .iOwe ? .orange : .blue)
-                        Text(direction == .iOwe ? "I owe \(person.name)" : "\(person.name) owes me")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                    
-                    TextField("What's the commitment?", text: $title)
-                }
-                
-                Section {
-                    Picker("Project", selection: $selectedProject) {
-                        Text("None").tag(nil as Project?)
-                        ForEach(activeProjects) { project in
-                            Text(project.name).tag(project as Project?)
-                        }
-                    }
-                    
-                    Toggle("Set Due Date", isOn: $hasDueDate)
-                    
-                    if hasDueDate {
-                        DatePicker("Due Date", selection: $dueDate, displayedComponents: .date)
-                    }
-                }
-                
-                Section("Importance") {
-                    Stepper("Importance: \(importance)", value: $importance, in: 1...5)
-                }
-            }
-            .navigationTitle("New Commitment")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        createCommitment()
-                    }
-                    .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
-            }
-        }
-    }
-    
-    private func createCommitment() {
-        let commitment = Commitment(
-            title: title.trimmingCharacters(in: .whitespacesAndNewlines),
-            direction: direction,
-            dueDate: hasDueDate ? dueDate : nil,
-            importance: importance
-        )
-        commitment.person = person
-        commitment.project = selectedProject
-        
-        modelContext.insert(commitment)
-        try? modelContext.save()
-        dismiss()
     }
 }
 
@@ -601,4 +509,5 @@ struct NewCommitmentForPersonView: View {
     }
     .modelContainer(for: [Person.self, Commitment.self, Entry.self, Project.self], inMemory: true)
 }
+
 

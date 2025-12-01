@@ -580,9 +580,6 @@ struct ActivityView: View {
             // Exclude soft-deleted entries
             guard !entry.isDeleted else { return false }
             
-            // Exclude commitment-type entries (matching web behavior)
-            guard entry.kind != .commitment else { return false }
-            
             // Filter by project if selected
             if let projectId = selectedProjectId {
                 guard entry.project?.id == projectId else { return false }
@@ -681,7 +678,6 @@ struct ActivityView: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
-        case .commitment: return .indigo
         }
     }
     
@@ -763,7 +759,6 @@ struct ActivityEntryRowView: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
-        case .commitment: return .indigo
         }
     }
 }
@@ -871,7 +866,6 @@ struct MacTimelineRow: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
-        case .commitment: return .indigo
         }
     }
 }

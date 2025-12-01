@@ -8,7 +8,9 @@ struct ProjectDetailView: View {
     @State private var showingNewEntry: Bool = false
     @State private var showingPrepBriefing: Bool = false
     @State private var showingEditProject: Bool = false
+    @State private var showingNewCommitment: Bool = false
     @State private var selectedEntryKind: EntryKind? = nil
+    @State private var selectedCommitmentDirection: CommitmentDirection = .iOwe
     
     var body: some View {
         ScrollView {
@@ -67,6 +69,14 @@ struct ProjectDetailView: View {
         .sheet(isPresented: $showingEditProject) {
             EditProjectView(project: project)
         }
+        .sheet(isPresented: $showingNewCommitment) {
+            NewCommitmentView(
+                project: project,
+                person: nil,
+                sourceEntry: nil,
+                preselectedDirection: selectedCommitmentDirection
+            )
+        }
     }
     
     // MARK: - Project Header
@@ -109,24 +119,31 @@ struct ProjectDetailView: View {
     // MARK: - Quick Actions
     
     private var quickActions: some View {
-        HStack(spacing: 12) {
-            QuickActionButton(title: "Meeting", icon: "person.2.fill", color: .blue) {
-                selectedEntryKind = .meeting
-                showingNewEntry = true
-            }
-            
-            QuickActionButton(title: "Note", icon: "note.text", color: .orange) {
-                selectedEntryKind = .note
-                showingNewEntry = true
-            }
-            
-            QuickActionButton(title: "Decision", icon: "checkmark.seal.fill", color: .purple) {
-                selectedEntryKind = .decision
-                showingNewEntry = true
-            }
-            
-            QuickActionButton(title: "Prep", icon: "doc.text.fill", color: .cyan) {
-                showingPrepBriefing = true
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                QuickActionButton(title: "Meeting", icon: "person.2.fill", color: .blue) {
+                    selectedEntryKind = .meeting
+                    showingNewEntry = true
+                }
+                
+                QuickActionButton(title: "Note", icon: "note.text", color: .orange) {
+                    selectedEntryKind = .note
+                    showingNewEntry = true
+                }
+                
+                QuickActionButton(title: "Decision", icon: "checkmark.seal.fill", color: .purple) {
+                    selectedEntryKind = .decision
+                    showingNewEntry = true
+                }
+                
+                QuickActionButton(title: "Commitment", icon: "checkmark.circle", color: .indigo) {
+                    selectedCommitmentDirection = .iOwe
+                    showingNewCommitment = true
+                }
+                
+                QuickActionButton(title: "Prep", icon: "doc.text.fill", color: .cyan) {
+                    showingPrepBriefing = true
+                }
             }
         }
     }
@@ -135,7 +152,33 @@ struct ProjectDetailView: View {
     
     private var commitmentsPanel: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Commitments", icon: "checklist", color: .indigo)
+            // Header with add button
+            HStack {
+                Label("Commitments", systemImage: "checklist")
+                    .font(.headline)
+                    .foregroundStyle(.indigo)
+                
+                Spacer()
+                
+                Menu {
+                    Button {
+                        selectedCommitmentDirection = .iOwe
+                        showingNewCommitment = true
+                    } label: {
+                        Label("I Owe", systemImage: "arrow.up.right.circle")
+                    }
+                    
+                    Button {
+                        selectedCommitmentDirection = .waitingFor
+                        showingNewCommitment = true
+                    } label: {
+                        Label("Waiting For", systemImage: "arrow.down.left.circle")
+                    }
+                } label: {
+                    Image(systemName: "plus.circle")
+                        .foregroundStyle(.indigo)
+                }
+            }
             
             let iOwe = project.commitments?.filter { $0.direction == .iOwe && $0.status.isActive } ?? []
             let waitingFor = project.commitments?.filter { $0.direction == .waitingFor && $0.status.isActive } ?? []
@@ -144,7 +187,7 @@ struct ProjectDetailView: View {
                 EmptyStateCard(
                     icon: "checkmark.circle",
                     title: "No Active Commitments",
-                    message: "Add entries to generate commitment suggestions."
+                    message: "Tap + to add a commitment, or add entries to generate suggestions."
                 )
             } else {
                 // I Owe section
@@ -155,7 +198,23 @@ struct ProjectDetailView: View {
                             .foregroundStyle(.orange)
                         
                         ForEach(iOwe.prefix(3)) { commitment in
-                            MiniCommitmentRow(commitment: commitment)
+                            #if os(macOS)
+                            NavigationLink(value: AppRoute.commitment(commitment.persistentModelID)) {
+                                MiniCommitmentRow(commitment: commitment) {
+                                    toggleCommitment(commitment)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            #else
+                            NavigationLink {
+                                CommitmentDetailView(commitment: commitment)
+                            } label: {
+                                MiniCommitmentRow(commitment: commitment) {
+                                    toggleCommitment(commitment)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            #endif
                         }
                     }
                 }
@@ -168,12 +227,37 @@ struct ProjectDetailView: View {
                             .foregroundStyle(.blue)
                         
                         ForEach(waitingFor.prefix(3)) { commitment in
-                            MiniCommitmentRow(commitment: commitment)
+                            #if os(macOS)
+                            NavigationLink(value: AppRoute.commitment(commitment.persistentModelID)) {
+                                MiniCommitmentRow(commitment: commitment) {
+                                    toggleCommitment(commitment)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            #else
+                            NavigationLink {
+                                CommitmentDetailView(commitment: commitment)
+                            } label: {
+                                MiniCommitmentRow(commitment: commitment) {
+                                    toggleCommitment(commitment)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            #endif
                         }
                     }
                 }
             }
         }
+    }
+    
+    private func toggleCommitment(_ commitment: Commitment) {
+        if commitment.status == .done {
+            commitment.reopen()
+        } else {
+            commitment.markDone()
+        }
+        try? modelContext.save()
     }
     
     // MARK: - Timeline Section

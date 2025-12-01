@@ -17,7 +17,8 @@ struct LeaderDojoMacApp: App {
             Project.self,
             Entry.self,
             Commitment.self,
-            Reflection.self
+            Reflection.self,
+            Person.self
         ])
         
         let configuration = ModelConfiguration(

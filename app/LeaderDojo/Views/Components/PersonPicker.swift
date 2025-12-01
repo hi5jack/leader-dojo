@@ -58,6 +58,7 @@ struct PersonPicker: View {
         }
         .sheet(isPresented: $showingPicker) {
             PersonPickerSheet(
+                allPeople: allPeople,
                 selection: $selection,
                 mode: .single,
                 allowCreate: allowCreate
@@ -120,6 +121,7 @@ struct MultiPersonPicker: View {
         }
         .sheet(isPresented: $showingPicker) {
             PersonPickerSheet(
+                allPeople: allPeople,
                 multiSelection: $selection,
                 mode: .multiple,
                 allowCreate: allowCreate
@@ -169,7 +171,9 @@ struct PersonChip: View {
 struct PersonPickerSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(sort: \Person.name) private var allPeople: [Person]
+    
+    /// All people available for selection, provided by the parent picker.
+    let allPeople: [Person]
     
     // Single selection binding
     @Binding var selection: Person?
@@ -184,7 +188,8 @@ struct PersonPickerSheet: View {
     @State private var showingNewPerson: Bool = false
     
     // Convenience initializer for single selection
-    init(selection: Binding<Person?>, mode: PersonPickerMode = .single, allowCreate: Bool = true) {
+    init(allPeople: [Person], selection: Binding<Person?>, mode: PersonPickerMode = .single, allowCreate: Bool = true) {
+        self.allPeople = allPeople
         self._selection = selection
         self._multiSelection = .constant([])
         self.mode = mode
@@ -192,7 +197,8 @@ struct PersonPickerSheet: View {
     }
     
     // Convenience initializer for multi selection
-    init(multiSelection: Binding<[Person]>, mode: PersonPickerMode = .multiple, allowCreate: Bool = true) {
+    init(allPeople: [Person], multiSelection: Binding<[Person]>, mode: PersonPickerMode = .multiple, allowCreate: Bool = true) {
+        self.allPeople = allPeople
         self._selection = .constant(nil)
         self._multiSelection = multiSelection
         self.mode = mode
@@ -277,6 +283,22 @@ struct PersonPickerSheet: View {
                         }
                     }
                 } else {
+                    #if os(macOS)
+                    // On macOS, use ScrollView + LazyVStack instead of List to avoid layout issues in sheets.
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(filteredPeople) { person in
+                                PersonPickerRowMac(
+                                    person: person,
+                                    isSelected: isSelected(person),
+                                    onSelect: { selectPerson(person) }
+                                )
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    #else
                     List {
                         ForEach(filteredPeople) { person in
                             PersonPickerRow(
@@ -287,6 +309,7 @@ struct PersonPickerSheet: View {
                         }
                     }
                     .listStyle(.plain)
+                    #endif
                 }
             }
             .navigationTitle(mode == .single ? "Select Person" : "Select Participants")
@@ -362,7 +385,7 @@ struct PersonPickerSheet: View {
     }
 }
 
-// MARK: - Person Picker Row
+// MARK: - Person Picker Row (iOS)
 
 struct PersonPickerRow: View {
     let person: Person
@@ -437,6 +460,134 @@ struct PersonPickerRow: View {
         }
     }
 }
+
+// MARK: - Person Picker Row (macOS)
+
+#if os(macOS)
+struct PersonPickerRowMac: View {
+    let person: Person
+    let isSelected: Bool
+    let onSelect: () -> Void
+    
+    @State private var isHovered: Bool = false
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 12) {
+                // Selection indicator
+                ZStack {
+                    Circle()
+                        .stroke(isSelected ? Color.blue : Color.secondary.opacity(0.4), lineWidth: 1.5)
+                        .frame(width: 20, height: 20)
+                    
+                    if isSelected {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 12, height: 12)
+                    }
+                }
+                
+                // Avatar
+                ZStack {
+                    Circle()
+                        .fill(avatarColor.opacity(0.2))
+                        .frame(width: 32, height: 32)
+                    
+                    Text(initials)
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(avatarColor)
+                }
+                
+                // Person info
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(person.name)
+                        .font(.body)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    
+                    if person.role != nil || person.organization != nil || person.relationshipType != nil {
+                        HStack(spacing: 4) {
+                            if let role = person.role, !role.isEmpty {
+                                Text(role)
+                            }
+                            
+                            if let org = person.organization, !org.isEmpty {
+                                if person.role != nil {
+                                    Text("•")
+                                }
+                                Text(org)
+                            }
+                            
+                            if let type = person.relationshipType {
+                                if person.role != nil || person.organization != nil {
+                                    Text("•")
+                                }
+                                Text(type.displayName)
+                                    .foregroundStyle(relationshipColor(type))
+                            }
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                // Commitment count badge
+                if person.activeCommitmentCount > 0 {
+                    HStack(spacing: 3) {
+                        Image(systemName: "checklist")
+                            .font(.caption2)
+                        Text("\(person.activeCommitmentCount)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.orange.opacity(0.15), in: Capsule())
+                    .foregroundStyle(.orange)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isHovered || isSelected ? Color.accentColor.opacity(isSelected ? 0.15 : 0.08) : Color.clear)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            isHovered = hovering
+        }
+    }
+    
+    private var initials: String {
+        let components = person.name.components(separatedBy: " ")
+        let initials = components.prefix(2).compactMap { $0.first }.map { String($0) }
+        return initials.joined().uppercased()
+    }
+    
+    private var avatarColor: Color {
+        switch person.relationshipType?.groupName {
+        case "Internal": return .blue
+        case "Investment & Advisory": return .purple
+        case "External": return .green
+        default: return .gray
+        }
+    }
+    
+    private func relationshipColor(_ type: RelationshipType) -> Color {
+        switch type.groupName {
+        case "Internal": return .blue
+        case "Investment & Advisory": return .purple
+        case "External": return .green
+        default: return .gray
+        }
+    }
+}
+#endif
 
 // MARK: - Quick New Person View
 

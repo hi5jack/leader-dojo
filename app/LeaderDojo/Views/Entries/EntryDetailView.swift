@@ -240,7 +240,7 @@ struct EntryDetailView: View {
         case .meeting: return .blue
         case .update: return .green
         case .decision: return .purple
-        case .note, ._legacyCommitment: return .orange
+        case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
         }

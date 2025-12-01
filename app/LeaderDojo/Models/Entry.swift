@@ -3,7 +3,6 @@ import SwiftData
 
 /// Entry types (timeline card kinds)
 /// Note: Commitments are tracked separately in the Commitment model, not as entries.
-/// We keep a hidden legacy case to be able to decode and clean up old data.
 enum EntryKind: String, CaseIterable, Sendable {
     case meeting = "meeting"
     case update = "update"
@@ -11,10 +10,6 @@ enum EntryKind: String, CaseIterable, Sendable {
     case note = "note"
     case prep = "prep"
     case reflection = "reflection"
-    
-    /// Legacy value used by older builds before commitments were a separate model.
-    /// Kept only so we can decode and delete those entries from existing stores.
-    case _legacyCommitment = "commitment"
     
     /// Cases that should be shown in UI pickers.
     static var activeCases: [EntryKind] {
@@ -26,7 +21,7 @@ enum EntryKind: String, CaseIterable, Sendable {
         case .meeting: return "Meeting"
         case .update: return "Update"
         case .decision: return "Decision"
-        case .note, ._legacyCommitment: return "Note"
+        case .note: return "Note"
         case .prep: return "Prep"
         case .reflection: return "Reflection"
         }
@@ -37,7 +32,7 @@ enum EntryKind: String, CaseIterable, Sendable {
         case .meeting: return "person.2.fill"
         case .update: return "arrow.up.circle.fill"
         case .decision: return "checkmark.seal.fill"
-        case .note, ._legacyCommitment: return "note.text"
+        case .note: return "note.text"
         case .prep: return "doc.text.fill"
         case .reflection: return "brain.head.profile"
         }
@@ -48,7 +43,7 @@ enum EntryKind: String, CaseIterable, Sendable {
         case .meeting: return "blue"
         case .update: return "green"
         case .decision: return "purple"
-        case .note, ._legacyCommitment: return "orange"
+        case .note: return "orange"
         case .prep: return "cyan"
         case .reflection: return "pink"
         }
@@ -58,7 +53,7 @@ enum EntryKind: String, CaseIterable, Sendable {
     nonisolated var supportsAISummary: Bool {
         switch self {
         case .meeting, .update: return true
-        case .decision, .note, .prep, .reflection, ._legacyCommitment: return false
+        case .decision, .note, .prep, .reflection: return false
         }
     }
 }

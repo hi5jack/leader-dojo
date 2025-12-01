@@ -281,7 +281,7 @@ struct CaptureView: View {
         case .meeting: return .blue
         case .update: return .green
         case .decision: return .purple
-        case .note, ._legacyCommitment: return .orange
+        case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
         }
@@ -356,7 +356,7 @@ struct CaptureView: View {
         case .decision: return "What was decided and why?"
         case .reflection: return "Your thoughts and reflections..."
         case .prep: return "What do you need to prepare?"
-        case .note, ._legacyCommitment: return "What's on your mind? Quick thoughts, observations, follow-ups..."
+        case .note: return "What's on your mind? Quick thoughts, observations, follow-ups..."
         }
     }
     

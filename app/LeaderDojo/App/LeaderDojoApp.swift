@@ -29,10 +29,6 @@ struct LeaderDojoApp: App {
         } catch {
             fatalError("Could not initialize ModelContainer: \(error)")
         }
-        
-        // One-time cleanup of legacy entry data from older builds.
-        // Specifically removes entries whose kind was the old \"commitment\" enum case.
-        cleanupLegacyCommitmentEntries()
     }
     
     var body: some Scene {
@@ -47,35 +43,6 @@ struct LeaderDojoApp: App {
                 .modelContainer(modelContainer)
         }
         #endif
-    }
-
-    /// Delete any legacy `Entry` records that were created when commitments
-    /// were still modeled as an `EntryKind.commitment`. These are now invalid
-    /// and should not appear in the timeline.
-    private func cleanupLegacyCommitmentEntries() {
-        let context = ModelContext(modelContainer)
-        let descriptor = FetchDescriptor<Entry>()
-        
-        do {
-            let entries = try context.fetch(descriptor)
-            var deletedCount = 0
-            
-            for entry in entries where entry.kind == ._legacyCommitment {
-                context.delete(entry)
-                deletedCount += 1
-            }
-            
-            if deletedCount > 0 {
-                try context.save()
-                #if DEBUG
-                print("LeaderDojo: Deleted \\(deletedCount) legacy commitment entries")
-                #endif
-            }
-        } catch {
-            #if DEBUG
-            print("LeaderDojo: Failed to clean up legacy commitment entries: \\(error)")
-            #endif
-        }
     }
 }
 

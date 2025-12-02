@@ -217,10 +217,12 @@ struct NewReflectionView: View {
     
     #if os(macOS)
     private var macLayout: some View {
-        HSplitView {
+        // HSplitView inside a sheet can collapse to zero height on macOS.
+        // Use an HStack-based layout instead so the sheet gets a sensible intrinsic size.
+        HStack(spacing: 0) {
             // Left column: Context panel
             VStack(alignment: .leading, spacing: 16) {
-                // Period info
+                // Period info (only for periodic reflections)
                 if reflectionType == .periodic {
                     periodSelectionCompact
                 }
@@ -231,39 +233,55 @@ struct NewReflectionView: View {
                 statsSummary
                 
                 Divider()
-                
-                // Event selection
-                if reflectionType == .periodic {
-                    Text("Highlight Events")
-                .font(.headline)
-            
-                    eventSelectionList
-                }
-                
+
                 Spacer()
             }
             .padding()
-            .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
+            .frame(minWidth: 280, idealWidth: 320, maxWidth: 360, maxHeight: .infinity, alignment: .top)
+            .background(Color(nsColor: .windowBackgroundColor))
+            
+            Divider()
             
             // Right column: Questions
             VStack(spacing: 0) {
                 progressIndicator
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.top)
                 
-                if isLoadingQuestions {
-                    loadingView
-                } else if let error = error {
-                    errorView(error)
-                } else {
-                    questionAnswerContent
-                }
+                macMainContent
                 
                 Divider()
                 
                 navigationButtons
                     .padding()
             }
-            .frame(minWidth: 400)
+            .frame(minWidth: 420, maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        }
+        // Give the sheet a reasonable default size so content is visible immediately.
+        .frame(minWidth: 800, minHeight: 500)
+    }
+
+    @ViewBuilder
+    private var macMainContent: some View {
+        switch currentStep {
+        case .selectPeriod:
+            // Period selection step (periodic reflections only)
+            periodSelectionStep
+        case .selectEvents:
+            // Event selection step for periodic/project/relationship reflections
+            eventSelectionStep
+        case .answerQuestions:
+            if isLoadingQuestions {
+                loadingView
+            } else if let error = error {
+                errorView(error)
+            } else if questionsAnswers.isEmpty {
+                noQuestionsView
+            } else {
+                questionAnswerContent
+            }
+        case .review:
+            reviewStep
         }
     }
     #endif
@@ -1127,7 +1145,7 @@ struct NewReflectionView: View {
         error = nil
         
         calculateStats()
-        
+
         do {
             let result = try await AIService.shared.generateContextualReflectionQuestions(
                 reflectionType: reflectionType,
@@ -1140,10 +1158,19 @@ struct NewReflectionView: View {
             )
             
             await MainActor.run {
-                questionsAnswers = result.toQAArray()
-                suggestions = result.suggestions
-                currentQuestionIndex = 0
-                isLoadingQuestions = false
+                let qa = result.toQAArray()
+                if qa.isEmpty {
+                    // Guardrail: never leave the user without questions even if AI
+                    // returns an empty set. Fall back to our default question set.
+                    usedFallbackQuestions = true
+                    useDefaultQuestions()
+                } else {
+                    questionsAnswers = qa
+                    suggestions = result.suggestions
+                    currentQuestionIndex = 0
+                    isLoadingQuestions = false
+                    error = nil
+                }
             }
         } catch AIServiceError.timeout {
             // Guardrail: Fall back to defaults on timeout and surface this to the user

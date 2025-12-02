@@ -76,7 +76,7 @@ struct QuickActionButton: View {
                 Text(title)
                     .font(.caption)
             }
-            .frame(maxWidth: .infinity)
+            .frame(width: 72)
             .padding(.vertical, 12)
             .background(color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
             .foregroundStyle(color)

@@ -380,3 +380,4 @@ struct QuickReflectionTrigger {
     .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
 
+

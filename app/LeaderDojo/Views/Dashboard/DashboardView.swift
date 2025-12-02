@@ -6,6 +6,9 @@ struct DashboardView: View {
     @Query(sort: \Commitment.dueDate)
     private var allCommitments: [Commitment]
     
+    @Query(sort: \Entry.occurredAt, order: .reverse)
+    private var allEntries: [Entry]
+    
     @Query(sort: \Project.lastActiveAt)
     private var allProjects: [Project]
     
@@ -194,13 +197,23 @@ struct DashboardView: View {
     }
     
     private var waitingForCount: Int {
-        // This would need a separate query in real implementation
-        0
+        allCommitments.filter { $0.direction == .waitingFor && $0.status == .open }.count
     }
     
     private var entriesThisWeek: Int {
-        // This would need a separate query in real implementation
-        0
+        allEntries.filter { !$0.isDeleted && isDateInThisWeek($0.occurredAt) }.count
+    }
+    
+    private func isDateInThisWeek(_ date: Date) -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        guard let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)),
+              let weekEnd = calendar.date(byAdding: .day, value: 7, to: weekStart) else {
+            return false
+        }
+        
+        return date >= weekStart && date < weekEnd
     }
     
     // MARK: - Actions

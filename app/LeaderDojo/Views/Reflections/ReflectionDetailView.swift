@@ -53,7 +53,7 @@ struct ReflectionDetailView: View {
         }
         .navigationTitle(reflection.shortTitle)
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
             ToolbarItem(placement: .primaryAction) {

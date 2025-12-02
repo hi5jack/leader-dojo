@@ -49,7 +49,7 @@ struct ReflectionInsightsView: View {
         }
         .navigationTitle("Growth Insights")
         #if os(iOS)
-        .navigationBarTitleDisplayMode(.large)
+        .navigationBarTitleDisplayMode(.inline)
         #endif
     }
     

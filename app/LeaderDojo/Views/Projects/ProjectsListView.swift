@@ -42,54 +42,52 @@ struct ProjectsListView: View {
     
     #if os(iOS)
     private var iOSLayout: some View {
-        NavigationStack {
-            List {
-                ForEach(filteredProjects) { project in
-                    NavigationLink {
-                        ProjectDetailView(project: project)
-                    } label: {
-                        ProjectRowView(project: project)
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            deleteProject(project)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        
-                        Button {
-                            archiveProject(project)
-                        } label: {
-                            Label("Archive", systemImage: "archivebox")
-                        }
-                        .tint(.orange)
-                    }
+        List {
+            ForEach(filteredProjects) { project in
+                NavigationLink {
+                    ProjectDetailView(project: project)
+                } label: {
+                    ProjectRowView(project: project)
                 }
-            }
-            .listStyle(.plain)
-            .searchable(text: $searchText, prompt: "Search projects")
-            .navigationTitle("Projects")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        deleteProject(project)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                    
                     Button {
-                        showingNewProject = true
+                        archiveProject(project)
                     } label: {
-                        Image(systemName: "plus")
+                        Label("Archive", systemImage: "archivebox")
                     }
-                }
-                
-                ToolbarItem(placement: .secondaryAction) {
-                    filterMenu
+                    .tint(.orange)
                 }
             }
-            .sheet(isPresented: $showingNewProject) {
-                NewProjectView()
-            }
-            .overlay {
-                if filteredProjects.isEmpty {
-                    emptyStateView
+        }
+        .listStyle(.plain)
+        .searchable(text: $searchText, prompt: "Search projects")
+        .navigationTitle("Projects")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingNewProject = true
+                } label: {
+                    Image(systemName: "plus")
                 }
+            }
+            
+            ToolbarItem(placement: .secondaryAction) {
+                filterMenu
+            }
+        }
+        .sheet(isPresented: $showingNewProject) {
+            NewProjectView()
+        }
+        .overlay {
+            if filteredProjects.isEmpty {
+                emptyStateView
             }
         }
     }
@@ -1095,8 +1093,10 @@ struct NewProjectView: View {
 }
 
 #Preview {
-    ProjectsListView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
+    NavigationStack {
+        ProjectsListView()
+    }
+    .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
 }
 
 

@@ -30,9 +30,7 @@ struct ActivityView: View {
     
     #if os(iOS)
     private var iPhoneLayout: some View {
-        NavigationStack {
-            activityContent
-        }
+        activityContent
     }
     
     private var activityContent: some View {
@@ -872,6 +870,8 @@ struct MacTimelineRow: View {
 #endif
 
 #Preview {
-    ActivityView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
+    NavigationStack {
+        ActivityView()
+    }
+    .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
 }

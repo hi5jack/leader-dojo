@@ -16,13 +16,7 @@ struct DashboardView: View {
     private var reflections: [Reflection]
     
     var body: some View {
-        #if os(iOS)
-        NavigationStack {
-            dashboardContent
-        }
-        #else
         dashboardContent
-        #endif
     }
     
     private var dashboardContent: some View {
@@ -443,7 +437,9 @@ struct StatCard: View {
 }
 
 #Preview {
-    DashboardView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
+    NavigationStack {
+        DashboardView()
+    }
+    .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
 

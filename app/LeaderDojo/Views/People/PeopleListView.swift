@@ -43,33 +43,31 @@ struct PeopleListView: View {
     
     #if os(iOS)
     private var iPhoneLayout: some View {
-        NavigationStack {
-            Group {
-                if filteredPeople.isEmpty {
-                    emptyState
-                } else {
-                    peopleList
+        Group {
+            if filteredPeople.isEmpty {
+                emptyState
+            } else {
+                peopleList
+            }
+        }
+        .navigationTitle("People")
+        .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $searchText, prompt: "Search people")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingNewPerson = true
+                } label: {
+                    Image(systemName: "plus")
                 }
             }
-            .navigationTitle("People")
-            .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $searchText, prompt: "Search people")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingNewPerson = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-                
-                ToolbarItem(placement: .secondaryAction) {
-                    filterMenu
-                }
+            
+            ToolbarItem(placement: .secondaryAction) {
+                filterMenu
             }
-            .sheet(isPresented: $showingNewPerson) {
-                NewPersonView()
-            }
+        }
+        .sheet(isPresented: $showingNewPerson) {
+            NewPersonView()
         }
     }
     
@@ -766,8 +764,10 @@ struct FilterChipView: View {
 }
 
 #Preview {
-    PeopleListView()
-        .modelContainer(for: [Person.self, Commitment.self, Entry.self], inMemory: true)
+    NavigationStack {
+        PeopleListView()
+    }
+    .modelContainer(for: [Person.self, Commitment.self, Entry.self], inMemory: true)
 }
 
 

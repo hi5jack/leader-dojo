@@ -48,7 +48,6 @@ struct ReflectionsListView: View {
     @State private var filterPeriodType: ReflectionPeriodType? = nil
     @State private var viewMode: ReflectionsViewMode = .grid
     @State private var searchText: String = ""
-    @State private var showingInsights: Bool = false
     
     var body: some View {
         #if os(iOS)
@@ -66,9 +65,7 @@ struct ReflectionsListView: View {
     
     #if os(iOS)
     private var iPhoneLayout: some View {
-        NavigationStack {
-            reflectionsContent
-        }
+        reflectionsContent
     }
     
     private var reflectionsContent: some View {
@@ -96,11 +93,6 @@ struct ReflectionsListView: View {
         }
         .sheet(isPresented: $showingNewReflection) {
             NewReflectionView(periodType: selectedPeriodType)
-        }
-        .sheet(isPresented: $showingInsights) {
-            NavigationStack {
-                ReflectionInsightsView()
-            }
         }
     }
     
@@ -936,6 +928,8 @@ struct MacReflectionRow: View {
 #endif
 
 #Preview {
-    ReflectionsListView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
+    NavigationStack {
+        ReflectionsListView()
+    }
+    .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
 }

@@ -22,9 +22,7 @@ struct SettingsView: View {
     
     #if os(iOS)
     private var iOSLayout: some View {
-        NavigationStack {
-            settingsForm
-        }
+        settingsForm
     }
     
     private var settingsForm: some View {

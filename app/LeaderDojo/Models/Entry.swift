@@ -11,9 +11,11 @@ enum EntryKind: String, CaseIterable, Sendable {
     case prep = "prep"
     case reflection = "reflection"
     
-    /// Cases that should be shown in UI pickers.
+    /// Cases that should be shown in UI pickers for creating new entries.
+    /// Note: .reflection is excluded because reflections should be created through
+    /// the dedicated Reflection system (with structured prompts), not as freeform entries.
     static var activeCases: [EntryKind] {
-        [.meeting, .update, .decision, .note, .prep, .reflection]
+        [.meeting, .update, .decision, .note, .prep]
     }
     
     nonisolated var displayName: String {

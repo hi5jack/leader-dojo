@@ -68,35 +68,33 @@ struct CommitmentsListView: View {
     
     #if os(iOS)
     private var iPhoneLayout: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                directionTabs
-                
-                if filteredCommitments.isEmpty {
-                    emptyState
-                } else {
-                    iPhoneCommitmentsList
+        VStack(spacing: 0) {
+            directionTabs
+            
+            if filteredCommitments.isEmpty {
+                emptyState
+            } else {
+                iPhoneCommitmentsList
+            }
+        }
+        .navigationTitle("Commitments")
+        .navigationBarTitleDisplayMode(.large)
+        .searchable(text: $searchText, prompt: "Search commitments")
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    showingNewCommitment = true
+                } label: {
+                    Image(systemName: "plus")
                 }
             }
-            .navigationTitle("Commitments")
-            .navigationBarTitleDisplayMode(.large)
-            .searchable(text: $searchText, prompt: "Search commitments")
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingNewCommitment = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                }
-                
-                ToolbarItem(placement: .secondaryAction) {
-                    filterMenu
-                }
+            
+            ToolbarItem(placement: .secondaryAction) {
+                filterMenu
             }
-            .sheet(isPresented: $showingNewCommitment) {
-                NewCommitmentView(project: nil, person: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
-            }
+        }
+        .sheet(isPresented: $showingNewCommitment) {
+            NewCommitmentView(project: nil, person: nil, sourceEntry: nil, preselectedDirection: selectedDirection)
         }
     }
     
@@ -1264,6 +1262,8 @@ struct KanbanCard: View {
 #endif
 
 #Preview {
-    CommitmentsListView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Person.self], inMemory: true)
+    NavigationStack {
+        CommitmentsListView()
+    }
+    .modelContainer(for: [Project.self, Entry.self, Commitment.self, Person.self], inMemory: true)
 }

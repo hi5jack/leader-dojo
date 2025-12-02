@@ -61,40 +61,55 @@ struct ContentView: View {
     }
     
     // MARK: - iPhone Layout (Tab Bar)
+    // iOS TabView shows first 5 tabs directly, overflow goes to "More" tab.
+    // The "More" tab provides its own UIKit navigation controller.
+    // First 5 tabs need NavigationStack; overflow tabs should NOT have one to avoid double navigation.
     
     #if os(iOS)
     private var iPhoneLayout: some View {
         TabView(selection: $selectedTab) {
-            tabContent(for: .dashboard)
-                .tabItem {
-                    Label(AppTab.dashboard.label, systemImage: AppTab.dashboard.icon)
-                }
-                .tag(AppTab.dashboard)
+            // First 5 tabs shown directly in tab bar - need NavigationStack
+            NavigationStack {
+                tabContent(for: .dashboard)
+            }
+            .tabItem {
+                Label(AppTab.dashboard.label, systemImage: AppTab.dashboard.icon)
+            }
+            .tag(AppTab.dashboard)
             
-            tabContent(for: .activity)
-                .tabItem {
-                    Label(AppTab.activity.label, systemImage: AppTab.activity.icon)
-                }
-                .tag(AppTab.activity)
+            NavigationStack {
+                tabContent(for: .activity)
+            }
+            .tabItem {
+                Label(AppTab.activity.label, systemImage: AppTab.activity.icon)
+            }
+            .tag(AppTab.activity)
             
-            tabContent(for: .projects)
-                .tabItem {
-                    Label(AppTab.projects.label, systemImage: AppTab.projects.icon)
-                }
-                .tag(AppTab.projects)
+            NavigationStack {
+                tabContent(for: .projects)
+            }
+            .tabItem {
+                Label(AppTab.projects.label, systemImage: AppTab.projects.icon)
+            }
+            .tag(AppTab.projects)
             
-            tabContent(for: .people)
-                .tabItem {
-                    Label(AppTab.people.label, systemImage: AppTab.people.icon)
-                }
-                .tag(AppTab.people)
+            NavigationStack {
+                tabContent(for: .people)
+            }
+            .tabItem {
+                Label(AppTab.people.label, systemImage: AppTab.people.icon)
+            }
+            .tag(AppTab.people)
             
-            tabContent(for: .commitments)
-                .tabItem {
-                    Label(AppTab.commitments.label, systemImage: AppTab.commitments.icon)
-                }
-                .tag(AppTab.commitments)
+            NavigationStack {
+                tabContent(for: .commitments)
+            }
+            .tabItem {
+                Label(AppTab.commitments.label, systemImage: AppTab.commitments.icon)
+            }
+            .tag(AppTab.commitments)
             
+            // Tabs 6-8 go into "More" tab - iOS provides navigation, so NO NavigationStack here
             tabContent(for: .reflections)
                 .tabItem {
                     Label(AppTab.reflections.label, systemImage: AppTab.reflections.icon)
@@ -107,7 +122,6 @@ struct ContentView: View {
                 }
                 .tag(AppTab.capture)
             
-            // Settings tab for iPhone (will appear in "More" section automatically if > 5 tabs)
             tabContent(for: .settings)
                 .tabItem {
                     Label(AppTab.settings.label, systemImage: AppTab.settings.icon)

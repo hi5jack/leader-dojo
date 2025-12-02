@@ -58,18 +58,13 @@ struct CaptureView: View {
     @FocusState private var isTextEditorFocused: Bool
     
     /// Entry kinds available for quick capture
+    /// Note: .reflection is excluded - use the dedicated Reflection system instead
     private var captureEntryKinds: [EntryKind] {
-        [.note, .meeting, .update, .decision, .reflection, .prep]
+        [.note, .meeting, .update, .decision, .prep]
     }
     
     var body: some View {
-        #if os(iOS)
-        NavigationStack {
-            captureContent
-        }
-        #else
         captureContent
-        #endif
     }
     
     private var captureContent: some View {
@@ -283,7 +278,7 @@ struct CaptureView: View {
         case .decision: return .purple
         case .note: return .orange
         case .prep: return .cyan
-        case .reflection: return .pink
+        case .reflection: return .pink  // Kept for display of existing entries
         }
     }
     
@@ -354,9 +349,9 @@ struct CaptureView: View {
         case .meeting: return "Meeting notes and key takeaways..."
         case .update: return "What's the latest update?"
         case .decision: return "What was decided and why?"
-        case .reflection: return "Your thoughts and reflections..."
         case .prep: return "What do you need to prepare?"
         case .note: return "What's on your mind? Quick thoughts, observations, follow-ups..."
+        case .reflection: return "Your thoughts..."  // Kept for display of existing entries
         }
     }
     
@@ -740,7 +735,9 @@ struct CaptureView: View {
 }
 
 #Preview {
-    CaptureView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Person.self], inMemory: true)
+    NavigationStack {
+        CaptureView()
+    }
+    .modelContainer(for: [Project.self, Entry.self, Commitment.self, Person.self], inMemory: true)
 }
 

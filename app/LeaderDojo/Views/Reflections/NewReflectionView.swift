@@ -44,6 +44,7 @@ struct NewReflectionView: View {
     @State private var selectedEntryIds: Set<UUID> = []
     @State private var currentQuestionIndex: Int = 0
     @State private var mood: ReflectionMood? = nil
+    @State private var usedFallbackQuestions: Bool = false
     
     // Convenience initializer for periodic reflections
     init(periodType: ReflectionPeriodType) {
@@ -449,15 +450,21 @@ struct NewReflectionView: View {
     // MARK: - Question Answer Step
     
     private var questionAnswerStep: some View {
-        Group {
-            if isLoadingQuestions {
-                loadingView
-            } else if let error = error {
-                errorView(error)
-            } else if questionsAnswers.isEmpty {
-                noQuestionsView
-            } else {
-                questionAnswerContent
+        VStack(spacing: 8) {
+            if usedFallbackQuestions {
+                fallbackNotice
+            }
+            
+            Group {
+                if isLoadingQuestions {
+                    loadingView
+                } else if let error = error {
+                    errorView(error)
+                } else if questionsAnswers.isEmpty {
+                    noQuestionsView
+                } else {
+                    questionAnswerContent
+                }
             }
         }
     }
@@ -492,22 +499,17 @@ struct NewReflectionView: View {
         let qa = $questionsAnswers[index]
         
         return ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                // Question number and linked entry
-                HStack {
-                    Text("Question \(index + 1)")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.purple)
-                    
-                    Spacer()
-                    
-                    if let linkedId = qa.wrappedValue.linkedEntryId,
-                       let entry = significantEntries.first(where: { $0.id == linkedId }) {
-                        Label(entry.kind.displayName, systemImage: entry.kind.icon)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
+            VStack(alignment: .leading, spacing: 16) {
+                // Question number
+                Text("Question \(index + 1)")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.purple)
+                
+                // Linked entry context (if any)
+                if let linkedId = qa.wrappedValue.linkedEntryId,
+                   let entry = significantEntries.first(where: { $0.id == linkedId }) {
+                    linkedEntryBadge(entry: entry)
                 }
                 
                 // Question text
@@ -541,6 +543,44 @@ struct NewReflectionView: View {
                 Spacer()
             }
             .padding()
+        }
+    }
+    
+    /// Shows linked entry context as a prominent badge
+    private func linkedEntryBadge(entry: Entry) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: entry.kind.icon)
+                .font(.caption)
+                .foregroundStyle(entryKindColor(entry.kind))
+            
+            Text(entry.title)
+                .font(.caption)
+                .fontWeight(.medium)
+                .lineLimit(1)
+            
+            Spacer()
+            
+            Text(entry.occurredAt, style: .date)
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(entryKindColor(entry.kind).opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(entryKindColor(entry.kind).opacity(0.3), lineWidth: 1)
+        )
+    }
+    
+    private func entryKindColor(_ kind: EntryKind) -> Color {
+        switch kind {
+        case .meeting: return .blue
+        case .update: return .green
+        case .decision: return .purple
+        case .note: return .orange
+        case .prep: return .cyan
+        case .reflection: return .pink
         }
     }
     
@@ -610,6 +650,10 @@ struct NewReflectionView: View {
     private var reviewStep: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if usedFallbackQuestions {
+                    fallbackNotice
+                }
+                
                 Label("Review", systemImage: "checkmark.circle")
                     .font(.headline)
                 
@@ -652,6 +696,29 @@ struct NewReflectionView: View {
     }
     
     // MARK: - Shared Components
+    
+    /// Banner shown when AI timed out and we fell back to default questions
+    private var fallbackNotice: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Using fallback questions")
+                    .font(.footnote)
+                    .fontWeight(.semibold)
+                Text("AI took too long to respond, so we’re using a generic set of questions.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(8)
+        .background(Color.orange.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+        )
+    }
     
     private var statsSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -765,6 +832,34 @@ struct NewReflectionView: View {
     
     private var navigationButtons: some View {
         HStack {
+            // Back button
+            #if os(iOS)
+            if currentStep == .answerQuestions && currentQuestionIndex > 0 {
+                Button {
+                    withAnimation {
+                        currentQuestionIndex = max(0, currentQuestionIndex - 1)
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Previous")
+                    }
+                }
+                .buttonStyle(.bordered)
+            } else if currentStep.rawValue > stepsForReflectionType.first?.rawValue ?? 0 {
+                Button {
+                    withAnimation {
+                        goToPreviousStep()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+            #else
             if currentStep.rawValue > stepsForReflectionType.first?.rawValue ?? 0 {
                 Button {
                     withAnimation {
@@ -778,6 +873,7 @@ struct NewReflectionView: View {
                 }
                 .buttonStyle(.bordered)
             }
+            #endif
             
             Spacer()
             
@@ -790,6 +886,38 @@ struct NewReflectionView: View {
             }
             
             if currentStep.rawValue < (stepsForReflectionType.last?.rawValue ?? 0) {
+                #if os(iOS)
+                if currentStep == .answerQuestions && !questionsAnswers.isEmpty {
+                    Button {
+                        withAnimation {
+                            // On iPhone, advance through questions first, then move to Review
+                            if currentQuestionIndex < questionsAnswers.count - 1 {
+                                currentQuestionIndex += 1
+                            } else {
+                                goToNextStep()
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Text(currentQuestionIndex < questionsAnswers.count - 1 ? "Next Question" : "Review")
+                            Image(systemName: "chevron.right")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    Button {
+                        withAnimation {
+                            goToNextStep()
+                        }
+                    } label: {
+                        HStack {
+                            Text("Next")
+                            Image(systemName: "chevron.right")
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                #else
                 Button {
                     withAnimation {
                         goToNextStep()
@@ -801,6 +929,7 @@ struct NewReflectionView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
+                #endif
             }
         }
         .padding()
@@ -894,7 +1023,23 @@ struct NewReflectionView: View {
     
     // MARK: - Actions
     
+    /// Reset in-memory state for a fresh reflection session
+    private func resetState() {
+        questionsAnswers = []
+        suggestions = []
+        stats = ReflectionStats()
+        error = nil
+        isLoadingQuestions = false
+        currentQuestionIndex = 0
+        mood = nil
+        selectedEntryIds = []
+        usedFallbackQuestions = false
+    }
+    
     private func initializeReflection() async {
+        // Always start from a clean slate to avoid reusing questions
+        resetState()
+        
         // Auto-select significant entries
         let topEntries = significantEntries.prefix(3)
         selectedEntryIds = Set(topEntries.map { $0.id })
@@ -908,7 +1053,9 @@ struct NewReflectionView: View {
             currentStep = .selectPeriod
         case .project, .relationship:
             currentStep = .selectEvents
-            await loadQuestionsAndStats()
+            // For project/relationship reflections, wait until after the user finalizes
+            // event selection (Next) before generating questions, so they reflect the
+            // events they actually chose.
         case .quick:
             currentStep = .answerQuestions
             await loadQuestionsAndStats()
@@ -917,12 +1064,31 @@ struct NewReflectionView: View {
     
     private func goToNextStep() {
         let steps = stepsForReflectionType
-        if let currentIndex = steps.firstIndex(of: currentStep),
-           currentIndex < steps.count - 1 {
-            currentStep = steps[currentIndex + 1]
+        guard let currentIndex = steps.firstIndex(of: currentStep) else { return }
+        
+        // Don't advance past the answer step until we actually have questions
+        // (prevents jumping straight to Review while questions are still loading).
+        if currentStep == .answerQuestions && (questionsAnswers.isEmpty || isLoadingQuestions) {
+            return
+        }
+        
+        if currentIndex < steps.count - 1 {
+            let nextStep = steps[currentIndex + 1]
+            
+            // If we're moving into the answer step (e.g. from event selection),
+            // always regenerate questions based on the current selection.
+            if nextStep == .answerQuestions {
+                questionsAnswers = []
+                suggestions = []
+                error = nil
+                isLoadingQuestions = true
+                currentQuestionIndex = 0
+            }
+            
+            currentStep = nextStep
             
             // Load questions when entering answer step
-            if currentStep == .answerQuestions && questionsAnswers.isEmpty {
+            if currentStep == .answerQuestions {
                 Task {
                     await loadQuestionsAndStats()
                 }
@@ -934,7 +1100,17 @@ struct NewReflectionView: View {
         let steps = stepsForReflectionType
         if let currentIndex = steps.firstIndex(of: currentStep),
            currentIndex > 0 {
-            currentStep = steps[currentIndex - 1]
+            let previousStep = steps[currentIndex - 1]
+            currentStep = previousStep
+            
+            // If we're going back to event selection, clear questions so they will regenerate
+            if previousStep == .selectEvents {
+                questionsAnswers = []
+                suggestions = []
+                error = nil
+                isLoadingQuestions = false
+                currentQuestionIndex = 0
+            }
         }
     }
     
@@ -966,11 +1142,13 @@ struct NewReflectionView: View {
             await MainActor.run {
                 questionsAnswers = result.toQAArray()
                 suggestions = result.suggestions
+                currentQuestionIndex = 0
                 isLoadingQuestions = false
             }
         } catch AIServiceError.timeout {
-            // Guardrail: Fall back to defaults on timeout
+            // Guardrail: Fall back to defaults on timeout and surface this to the user
             await MainActor.run {
+                usedFallbackQuestions = true
                 useDefaultQuestions()
             }
         } catch {

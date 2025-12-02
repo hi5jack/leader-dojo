@@ -12,7 +12,9 @@ actor AIService {
     private let model = "gpt-4o-mini"
     
     /// Timeout for AI requests (Guardrail: Reflection is never blocked by AI)
-    private let requestTimeout: TimeInterval = 8.0
+    /// Increased to 15s to reduce unintended fallbacks to generic default questions,
+    /// especially on slower mobile networks.
+    private let requestTimeout: TimeInterval = 15.0
     
     // MARK: - Public Methods
     
@@ -249,7 +251,7 @@ actor AIService {
             systemPrompt: systemPrompt,
             userPrompt: userPrompt,
             apiKey: apiKey,
-            timeout: 5.0  // Shorter timeout for quick reflections
+            timeout: 8.0  // Slightly longer timeout for quick reflections
         )
         
         return response.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -354,28 +356,35 @@ actor AIService {
         
         Based on their specific activities and statistics:
         1. Generate 3-5 thoughtful, SPECIFIC reflection questions
-        2. Questions should reference the actual events/entries provided when relevant
+        2. Reference events by their TITLE (e.g., "your meeting about X"), NEVER by ID or UUID
         3. Include at least one question about patterns or recurring themes
         4. Include at least one forward-looking question
         5. Provide 2-3 actionable suggestions
         
+        IMPORTANT:
+        - In question TEXT, refer to events by title/description, NEVER include UUIDs
+        - Use "linkedEntryId" ONLY in JSON structure to link questions to events (metadata for the app)
+        
         Return as JSON:
         {
             "questions": [
-                {"text": "Question text", "linkedEntryId": "uuid or null"}
+                {"text": "Human-readable question without IDs", "linkedEntryId": "uuid or null"}
             ],
             "suggestions": ["suggestion1", "suggestion2"]
         }
         """
         
         // Build context from selected entries
-        let entriesContext = selectedEntries.prefix(5).map { entry in
+        let entriesContext = selectedEntries.prefix(5).enumerated().map { index, entry in
             """
-            - [ID: \(entry.id.uuidString)] \(entry.kind.displayName): "\(entry.title)"
-              \(entry.displayContent.prefix(150))...
-              \(entry.isDecision ? "(Marked as key decision)" : "")
+            Event \(index + 1):
+              ID (for linkedEntryId only): \(entry.id.uuidString)
+              Type: \(entry.kind.displayName)
+              Title: "\(entry.title)"
+              Content: \(entry.displayContent.prefix(150))...
+              \(entry.isDecision ? "Note: Key decision" : "")
             """
-        }.joined(separator: "\n")
+        }.joined(separator: "\n\n")
         
         let iOweCount = openCommitments.filter { $0.direction == .iOwe }.count
         let waitingCount = openCommitments.filter { $0.direction == .waitingFor }.count
@@ -394,6 +403,8 @@ actor AIService {
         
         Key Events This Period:
         \(entriesContext.isEmpty ? "No specific events selected" : entriesContext)
+        
+        Remember: Reference events by TITLE in questions, use linkedEntryId only for metadata.
         """
         
         return (systemPrompt, userPrompt)
@@ -411,15 +422,24 @@ actor AIService {
         
         Generate 3-4 reflection questions that:
         1. Are specific to this project's situation
-        2. Address leadership behaviors, not just project status
-        3. Surface potential blind spots
-        4. Encourage honest self-assessment
+        2. Reference concrete events by their TITLE (e.g., "the meeting about X" or "your note on Y"), NOT by ID
+        3. Address leadership behaviors, not just project status
+        4. Surface potential blind spots
+        5. Encourage honest self-assessment
+        
+        IMPORTANT: 
+        - In the question TEXT, refer to events by their title or description, NEVER include UUIDs or IDs
+        - Use "linkedEntryId" ONLY in the JSON structure to link the question to an event
+        - The linkedEntryId is metadata for the app, not part of the question the user sees
         
         Return as JSON:
         {
-            "questions": [{"text": "Question", "linkedEntryId": null}],
+            "questions": [{"text": "Human-readable question without IDs", "linkedEntryId": "uuid-or-null"}],
             "suggestions": ["suggestion1"]
         }
+        
+        Example good question: "In your meeting about the Q4 roadmap, how effectively did you communicate priorities?"
+        Example BAD question: "Regarding entry ID A7711AF6-..., how did you handle it?" (NEVER do this)
         """
         
         let projectCommitments = openCommitments.filter { $0.project?.id == project?.id }
@@ -427,9 +447,16 @@ actor AIService {
         let waitingCount = projectCommitments.filter { $0.direction == .waitingFor }.count
         let overdueCount = projectCommitments.filter { $0.isOverdue }.count
         
-        let entriesContext = selectedEntries.prefix(5).map { entry in
-            "- \(entry.kind.displayName): \(entry.title)"
-        }.joined(separator: "\n")
+        let entriesContext = selectedEntries.prefix(5).enumerated().map { index, entry in
+            """
+            Event \(index + 1):
+              ID (for linkedEntryId only): \(entry.id.uuidString)
+              Type: \(entry.kind.displayName)
+              Title: "\(entry.title)"
+              Content: \(entry.displayContent.prefix(160))...
+              \(entry.isDecision ? "Note: This was marked as a key decision" : "")
+            """
+        }.joined(separator: "\n\n")
         
         let userPrompt = """
         Project: \(project?.name ?? "Unknown")
@@ -442,10 +469,12 @@ actor AIService {
         - Waiting for \(waitingCount) commitments
         - \(overdueCount) commitments are overdue
         
-        Recent Activity:
-        \(entriesContext.isEmpty ? "No recent entries" : entriesContext)
+        Selected Events to Reflect On:
+        \(entriesContext.isEmpty ? "No events selected" : entriesContext)
         
-        Notes: \(project?.ownerNotes ?? "None")
+        Owner Notes: \(project?.ownerNotes ?? "None")
+        
+        Remember: Reference events by their TITLE in questions, use linkedEntryId only for metadata.
         """
         
         return (systemPrompt, userPrompt)

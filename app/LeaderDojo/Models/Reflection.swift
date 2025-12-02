@@ -82,7 +82,7 @@ enum ReflectionMood: String, Codable, CaseIterable, Sendable {
 // MARK: - Reflection Period Type
 
 /// Reflection period type (for periodic reflections)
-enum ReflectionPeriodType: String, Codable, CaseIterable, Sendable {
+enum ReflectionPeriodType: String, Codable, CaseIterable, Sendable, Hashable {
     case week = "week"
     case month = "month"
     case quarter = "quarter"

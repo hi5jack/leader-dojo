@@ -11,6 +11,8 @@ enum AppRoute: Hashable {
     case commitment(PersistentIdentifier)
     case reflection(PersistentIdentifier)
     case person(PersistentIdentifier)
+    /// New periodic reflection creation (e.g. weekly reflection flow)
+    case newPeriodicReflection(ReflectionPeriodType)
 }
 
 

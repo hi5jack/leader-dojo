@@ -84,41 +84,50 @@ struct NewReflectionView: View {
     }
     
     var body: some View {
+        #if os(iOS)
         NavigationStack {
-            Group {
-                #if os(iOS)
-                if UIDevice.current.userInterfaceIdiom == .pad {
-                    iPadLayout
-                } else {
-                    iPhoneLayout
-                }
-                #else
-                macLayout
-                #endif
-            }
-            .navigationTitle(navigationTitle)
+            rootContent
+        }
+        #else
+        rootContent
+        #endif
+    }
+    
+    /// Platform-agnostic root content; wrapped in a `NavigationStack` on iOS only.
+    private var rootContent: some View {
+        Group {
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+            if UIDevice.current.userInterfaceIdiom == .pad {
+                iPadLayout
+            } else {
+                iPhoneLayout
+            }
+            #else
+            macLayout
             #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
+        }
+        .navigationTitle(navigationTitle)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
                 }
-                
-                ToolbarItem(placement: .confirmationAction) {
-                    if currentStep == .review || currentStep == .answerQuestions {
+            }
+            
+            ToolbarItem(placement: .confirmationAction) {
+                if currentStep == .review || currentStep == .answerQuestions {
                     Button("Save") {
                         saveReflection()
                     }
                     .disabled(isLoadingQuestions)
-                    }
                 }
             }
-            .task {
-                await initializeReflection()
-            }
+        }
+        .task {
+            await initializeReflection()
         }
     }
     

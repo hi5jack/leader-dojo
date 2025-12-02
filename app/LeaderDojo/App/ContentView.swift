@@ -198,11 +198,10 @@ struct ContentView: View {
     private func sidebarRow(for tab: AppTab) -> some View {
         Button {
             #if os(macOS)
-            if selectedTab != tab {
-                // When switching tabs on macOS, clear the NavigationStack path
-                // so any pushed detail views are dismissed.
-                navigationPath = NavigationPath()
-            }
+            // On macOS, always clear the NavigationStack path when a sidebar item
+            // is tapped so any pushed detail views (like reflection flows) are
+            // dismissed and we return to the root of the selected tab.
+            navigationPath = NavigationPath()
             #endif
             selectedTab = tab
         } label: {
@@ -248,7 +247,9 @@ struct ContentView: View {
             if let person = modelContext.model(for: id) as? Person {
                 PersonDetailView(person: person)
             }
-        }
+        case .newPeriodicReflection(let periodType):
+            NewReflectionView(periodType: periodType)
+            }
     }
     #endif
     

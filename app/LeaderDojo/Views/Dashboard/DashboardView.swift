@@ -155,6 +155,18 @@ struct DashboardView: View {
         }
         // Weekly reflection prompt takes priority
         else if shouldPromptWeeklyReflection {
+            #if os(macOS)
+            // Use value-based navigation so it integrates with NavigationStack(path:)
+            // and sidebar clicks can pop the view by clearing the path.
+            NavigationLink(value: AppRoute.newPeriodicReflection(.week)) {
+                ReflectionPromptCard(
+                    title: "Weekly Reflection",
+                    message: "Take a few minutes to reflect on your week. You had \(entriesThisWeek) entries.",
+                    icon: "calendar.badge.clock"
+                )
+            }
+            .buttonStyle(.plain)
+            #else
             NavigationLink {
                 NewReflectionView(periodType: .week)
             } label: {
@@ -165,6 +177,7 @@ struct DashboardView: View {
                 )
             }
             .buttonStyle(.plain)
+            #endif
         }
         // Project needing reflection (hasn't been reflected on in 2+ weeks)
         else if let projectNeedingReflection = projectNeedingReflection {

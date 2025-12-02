@@ -9,6 +9,7 @@ struct ProjectDetailView: View {
     @State private var showingPrepBriefing: Bool = false
     @State private var showingEditProject: Bool = false
     @State private var showingNewCommitment: Bool = false
+    @State private var showingProjectReflection: Bool = false
     @State private var selectedEntryKind: EntryKind? = nil
     @State private var selectedCommitmentDirection: CommitmentDirection = .iOwe
     
@@ -48,6 +49,12 @@ struct ProjectDetailView: View {
                         Label("Prep Briefing", systemImage: "doc.text.fill")
                     }
                     
+                    Button {
+                        showingProjectReflection = true
+                    } label: {
+                        Label("Reflect on Project", systemImage: "brain.head.profile")
+                    }
+                    
                     Divider()
                     
                     Button {
@@ -76,6 +83,9 @@ struct ProjectDetailView: View {
                 sourceEntry: nil,
                 preselectedDirection: selectedCommitmentDirection
             )
+        }
+        .sheet(isPresented: $showingProjectReflection) {
+            NewReflectionView(project: project)
         }
     }
     

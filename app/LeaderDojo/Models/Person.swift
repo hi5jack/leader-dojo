@@ -122,6 +122,10 @@ final class Person {
     @Relationship(deleteRule: .nullify)
     var entries: [Entry]?
     
+    /// NEW: Reflections about this person/relationship
+    @Relationship(deleteRule: .nullify)
+    var reflections: [Reflection]?
+    
     init(
         id: UUID = UUID(),
         name: String,
@@ -207,6 +211,42 @@ final class Person {
     var daysSinceLastInteraction: Int? {
         guard let lastDate = lastInteractionDate else { return nil }
         return Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day
+    }
+    
+    // MARK: - Reflection Helpers (NEW)
+    
+    /// Count of reflections about this person
+    var reflectionCount: Int {
+        reflections?.count ?? 0
+    }
+    
+    /// Most recent reflection about this relationship
+    var lastReflection: Reflection? {
+        reflections?.sorted { $0.createdAt > $1.createdAt }.first
+    }
+    
+    /// Date of last reflection about this relationship
+    var lastReflectionDate: Date? {
+        lastReflection?.createdAt
+    }
+    
+    /// Days since last reflection on this relationship
+    var daysSinceLastReflection: Int? {
+        guard let lastDate = lastReflectionDate else { return nil }
+        return Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day
+    }
+    
+    /// Whether this relationship needs attention (no recent reflection + active commitments)
+    var needsReflection: Bool {
+        let hasActiveCommitments = activeCommitmentCount > 0
+        let noRecentReflection = (daysSinceLastReflection ?? 30) > 14  // More than 2 weeks
+        return hasActiveCommitments && noRecentReflection
+    }
+    
+    /// Projects this person is involved in (via entries)
+    var activeProjects: [Project] {
+        let projectSet = Set(entries?.compactMap { $0.project } ?? [])
+        return Array(projectSet).filter { $0.status == .active }
     }
 }
 

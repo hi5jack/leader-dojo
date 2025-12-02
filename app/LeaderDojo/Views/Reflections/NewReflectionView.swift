@@ -1,6 +1,24 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - View State
+
+enum ReflectionCreationStep: Int, CaseIterable {
+    case selectPeriod = 0
+    case selectEvents = 1
+    case answerQuestions = 2
+    case review = 3
+    
+    var title: String {
+        switch self {
+        case .selectPeriod: return "Period"
+        case .selectEvents: return "Events"
+        case .answerQuestions: return "Reflect"
+        case .review: return "Review"
+        }
+    }
+}
+
 struct NewReflectionView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -9,31 +27,75 @@ struct NewReflectionView: View {
     @Query private var allCommitments: [Commitment]
     @Query private var allProjects: [Project]
     
-    let periodType: ReflectionPeriodType
+    let reflectionType: ReflectionType
+    let periodType: ReflectionPeriodType?
+    let project: Project?
+    let person: Person?
     
-    @State private var isLoadingQuestions: Bool = true
+    // State
+    @State private var currentStep: ReflectionCreationStep = .selectPeriod
+    @State private var isLoadingQuestions: Bool = false
     @State private var questionsAnswers: [ReflectionQA] = []
     @State private var suggestions: [String] = []
     @State private var stats: ReflectionStats = ReflectionStats()
     @State private var error: String? = nil
-    @State private var currentQuestionIndex: Int = 0
     @State private var periodStart: Date = Date()
     @State private var showingDatePicker: Bool = false
+    @State private var selectedEntryIds: Set<UUID> = []
+    @State private var currentQuestionIndex: Int = 0
+    @State private var mood: ReflectionMood? = nil
+    
+    // Convenience initializer for periodic reflections
+    init(periodType: ReflectionPeriodType) {
+        self.reflectionType = .periodic
+        self.periodType = periodType
+        self.project = nil
+        self.person = nil
+    }
+    
+    // Convenience initializer for project reflections
+    init(project: Project) {
+        self.reflectionType = .project
+        self.periodType = nil
+        self.project = project
+        self.person = nil
+    }
+    
+    // Convenience initializer for relationship reflections
+    init(person: Person) {
+        self.reflectionType = .relationship
+        self.periodType = nil
+        self.project = nil
+        self.person = person
+    }
+    
+    // Full initializer
+    init(
+        reflectionType: ReflectionType,
+        periodType: ReflectionPeriodType? = nil,
+        project: Project? = nil,
+        person: Person? = nil
+    ) {
+        self.reflectionType = reflectionType
+        self.periodType = periodType
+        self.project = project
+        self.person = person
+    }
     
     var body: some View {
         NavigationStack {
             Group {
-                if isLoadingQuestions {
-                    loadingView
-                } else if let error = error {
-                    errorView(error)
-                } else if questionsAnswers.isEmpty {
-                    noQuestionsView
+                #if os(iOS)
+                if UIDevice.current.userInterfaceIdiom == .pad {
+                    iPadLayout
                 } else {
-                    questionAnswerView
+                    iPhoneLayout
                 }
+                #else
+                macLayout
+                #endif
             }
-            .navigationTitle("\(periodType.displayName) Reflection")
+            .navigationTitle(navigationTitle)
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -45,116 +107,224 @@ struct NewReflectionView: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
+                    if currentStep == .review || currentStep == .answerQuestions {
                     Button("Save") {
                         saveReflection()
                     }
                     .disabled(isLoadingQuestions)
+                    }
                 }
             }
             .task {
-                await loadQuestionsAndStats()
+                await initializeReflection()
             }
         }
     }
     
-    // MARK: - Loading View
-    
-    private var loadingView: some View {
-        VStack(spacing: 20) {
-            ProgressView()
-                .progressViewStyle(.circular)
-                .scaleEffect(1.5)
-            
-            Text("Analyzing your activity...")
-                .font(.headline)
-            
-            Text("Generating personalized reflection questions")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+    private var navigationTitle: String {
+        switch reflectionType {
+        case .periodic:
+            return "\(periodType?.displayName ?? "Periodic") Reflection"
+        case .project:
+            return "Project Reflection"
+        case .relationship:
+            return "Relationship Reflection"
+        case .quick:
+            return "Quick Reflection"
         }
     }
     
-    // MARK: - Error View
+    // MARK: - iPhone Layout
     
-    private func errorView(_ message: String) -> some View {
-        VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.orange)
+    #if os(iOS)
+    private var iPhoneLayout: some View {
+        VStack(spacing: 0) {
+            // Progress indicator
+            progressIndicator
             
-            Text("Couldn't generate questions")
-                .font(.headline)
-            
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-            
-            Button("Use Default Questions") {
-                useDefaultQuestions()
-            }
-            .buttonStyle(.borderedProminent)
-            
-            Button("Try Again") {
-                Task {
-                    await loadQuestionsAndStats()
-                }
-            }
-        }
-        .padding()
-    }
-    
-    // MARK: - No Questions View
-    
-    private var noQuestionsView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "questionmark.circle.fill")
-                .font(.system(size: 48))
-                .foregroundStyle(.secondary)
-            
-            Text("No questions generated")
-                .font(.headline)
-            
-            Button("Use Default Questions") {
-                useDefaultQuestions()
-            }
-            .buttonStyle(.borderedProminent)
-        }
-    }
-    
-    // MARK: - Question Answer View
-    
-    private var questionAnswerView: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                // Period Selection
-                periodSelection
+            // Content based on step
+            TabView(selection: $currentStep) {
+                periodSelectionStep
+                    .tag(ReflectionCreationStep.selectPeriod)
                 
-                // Stats Summary
+                eventSelectionStep
+                    .tag(ReflectionCreationStep.selectEvents)
+                
+                questionAnswerStep
+                    .tag(ReflectionCreationStep.answerQuestions)
+                
+                reviewStep
+                    .tag(ReflectionCreationStep.review)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.easeInOut, value: currentStep)
+            
+            // Navigation buttons
+            navigationButtons
+        }
+    }
+    #endif
+    
+    // MARK: - iPad Layout
+    
+    #if os(iOS)
+    private var iPadLayout: some View {
+        HStack(spacing: 0) {
+            // Left column: Context panel
+            VStack(alignment: .leading, spacing: 16) {
+                // Stats summary
                 statsSummary
+                    .padding()
                 
-                // AI Suggestions (if any)
-                if !suggestions.isEmpty {
-                    suggestionsSection
+                Divider()
+                
+                // Event selection (always visible on iPad)
+                if reflectionType == .periodic {
+                    Text("Highlight Events")
+                .font(.headline)
+                        .padding(.horizontal)
+                    
+                    eventSelectionList
                 }
                 
-                // Progress indicator
+                Spacer()
+            }
+            .frame(width: 320)
+            .background(Color(uiColor: .secondarySystemBackground))
+            
+            Divider()
+            
+            // Right column: Questions
+            VStack(spacing: 0) {
                 progressIndicator
                 
-                // Questions
-                ForEach($questionsAnswers) { $qa in
-                    questionCard(qa: $qa)
+                if isLoadingQuestions {
+                    loadingView
+                } else if let error = error {
+                    errorView(error)
+                } else {
+                    questionAnswerContent
                 }
+                
+                navigationButtons
+            }
+        }
+    }
+    #endif
+    
+    // MARK: - macOS Layout
+    
+    #if os(macOS)
+    private var macLayout: some View {
+        HSplitView {
+            // Left column: Context panel
+            VStack(alignment: .leading, spacing: 16) {
+                // Period info
+                if reflectionType == .periodic {
+                    periodSelectionCompact
+                }
+                
+                Divider()
+                
+                // Stats summary
+                statsSummary
+                
+                Divider()
+                
+                // Event selection
+                if reflectionType == .periodic {
+                    Text("Highlight Events")
+                .font(.headline)
+            
+                    eventSelectionList
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .frame(minWidth: 280, idealWidth: 320, maxWidth: 400)
+            
+            // Right column: Questions
+            VStack(spacing: 0) {
+                progressIndicator
+                    .padding()
+                
+                if isLoadingQuestions {
+                    loadingView
+                } else if let error = error {
+                    errorView(error)
+                } else {
+                    questionAnswerContent
+                }
+                
+                Divider()
+                
+                navigationButtons
+                    .padding()
+            }
+            .frame(minWidth: 400)
+        }
+    }
+    #endif
+    
+    // MARK: - Progress Indicator
+    
+    private var progressIndicator: some View {
+        VStack(spacing: 8) {
+            // Step dots
+            HStack(spacing: 8) {
+                ForEach(Array(stepsForReflectionType.enumerated()), id: \.offset) { index, step in
+                    Circle()
+                        .fill(currentStep.rawValue >= step.rawValue ? Color.purple : Color.secondary.opacity(0.3))
+                        .frame(width: 8, height: 8)
+                }
+            }
+            
+            // Question progress (when in answer step)
+            if currentStep == .answerQuestions && !questionsAnswers.isEmpty {
+                HStack {
+                    Text("Question \(currentQuestionIndex + 1) of \(questionsAnswers.count)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    Spacer()
+                    
+                    Text(reflectionType.estimatedTime)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(.horizontal)
+            }
+        }
+        .padding(.vertical, 12)
+        .background(.bar)
+    }
+    
+    private var stepsForReflectionType: [ReflectionCreationStep] {
+        switch reflectionType {
+        case .periodic:
+            return [.selectPeriod, .selectEvents, .answerQuestions, .review]
+        case .project, .relationship:
+            return [.selectEvents, .answerQuestions, .review]
+        case .quick:
+            return [.answerQuestions]
+        }
+    }
+    
+    // MARK: - Period Selection Step
+    
+    private var periodSelectionStep: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                periodSelectionContent
             }
             .padding()
         }
     }
     
-    // MARK: - Period Selection
-    
-    private var periodSelection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("Period Start", systemImage: "calendar")
+    private var periodSelectionCompact: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Period")
                 .font(.headline)
             
             HStack {
@@ -170,14 +340,53 @@ struct NewReflectionView: View {
                 
                 Spacer()
                 
+                Button("Change") {
+                    showingDatePicker.toggle()
+                }
+                .buttonStyle(.bordered)
+            }
+            
+            if showingDatePicker {
+                DatePicker("Start Date", selection: $periodStart, displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+                    .onChange(of: periodStart) { _, _ in
+                        Task {
+                            await recalculateStats()
+                        }
+                    }
+            }
+        }
+    }
+    
+    private var periodSelectionContent: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Select Period", systemImage: "calendar")
+                .font(.headline)
+            
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(periodStart, style: .date)
+                        .font(.title3)
+                        .fontWeight(.medium)
+                    if let endDate = periodEndDate {
+                        Text("to \(endDate, style: .date)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
                 Button {
                     showingDatePicker.toggle()
                 } label: {
                     Text("Change")
-                        .font(.caption)
+                        .font(.subheadline)
                 }
                 .buttonStyle(.bordered)
             }
+            .padding()
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
             
             if showingDatePicker {
                 DatePicker(
@@ -188,8 +397,207 @@ struct NewReflectionView: View {
                 .datePickerStyle(.graphical)
                 .onChange(of: periodStart) { _, _ in
                     Task {
-                        await recalculateStatsAndQuestions()
+                        await recalculateStats()
                     }
+                }
+            }
+            
+            // Stats preview
+            statsSummary
+        }
+    }
+    
+    // MARK: - Event Selection Step
+    
+    private var eventSelectionStep: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Label("Select Key Events", systemImage: "star.fill")
+                    .font(.headline)
+                
+                Text("Choose the events you want to reflect on. We'll generate questions specific to what happened.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                eventSelectionList
+        }
+        .padding()
+        }
+    }
+    
+    private var eventSelectionList: some View {
+        LazyVStack(spacing: 12) {
+            ForEach(significantEntries) { entry in
+                EventSelectionCard(
+                    entry: entry,
+                    isSelected: selectedEntryIds.contains(entry.id)
+                ) {
+                    toggleEntrySelection(entry)
+                }
+            }
+            
+            if significantEntries.isEmpty {
+                ContentUnavailableView {
+                    Label("No Events", systemImage: "doc.text")
+                } description: {
+                    Text("No significant events found for this period.")
+                }
+            }
+        }
+    }
+    
+    // MARK: - Question Answer Step
+    
+    private var questionAnswerStep: some View {
+        Group {
+            if isLoadingQuestions {
+                loadingView
+            } else if let error = error {
+                errorView(error)
+            } else if questionsAnswers.isEmpty {
+                noQuestionsView
+            } else {
+                questionAnswerContent
+            }
+        }
+    }
+    
+    private var questionAnswerContent: some View {
+        #if os(iOS)
+        // Card-based swipeable questions for iPhone
+        TabView(selection: $currentQuestionIndex) {
+            ForEach(Array(questionsAnswers.enumerated()), id: \.offset) { index, _ in
+                questionCard(index: index)
+                    .tag(index)
+            }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        #else
+        // Scrollable list for Mac/iPad
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                // Mood selector at top
+                moodSelector
+                
+                ForEach(Array($questionsAnswers.enumerated()), id: \.offset) { index, $qa in
+                    questionCardExpanded(qa: $qa, index: index)
+                }
+            }
+            .padding()
+        }
+        #endif
+    }
+    
+    private func questionCard(index: Int) -> some View {
+        let qa = $questionsAnswers[index]
+        
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Question number and linked entry
+                HStack {
+                    Text("Question \(index + 1)")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.purple)
+                    
+                    Spacer()
+                    
+                    if let linkedId = qa.wrappedValue.linkedEntryId,
+                       let entry = significantEntries.first(where: { $0.id == linkedId }) {
+                        Label(entry.kind.displayName, systemImage: entry.kind.icon)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                // Question text
+                Text(qa.wrappedValue.question)
+                    .font(.title3)
+                    .fontWeight(.medium)
+                
+                // Answer input
+                TextEditor(text: qa.answer)
+                    .frame(minHeight: 150)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.1))
+                    )
+                    .overlay(alignment: .topLeading) {
+                        if qa.wrappedValue.answer.isEmpty {
+                            Text("Your thoughts...")
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 20)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                
+                // Mood selector (on first question)
+                if index == 0 {
+                    moodSelector
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+    }
+    
+    private func questionCardExpanded(qa: Binding<ReflectionQA>, index: Int) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                Text("\(index + 1).")
+                .font(.headline)
+                    .foregroundStyle(.purple)
+                    .frame(width: 24, alignment: .leading)
+                
+                Text(qa.wrappedValue.question)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            
+            TextEditor(text: qa.answer)
+                .frame(minHeight: 100)
+                .padding(8)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.1))
+                )
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+    
+    private var moodSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("How are you feeling?")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+            
+            HStack(spacing: 12) {
+                ForEach(ReflectionMood.allCases, id: \.self) { moodOption in
+                    Button {
+                        mood = moodOption
+                    } label: {
+                        VStack(spacing: 4) {
+                            Text(moodOption.emoji)
+                                .font(.title2)
+                            Text(moodOption.displayName)
+                                .font(.caption2)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(
+                            mood == moodOption ? Color.purple.opacity(0.2) : Color.clear,
+                            in: RoundedRectangle(cornerRadius: 8)
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(mood == moodOption ? Color.purple : Color.clear, lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -197,37 +605,57 @@ struct NewReflectionView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
     
-    // MARK: - Suggestions Section
+    // MARK: - Review Step
     
-    private var suggestionsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("AI Suggestions", systemImage: "lightbulb.fill")
-                .font(.headline)
-                .foregroundStyle(.orange)
-            
-            ForEach(suggestions, id: \.self) { suggestion in
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "arrow.right.circle.fill")
-                        .foregroundStyle(.orange)
-                        .font(.caption)
-                        .padding(.top, 2)
-                    
-                    Text(suggestion)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-            }
+    private var reviewStep: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                Label("Review", systemImage: "checkmark.circle")
+                    .font(.headline)
+                
+                // Answers summary
+                ForEach(Array(questionsAnswers.enumerated()), id: \.offset) { index, qa in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Q\(index + 1): \(qa.question)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        
+                        Text(qa.answer.isEmpty ? "No answer" : qa.answer)
+                            .font(.body)
+                            .foregroundStyle(qa.answer.isEmpty ? .secondary : .primary)
+                            .italic(qa.answer.isEmpty)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                
+                // Mood summary
+                if let mood = mood {
+                    HStack {
+                        Text("Mood:")
+                            .foregroundStyle(.secondary)
+                        Text(mood.emoji)
+                        Text(mood.displayName)
+                    }
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                }
+                
+                // Suggestions
+                if !suggestions.isEmpty {
+                    suggestionsSummary
+                }
+            }
+            .padding()
+        }
     }
     
-    // MARK: - Stats Summary
+    // MARK: - Shared Components
     
     private var statsSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Your \(periodType.displayName) Activity", systemImage: "chart.bar.fill")
+            Label("Activity Summary", systemImage: "chart.bar.fill")
                 .font(.headline)
             
             LazyVGrid(columns: [
@@ -247,59 +675,144 @@ struct NewReflectionView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
     
-    // MARK: - Progress Indicator
-    
-    private var progressIndicator: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Text("Progress")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-                Text("\(answeredCount)/\(questionsAnswers.count) answered")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-            ProgressView(value: Double(answeredCount), total: Double(questionsAnswers.count))
-                .tint(.purple)
-        }
-    }
-    
-    // MARK: - Question Card
-    
-    private func questionCard(qa: Binding<ReflectionQA>) -> some View {
+    private var suggestionsSummary: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                Image(systemName: "questionmark.circle.fill")
-                    .foregroundStyle(.purple)
-                
-                Text(qa.wrappedValue.question)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-            }
+            Label("Suggestions", systemImage: "lightbulb.fill")
+                .font(.headline)
+                .foregroundStyle(.orange)
             
-            TextEditor(text: qa.answer)
-                .frame(minHeight: 100)
-                .padding(8)
-                .background(
-                    Color.gray.opacity(0.12),
-                    in: RoundedRectangle(cornerRadius: 8)
-                )
+            ForEach(suggestions, id: \.self) { suggestion in
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "arrow.right.circle.fill")
+                        .foregroundStyle(.orange)
+                    .font(.caption)
+                        .padding(.top, 2)
+                    
+                    Text(suggestion)
+                        .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                }
+            }
         }
         .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+    }
+    
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .progressViewStyle(.circular)
+                .scaleEffect(1.5)
+            
+            Text("Analyzing your activity...")
+                .font(.headline)
+            
+            Text("Generating personalized reflection questions")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private func errorView(_ message: String) -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.orange)
+            
+            Text("Couldn't generate questions")
+                .font(.headline)
+            
+            Text(message)
+                    .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+            
+            Button("Use Default Questions") {
+                useDefaultQuestions()
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button("Try Again") {
+                Task {
+                    await loadQuestionsAndStats()
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var noQuestionsView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "questionmark.circle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary)
+            
+            Text("No questions generated")
+                .font(.headline)
+            
+            Button("Use Default Questions") {
+                useDefaultQuestions()
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Navigation Buttons
+    
+    private var navigationButtons: some View {
+        HStack {
+            if currentStep.rawValue > stepsForReflectionType.first?.rawValue ?? 0 {
+                Button {
+                    withAnimation {
+                        goToPreviousStep()
+                    }
+                } label: {
+                    HStack {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
+                    }
+                }
+                .buttonStyle(.bordered)
+            }
+            
+            Spacer()
+            
+            // "Done for now" button (always visible per guardrail)
+            if currentStep == .answerQuestions {
+                Button("Done for now") {
+                    saveReflection()
+                }
+                .foregroundStyle(.secondary)
+            }
+            
+            if currentStep.rawValue < (stepsForReflectionType.last?.rawValue ?? 0) {
+                Button {
+                    withAnimation {
+                        goToNextStep()
+                    }
+                } label: {
+                    HStack {
+                        Text("Next")
+                        Image(systemName: "chevron.right")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding()
+        .background(.bar)
     }
     
     // MARK: - Computed Properties
     
-    private var answeredCount: Int {
-        questionsAnswers.filter { !$0.answer.isEmpty }.count
-    }
-    
     private var periodEndDate: Date? {
+        guard let type = periodType else { return nil }
         let calendar = Calendar.current
-        switch periodType {
+        switch type {
         case .week:
             return calendar.date(byAdding: .day, value: 6, to: periodStart)
         case .month:
@@ -312,9 +825,10 @@ struct NewReflectionView: View {
     }
     
     private var periodStartDateNormalized: Date {
+        guard let type = periodType else { return periodStart }
         let calendar = Calendar.current
         
-        switch periodType {
+        switch type {
         case .week:
             return calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: periodStart)) ?? periodStart
         case .month:
@@ -329,26 +843,135 @@ struct NewReflectionView: View {
         }
     }
     
+    private var significantEntries: [Entry] {
+        let filtered: [Entry]
+        
+        switch reflectionType {
+        case .periodic:
+            guard let endDate = periodEndDate else { return [] }
+            let startDate = periodStartDateNormalized
+            filtered = allEntries.filter { entry in
+                entry.deletedAt == nil &&
+                entry.occurredAt >= startDate &&
+                entry.occurredAt <= endDate
+            }
+        case .project:
+            filtered = allEntries.filter { entry in
+                entry.deletedAt == nil &&
+                entry.project?.id == project?.id
+            }
+        case .relationship:
+            filtered = allEntries.filter { entry in
+                entry.deletedAt == nil &&
+                entry.participants?.contains(where: { $0.id == person?.id }) == true
+            }
+        case .quick:
+            return []
+        }
+        
+        // Sort by significance: decisions first, then meetings, then by date
+        return filtered.sorted { e1, e2 in
+            if e1.isDecision != e2.isDecision {
+                return e1.isDecision
+            }
+            if e1.kind == .decision && e2.kind != .decision {
+                return true
+            }
+            if e1.kind == .meeting && e2.kind != .meeting && e2.kind != .decision {
+                return true
+            }
+            return e1.occurredAt > e2.occurredAt
+        }.prefix(10).map { $0 }
+    }
+    
+    private var selectedEntries: [Entry] {
+        significantEntries.filter { selectedEntryIds.contains($0.id) }
+    }
+    
+    private var openCommitments: [Commitment] {
+        allCommitments.filter { $0.status == .open || $0.status == .blocked }
+    }
+    
     // MARK: - Actions
+    
+    private func initializeReflection() async {
+        // Auto-select significant entries
+        let topEntries = significantEntries.prefix(3)
+        selectedEntryIds = Set(topEntries.map { $0.id })
+        
+        // Calculate initial stats
+        calculateStats()
+        
+        // Skip to appropriate step based on reflection type
+        switch reflectionType {
+        case .periodic:
+            currentStep = .selectPeriod
+        case .project, .relationship:
+            currentStep = .selectEvents
+            await loadQuestionsAndStats()
+        case .quick:
+            currentStep = .answerQuestions
+            await loadQuestionsAndStats()
+        }
+    }
+    
+    private func goToNextStep() {
+        let steps = stepsForReflectionType
+        if let currentIndex = steps.firstIndex(of: currentStep),
+           currentIndex < steps.count - 1 {
+            currentStep = steps[currentIndex + 1]
+            
+            // Load questions when entering answer step
+            if currentStep == .answerQuestions && questionsAnswers.isEmpty {
+                Task {
+                    await loadQuestionsAndStats()
+                }
+            }
+        }
+    }
+    
+    private func goToPreviousStep() {
+        let steps = stepsForReflectionType
+        if let currentIndex = steps.firstIndex(of: currentStep),
+           currentIndex > 0 {
+            currentStep = steps[currentIndex - 1]
+        }
+    }
+    
+    private func toggleEntrySelection(_ entry: Entry) {
+        if selectedEntryIds.contains(entry.id) {
+            selectedEntryIds.remove(entry.id)
+        } else {
+            selectedEntryIds.insert(entry.id)
+        }
+    }
     
     private func loadQuestionsAndStats() async {
         isLoadingQuestions = true
         error = nil
         
-        // Calculate stats from actual data
         calculateStats()
         
-        // Generate AI questions and suggestions
         do {
-            let result = try await AIService.shared.generateReflectionQuestions(
+            let result = try await AIService.shared.generateContextualReflectionQuestions(
+                reflectionType: reflectionType,
                 periodType: periodType,
-                stats: stats
+                stats: stats,
+                selectedEntries: selectedEntries,
+                project: project,
+                person: person,
+                openCommitments: openCommitments
             )
             
             await MainActor.run {
-                questionsAnswers = result.questions.map { ReflectionQA(question: $0) }
+                questionsAnswers = result.toQAArray()
                 suggestions = result.suggestions
                 isLoadingQuestions = false
+            }
+        } catch AIServiceError.timeout {
+            // Guardrail: Fall back to defaults on timeout
+            await MainActor.run {
+                useDefaultQuestions()
             }
         } catch {
             await MainActor.run {
@@ -358,98 +981,70 @@ struct NewReflectionView: View {
         }
     }
     
-    private func recalculateStatsAndQuestions() async {
-        isLoadingQuestions = true
-        error = nil
-        
-        // Recalculate stats with new period
+    private func recalculateStats() async {
         calculateStats()
         
-        // Regenerate AI questions and suggestions
-        do {
-            let result = try await AIService.shared.generateReflectionQuestions(
-                periodType: periodType,
-                stats: stats
-            )
-            
-            await MainActor.run {
-                questionsAnswers = result.questions.map { ReflectionQA(question: $0) }
-                suggestions = result.suggestions
-                isLoadingQuestions = false
-            }
-        } catch {
-            await MainActor.run {
-                self.error = error.localizedDescription
-                isLoadingQuestions = false
-            }
-        }
+        // Recalculate significant entries based on new period
+        let topEntries = significantEntries.prefix(3)
+        selectedEntryIds = Set(topEntries.map { $0.id })
     }
     
     private func calculateStats() {
+        let relevantEntries: [Entry]
+        let relevantCommitments: [Commitment]
+        
+        switch reflectionType {
+        case .periodic:
         guard let endDate = periodEndDate else { return }
         let startDate = periodStartDateNormalized
         
-        // Filter entries in the period
-        let periodEntries = allEntries.filter { entry in
-            entry.occurredAt >= startDate && entry.occurredAt <= endDate
-        }
-        
-        // Filter commitments in the period
-        let periodCommitments = allCommitments.filter { commitment in
+            relevantEntries = allEntries.filter { entry in
+                entry.deletedAt == nil &&
+                entry.occurredAt >= startDate &&
+                entry.occurredAt <= endDate
+            }
+            
+            relevantCommitments = allCommitments.filter { commitment in
             if let dueDate = commitment.dueDate {
                 return dueDate >= startDate && dueDate <= endDate
             }
             return commitment.createdAt >= startDate && commitment.createdAt <= endDate
         }
         
-        // Count active projects
-        let activeProjects = allProjects.filter { project in
-            project.status == .active
+        case .project:
+            relevantEntries = allEntries.filter { $0.deletedAt == nil && $0.project?.id == project?.id }
+            relevantCommitments = allCommitments.filter { $0.project?.id == project?.id }
+            
+        case .relationship:
+            relevantEntries = allEntries.filter { entry in
+                entry.deletedAt == nil &&
+                entry.participants?.contains(where: { $0.id == person?.id }) == true
+            }
+            relevantCommitments = allCommitments.filter { $0.person?.id == person?.id }
+            
+        case .quick:
+            relevantEntries = []
+            relevantCommitments = []
         }
         
-        // Calculate stats
+        let activeProjects = allProjects.filter { $0.status == .active }
+        
         stats = ReflectionStats(
-            entriesCreated: periodEntries.count,
-            commitmentsCreated: periodCommitments.count,
-            commitmentsCompleted: periodCommitments.filter { $0.status == .done }.count,
+            entriesCreated: relevantEntries.count,
+            commitmentsCreated: relevantCommitments.count,
+            commitmentsCompleted: relevantCommitments.filter { $0.status == .done }.count,
             iOweOpen: allCommitments.filter { $0.direction == .iOwe && $0.status == .open }.count,
             waitingForOpen: allCommitments.filter { $0.direction == .waitingFor && $0.status == .open }.count,
             projectsActive: activeProjects.count,
-            meetingsHeld: periodEntries.filter { $0.kind == .meeting }.count,
-            decisionsRecorded: periodEntries.filter { $0.isDecision }.count
+            meetingsHeld: relevantEntries.filter { $0.kind == .meeting }.count,
+            decisionsRecorded: relevantEntries.filter { $0.isDecision || $0.kind == .decision }.count,
+            significantEntryIds: Array(selectedEntryIds)
         )
     }
     
     private func useDefaultQuestions() {
-        let defaultQuestions: [String]
-        switch periodType {
-        case .week:
-            defaultQuestions = [
-                "What was your biggest win this week?",
-                "What commitment did you struggle to keep? Why?",
-                "Which conversation or decision would you handle differently?",
-                "What pattern do you notice in how you spent your time?",
-                "What's one thing you want to do better next week?"
-            ]
-        case .month:
-            defaultQuestions = [
-                "What progress did you make on your most important projects?",
-                "Which relationships received the most attention? Which were neglected?",
-                "What decisions are you most and least confident about?",
-                "What feedback have you received and how have you acted on it?",
-                "What's the most important lesson you learned this month?"
-            ]
-        case .quarter:
-            defaultQuestions = [
-                "Looking at your projects, what themes emerge in where you invested time?",
-                "How has your leadership style evolved this quarter?",
-                "What commitments did you consistently keep or break?",
-                "What were the three most impactful decisions you made?",
-                "What do you want to be different about next quarter?"
-            ]
-        }
-        
-        questionsAnswers = defaultQuestions.map { ReflectionQA(question: $0) }
+        let defaults = Reflection.defaultQuestions(for: reflectionType, periodType: periodType)
+        questionsAnswers = defaults.map { ReflectionQA(question: $0) }
         suggestions = []
         isLoadingQuestions = false
         error = nil
@@ -457,20 +1052,108 @@ struct NewReflectionView: View {
     
     private func saveReflection() {
         let startDate = periodStartDateNormalized
-        guard let endDate = periodEndDate else { return }
+        let endDate = periodEndDate
         
         let reflection = Reflection(
+            reflectionType: reflectionType,
             periodType: periodType,
             periodStart: startDate,
             periodEnd: endDate,
+            mood: mood,
             questionsAnswers: questionsAnswers
         )
         reflection.stats = stats
         reflection.aiQuestions = questionsAnswers.map { $0.question }
+        reflection.linkedEntryIds = Array(selectedEntryIds)
+        reflection.project = project
+        reflection.person = person
         
         modelContext.insert(reflection)
+        
+        // Extract and save themes asynchronously
+        Task {
+            if let themes = try? await AIService.shared.extractReflectionThemes(questionsAnswers: questionsAnswers) {
+                await MainActor.run {
+                    for theme in themes {
+                        reflection.addTag(theme)
+                    }
+                    try? modelContext.save()
+                }
+            }
+        }
+        
         try? modelContext.save()
         dismiss()
+    }
+}
+
+// MARK: - Event Selection Card
+
+struct EventSelectionCard: View {
+    let entry: Entry
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Selection indicator
+                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                    .font(.title2)
+                    .foregroundStyle(isSelected ? .purple : .secondary)
+                
+                // Entry info
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: entry.kind.icon)
+                            .font(.caption)
+                            .foregroundStyle(kindColor)
+                        
+                        Text(entry.kind.displayName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        if entry.isDecision {
+                            Text("• Decision")
+                                .font(.caption)
+                                .foregroundStyle(.purple)
+                        }
+                    }
+                    
+                    Text(entry.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .lineLimit(2)
+                    
+                    Text(entry.occurredAt, style: .date)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .background(
+                isSelected ? Color.purple.opacity(0.1) : Color.clear,
+                in: RoundedRectangle(cornerRadius: 12)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(isSelected ? Color.purple : Color.secondary.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private var kindColor: Color {
+        switch entry.kind {
+        case .meeting: return .blue
+        case .update: return .green
+        case .decision: return .purple
+        case .note: return .orange
+        case .prep: return .cyan
+        case .reflection: return .pink
+        }
     }
 }
 
@@ -498,8 +1181,14 @@ struct MiniStatView: View {
     }
 }
 
-#Preview {
+// MARK: - Previews
+
+#Preview("Weekly") {
     NewReflectionView(periodType: .week)
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
 
+#Preview("Monthly") {
+    NewReflectionView(periodType: .month)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
+}

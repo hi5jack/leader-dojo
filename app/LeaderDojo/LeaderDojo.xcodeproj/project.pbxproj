@@ -74,6 +74,10 @@
 		43EA49132EDBD2890006D0E9 /* PeopleListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49092EDBD2890006D0E9 /* PeopleListView.swift */; };
 		43EA49152EDBD7BF0006D0E9 /* PersonPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49142EDBD7BF0006D0E9 /* PersonPicker.swift */; };
 		43EA49162EDBD7BF0006D0E9 /* PersonPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49142EDBD7BF0006D0E9 /* PersonPicker.swift */; };
+		43EA49232EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */; };
+		43EA49242EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */; };
+		43EA49252EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */; };
+		43EA49262EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -134,6 +138,8 @@
 		43EA49092EDBD2890006D0E9 /* PeopleListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleListView.swift; sourceTree = "<group>"; };
 		43EA490A2EDBD2890006D0E9 /* PersonDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonDetailView.swift; sourceTree = "<group>"; };
 		43EA49142EDBD7BF0006D0E9 /* PersonPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonPicker.swift; sourceTree = "<group>"; };
+		43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReflectionSheet.swift; sourceTree = "<group>"; };
+		43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionInsightsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -288,6 +294,8 @@
 		00500000000B /* Reflections */ = {
 			isa = PBXGroup;
 			children = (
+				43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */,
+				43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */,
 				002000000015 /* ReflectionsListView.swift */,
 				002000000016 /* NewReflectionView.swift */,
 				002000000017 /* ReflectionDetailView.swift */,
@@ -549,6 +557,8 @@
 				001000000012 /* PrepBriefingView.swift in Sources */,
 				001000000013 /* CommitmentsListView.swift in Sources */,
 				001000000014 /* CommitmentDetailView.swift in Sources */,
+				43EA49252EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */,
+				43EA49262EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */,
 				43EA49052EDBD26C0006D0E9 /* Person.swift in Sources */,
 				43EA490C2EDBD2890006D0E9 /* NewPersonView.swift in Sources */,
 				43EA490D2EDBD2890006D0E9 /* EditPersonView.swift in Sources */,
@@ -588,6 +598,8 @@
 				430C0B4C2ED9619F0035BE62 /* CaptureView.swift in Sources */,
 				430C0B492ED961990035BE62 /* NewReflectionView.swift in Sources */,
 				430C0B4A2ED961990035BE62 /* ReflectionsListView.swift in Sources */,
+				43EA49232EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */,
+				43EA49242EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */,
 				430C0B4B2ED961990035BE62 /* ReflectionDetailView.swift in Sources */,
 				43EA49062EDBD26C0006D0E9 /* Person.swift in Sources */,
 				43EA49102EDBD2890006D0E9 /* NewPersonView.swift in Sources */,

@@ -5,6 +5,12 @@ struct NewEntryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    @Query private var allReflections: [Reflection]
+    
+    private var quickReflections: [Reflection] {
+        allReflections.filter { $0.reflectionType == .quick }
+    }
+    
     let project: Project
     var preselectedKind: EntryKind?
     
@@ -21,6 +27,10 @@ struct NewEntryView: View {
     @State private var showAIResults: Bool = false
     @State private var aiError: String? = nil
     
+    // Quick reflection state
+    @State private var showQuickReflection: Bool = false
+    @State private var savedEntry: Entry? = nil
+    
     var body: some View {
         NavigationStack {
             #if os(macOS)
@@ -28,6 +38,14 @@ struct NewEntryView: View {
             #else
             iOSLayout
             #endif
+        }
+        .sheet(isPresented: $showQuickReflection) {
+            if let entry = savedEntry {
+                QuickReflectionSheet(entry: entry) {
+                    // Dismiss the parent view after quick reflection is dismissed
+                    dismiss()
+                }
+            }
         }
     }
     
@@ -517,7 +535,15 @@ struct NewEntryView: View {
         project.markActive()
         
         try? modelContext.save()
-        dismiss()
+        
+        // Check if we should prompt for quick reflection (Guardrail: prompting strategy)
+        let quickReflectionsToday = QuickReflectionTrigger.quickReflectionsToday(from: quickReflections)
+        if QuickReflectionTrigger.shouldPrompt(for: entry, existingReflectionsToday: quickReflectionsToday) {
+            savedEntry = entry
+            showQuickReflection = true
+        } else {
+            dismiss()
+        }
     }
 }
 
@@ -610,7 +636,7 @@ struct MacSuggestedActionRow: View {
 
 #Preview {
     NewEntryView(project: Project(name: "Test Project"))
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
 
 

@@ -14,6 +14,29 @@ enum ReflectionsViewMode: String, CaseIterable {
     }
 }
 
+/// Filter options for reflections list
+enum ReflectionFilterType: String, CaseIterable {
+    case all = "All"
+    case quick = "Quick"
+    case weekly = "Weekly"
+    case monthly = "Monthly"
+    case quarterly = "Quarterly"
+    case project = "Project"
+    case relationship = "Relationship"
+    
+    var icon: String {
+        switch self {
+        case .all: return "tray.full"
+        case .quick: return "bolt.fill"
+        case .weekly: return "calendar.badge.clock"
+        case .monthly: return "calendar"
+        case .quarterly: return "calendar.badge.plus"
+        case .project: return "folder.fill"
+        case .relationship: return "person.2.fill"
+        }
+    }
+}
+
 struct ReflectionsListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Reflection.createdAt, order: .reverse) private var reflections: [Reflection]
@@ -21,9 +44,11 @@ struct ReflectionsListView: View {
     @State private var showingNewReflection: Bool = false
     @State private var selectedPeriodType: ReflectionPeriodType = .week
     @State private var selectedReflection: Reflection? = nil
+    @State private var filterType: ReflectionFilterType = .all
     @State private var filterPeriodType: ReflectionPeriodType? = nil
     @State private var viewMode: ReflectionsViewMode = .grid
     @State private var searchText: String = ""
+    @State private var showingInsights: Bool = false
     
     var body: some View {
         #if os(iOS)
@@ -58,11 +83,24 @@ struct ReflectionsListView: View {
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                addReflectionMenu
+                HStack(spacing: 12) {
+                    NavigationLink {
+                        ReflectionInsightsView()
+                    } label: {
+                        Image(systemName: "chart.bar.fill")
+                    }
+                    
+                    addReflectionMenu
+                }
             }
         }
         .sheet(isPresented: $showingNewReflection) {
             NewReflectionView(periodType: selectedPeriodType)
+        }
+        .sheet(isPresented: $showingInsights) {
+            NavigationStack {
+                ReflectionInsightsView()
+            }
         }
     }
     
@@ -573,26 +611,32 @@ struct ReflectionRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: reflection.periodType?.icon ?? "brain.head.profile")
+            Image(systemName: reflectionIcon)
                 .font(.title2)
-                .foregroundStyle(periodColor)
+                .foregroundStyle(reflectionColor)
                 .frame(width: 40)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(reflection.periodDisplay)
                     .font(.headline)
+                    .lineLimit(1)
                 
-                HStack {
-                    if let type = reflection.periodType {
-                        Text(type.displayName)
+                HStack(spacing: 6) {
+                    // Reflection type badge
+                    Text(reflectionTypeLabel)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    // Mood indicator
+                    if let mood = reflection.mood {
+                        Text(mood.emoji)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
                     }
                     
                     Text("•")
                         .foregroundStyle(.secondary)
                     
-                    Text("\(reflection.answeredCount)/\(reflection.questionsAnswers.count) answered")
+                    Text("\(reflection.answeredCount)/\(reflection.questionsAnswers.count)")
                         .font(.caption)
                         .foregroundStyle(reflection.isComplete ? .green : .orange)
                 }
@@ -600,20 +644,64 @@ struct ReflectionRowView: View {
             
             Spacer()
             
-            if reflection.isComplete {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
+            VStack(alignment: .trailing, spacing: 4) {
+                if reflection.isComplete {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                }
+                
+                // Show linked entries count
+                if reflection.hasLinkedEntries {
+                    Text("\(reflection.linkedEntryIds.count) events")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
         }
         .padding(.vertical, 4)
     }
     
-    private var periodColor: Color {
-        switch reflection.periodType {
-        case .week: return .blue
-        case .month: return .purple
-        case .quarter: return .orange
-        case .none: return .gray
+    private var reflectionIcon: String {
+        switch reflection.reflectionType {
+        case .quick:
+            return "bolt.fill"
+        case .periodic:
+            return reflection.periodType?.icon ?? "calendar.badge.clock"
+        case .project:
+            return "folder.fill"
+        case .relationship:
+            return "person.2.fill"
+        }
+    }
+    
+    private var reflectionColor: Color {
+        switch reflection.reflectionType {
+        case .quick:
+            return .orange
+        case .periodic:
+            switch reflection.periodType {
+            case .week: return .blue
+            case .month: return .purple
+            case .quarter: return .cyan
+            case .none: return .gray
+            }
+        case .project:
+            return .indigo
+        case .relationship:
+            return .pink
+        }
+    }
+    
+    private var reflectionTypeLabel: String {
+        switch reflection.reflectionType {
+        case .quick:
+            return "Quick"
+        case .periodic:
+            return reflection.periodType?.displayName ?? "Periodic"
+        case .project:
+            return "Project"
+        case .relationship:
+            return "Relationship"
         }
     }
 }

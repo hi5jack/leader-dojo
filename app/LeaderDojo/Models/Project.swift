@@ -133,5 +133,49 @@ final class Project {
     var openWaitingForCount: Int {
         commitments?.filter { $0.direction == .waitingFor && $0.status == .open }.count ?? 0
     }
+    
+    // MARK: - Reflection Helpers (NEW)
+    
+    /// Count of reflections for this project
+    var reflectionCount: Int {
+        reflections?.count ?? 0
+    }
+    
+    /// Most recent reflection for this project
+    var lastReflection: Reflection? {
+        reflections?.sorted { $0.createdAt > $1.createdAt }.first
+    }
+    
+    /// Date of last reflection for this project
+    var lastReflectionDate: Date? {
+        lastReflection?.createdAt
+    }
+    
+    /// Days since last reflection on this project
+    var daysSinceLastReflection: Int? {
+        guard let lastDate = lastReflectionDate else { return nil }
+        return Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day
+    }
+    
+    /// Whether this project needs a reflection (active + no recent reflection)
+    var needsReflection: Bool {
+        guard status == .active else { return false }
+        let noRecentReflection = (daysSinceLastReflection ?? 30) > 14  // More than 2 weeks
+        let hasActivity = (entries?.count ?? 0) > 0
+        return hasActivity && noRecentReflection
+    }
+    
+    /// Recent entries (for reflection context)
+    var recentEntries: [Entry] {
+        let allEntries = entries?.filter { $0.deletedAt == nil } ?? []
+        return allEntries.sorted { $0.occurredAt > $1.occurredAt }.prefix(10).map { $0 }
+    }
+    
+    /// Significant entries (decisions and meetings) for reflection prompts
+    var significantEntries: [Entry] {
+        let allEntries = entries?.filter { $0.deletedAt == nil } ?? []
+        return allEntries.filter { $0.kind == .decision || $0.kind == .meeting || $0.isDecision }
+            .sorted { $0.occurredAt > $1.occurredAt }
+    }
 }
 

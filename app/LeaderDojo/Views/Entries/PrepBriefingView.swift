@@ -29,6 +29,9 @@ struct PrepBriefingView: View {
                         briefingContent
                     }
                     
+                    // Past Reflection Insights (NEW)
+                    reflectionInsightsSection
+                    
                     // Commitments Summary
                     commitmentsSummary
                     
@@ -166,6 +169,74 @@ struct PrepBriefingView: View {
         .background(.purple.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
     }
     
+    // MARK: - Reflection Insights Section (NEW)
+    
+    @ViewBuilder
+    private var reflectionInsightsSection: some View {
+        let relevantReflections = getRelevantReflections()
+        
+        if !relevantReflections.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Past Reflection Insights", systemImage: "brain.head.profile")
+                    .font(.headline)
+                    .foregroundStyle(.pink)
+                
+                ForEach(relevantReflections.prefix(3)) { reflection in
+                    reflectionInsightCard(reflection)
+                }
+            }
+        }
+    }
+    
+    private func reflectionInsightCard(_ reflection: Reflection) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(reflection.periodDisplay)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                
+                Spacer()
+                
+                Text(reflection.createdAt, style: .date)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                
+                if let mood = reflection.mood {
+                    Text(mood.emoji)
+                }
+            }
+            
+            // Show key insight from reflection
+            if let firstAnswer = reflection.questionsAnswers.first(where: { !$0.answer.isEmpty }) {
+                Text(firstAnswer.answer)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(3)
+            }
+            
+            // Show themes if any
+            if !reflection.tags.isEmpty {
+                HStack(spacing: 4) {
+                    ForEach(reflection.tags.prefix(3), id: \.self) { tag in
+                        Text(tag.capitalized)
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.pink.opacity(0.1), in: Capsule())
+                            .foregroundStyle(.pink)
+                    }
+                }
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.pink.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.pink.opacity(0.2), lineWidth: 1)
+        )
+    }
+    
     // MARK: - Commitments Summary
     
     private var commitmentsSummary: some View {
@@ -287,10 +358,14 @@ struct PrepBriefingView: View {
             let openCommitments = (project.commitments ?? [])
                 .filter { $0.status.isActive }
             
+            // NEW: Include relevant reflections in briefing generation
+            let relevantReflections = getRelevantReflections()
+            
             let result = try await AIService.shared.generatePrepBriefing(
                 project: project,
                 recentEntries: recentEntries,
-                openCommitments: openCommitments
+                openCommitments: openCommitments,
+                relevantReflections: relevantReflections
             )
             
             await MainActor.run {
@@ -303,6 +378,28 @@ struct PrepBriefingView: View {
                 isLoading = false
             }
         }
+    }
+    
+    /// Get reflections relevant to this project
+    private func getRelevantReflections() -> [Reflection] {
+        // Get project-specific reflections first
+        var reflections = (project.reflections ?? [])
+            .sorted { $0.createdAt > $1.createdAt }
+        
+        // Also include periodic reflections that mention this project's entries
+        let projectEntryIds = Set((project.entries ?? []).map { $0.id })
+        let periodicReflectionsWithProjectEntries = reflections.filter { reflection in
+            reflection.reflectionType == .periodic &&
+            !Set(reflection.linkedEntryIds).isDisjoint(with: projectEntryIds)
+        }
+        
+        // Combine and dedupe
+        let allRelevant = Set(reflections + periodicReflectionsWithProjectEntries)
+        
+        return Array(allRelevant)
+            .sorted { $0.createdAt > $1.createdAt }
+            .prefix(3)
+            .map { $0 }
     }
     
     // MARK: - Computed Properties
@@ -329,6 +426,5 @@ struct PrepBriefingView: View {
 
 #Preview {
     PrepBriefingView(project: Project(name: "Sample Project"))
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
-

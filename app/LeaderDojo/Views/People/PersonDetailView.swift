@@ -7,6 +7,7 @@ struct PersonDetailView: View {
     
     @State private var showingEditPerson: Bool = false
     @State private var showingNewCommitment: Bool = false
+    @State private var showingRelationshipReflection: Bool = false
     @State private var selectedCommitmentDirection: CommitmentDirection = .iOwe
     
     var body: some View {
@@ -62,6 +63,12 @@ struct PersonDetailView: View {
                             Label("Waiting For", systemImage: "arrow.down.left.circle")
                         }
                     }
+                    
+                    Button {
+                        showingRelationshipReflection = true
+                    } label: {
+                        Label("Reflect on Relationship", systemImage: "brain.head.profile")
+                    }
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -77,6 +84,9 @@ struct PersonDetailView: View {
                 sourceEntry: nil,
                 preselectedDirection: selectedCommitmentDirection
             )
+        }
+        .sheet(isPresented: $showingRelationshipReflection) {
+            NewReflectionView(person: person)
         }
     }
     

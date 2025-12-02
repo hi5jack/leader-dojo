@@ -11,6 +11,9 @@ actor AIService {
     private let baseURL = "https://api.openai.com/v1/chat/completions"
     private let model = "gpt-4o-mini"
     
+    /// Timeout for AI requests (Guardrail: Reflection is never blocked by AI)
+    private let requestTimeout: TimeInterval = 8.0
+    
     // MARK: - Public Methods
     
     /// Check if API key is configured
@@ -68,7 +71,8 @@ actor AIService {
     func generatePrepBriefing(
         project: Project,
         recentEntries: [Entry],
-        openCommitments: [Commitment]
+        openCommitments: [Commitment],
+        relevantReflections: [Reflection] = []  // NEW: Include past reflection insights
     ) async throws -> PrepBriefingResult {
         guard let apiKey = apiKey, !apiKey.isEmpty else {
             throw AIServiceError.apiKeyNotConfigured
@@ -84,18 +88,28 @@ actor AIService {
         let iOweCommitments = openCommitments.filter { $0.direction == .iOwe }
         let waitingForCommitments = openCommitments.filter { $0.direction == .waitingFor }
         
+        // NEW: Include relevant reflection insights
+        let reflectionInsights = relevantReflections.prefix(3).compactMap { reflection -> String? in
+            let answers = reflection.questionsAnswers.filter { !$0.answer.isEmpty }
+            guard !answers.isEmpty else { return nil }
+            let date = reflection.createdAt.formatted(date: .abbreviated, time: .omitted)
+            let insight = answers.first?.answer.prefix(200) ?? ""
+            return "- [\(date)] \(insight)..."
+        }.joined(separator: "\n")
+        
         let systemPrompt = """
         You are an executive coach helping a leader prepare for an important conversation.
         Generate a brief but insightful prep briefing that includes:
         1. Current project status (one sentence)
         2. Key events from the timeline
         3. Outstanding commitments to address
-        4. Suggested talking points for the upcoming conversation
+        4. Relevant insights from past reflections (if provided)
+        5. Suggested talking points for the upcoming conversation
         
         Keep it concise and actionable.
         """
         
-        let userPrompt = """
+        var userPrompt = """
         Project: \(project.name)
         Priority: \(project.priority)/5
         Last Active: \(project.lastActiveAt?.formatted(date: .abbreviated, time: .omitted) ?? "Unknown")
@@ -111,6 +125,15 @@ actor AIService {
         \(waitingForCommitments.map { "- \($0.title) (from \($0.person?.name ?? "unknown"))" }.joined(separator: "\n"))
         """
         
+        // Add reflection insights if available
+        if !reflectionInsights.isEmpty {
+            userPrompt += """
+            
+            Past Reflection Insights:
+            \(reflectionInsights)
+            """
+        }
+        
         let response = try await sendChatCompletion(
             systemPrompt: systemPrompt,
             userPrompt: userPrompt,
@@ -120,7 +143,43 @@ actor AIService {
         return PrepBriefingResult(briefing: response)
     }
     
-    /// Generate reflection questions and suggestions based on period statistics
+    // MARK: - Enhanced Reflection Question Generation
+    
+    /// Generate context-rich reflection questions based on specific events (NEW)
+    func generateContextualReflectionQuestions(
+        reflectionType: ReflectionType,
+        periodType: ReflectionPeriodType? = nil,
+        stats: ReflectionStats,
+        selectedEntries: [Entry] = [],
+        project: Project? = nil,
+        person: Person? = nil,
+        openCommitments: [Commitment] = []
+    ) async throws -> ContextualReflectionResult {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            throw AIServiceError.apiKeyNotConfigured
+        }
+        
+        let (systemPrompt, userPrompt) = buildReflectionPrompt(
+            reflectionType: reflectionType,
+            periodType: periodType,
+            stats: stats,
+            selectedEntries: selectedEntries,
+            project: project,
+            person: person,
+            openCommitments: openCommitments
+        )
+        
+        let response = try await sendChatCompletionWithTimeout(
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
+            apiKey: apiKey,
+            timeout: requestTimeout
+        )
+        
+        return try parseContextualReflectionResponse(response, selectedEntries: selectedEntries)
+    }
+    
+    /// Generate reflection questions and suggestions based on period statistics (legacy support)
     func generateReflectionQuestions(
         periodType: ReflectionPeriodType,
         stats: ReflectionStats
@@ -165,7 +224,281 @@ actor AIService {
         return try parseReflectionPromptsResponse(response)
     }
     
+    /// Generate a quick reflection question for a specific entry (NEW)
+    func generateQuickReflectionQuestion(
+        entry: Entry
+    ) async throws -> String {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            throw AIServiceError.apiKeyNotConfigured
+        }
+        
+        let systemPrompt = """
+        You are a leadership coach. Generate ONE short, thought-provoking question to help the user reflect on this recent activity.
+        The question should be specific to what happened, not generic.
+        Keep it under 15 words. Return just the question, no formatting.
+        """
+        
+        let userPrompt = """
+        Entry Type: \(entry.kind.displayName)
+        Title: \(entry.title)
+        Content: \(entry.displayContent.prefix(500))
+        \(entry.isDecision ? "This was marked as an important decision." : "")
+        """
+        
+        let response = try await sendChatCompletionWithTimeout(
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
+            apiKey: apiKey,
+            timeout: 5.0  // Shorter timeout for quick reflections
+        )
+        
+        return response.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    /// Extract leadership themes/tags from reflection answers (NEW)
+    func extractReflectionThemes(
+        questionsAnswers: [ReflectionQA]
+    ) async throws -> [String] {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            return []  // Don't throw, just return empty - tagging is optional
+        }
+        
+        let answeredQAs = questionsAnswers.filter { !$0.answer.isEmpty }
+        guard !answeredQAs.isEmpty else { return [] }
+        
+        let systemPrompt = """
+        You are analyzing leadership reflection answers. Extract 1-3 key themes from the answers.
+        Themes should be common leadership topics like: delegation, feedback, conflict, decision-making, 
+        communication, time-management, prioritization, team-building, accountability, etc.
+        
+        Return as JSON array of lowercase theme strings: ["theme1", "theme2"]
+        """
+        
+        let content = answeredQAs.map { "Q: \($0.question)\nA: \($0.answer)" }.joined(separator: "\n\n")
+        
+        let response = try await sendChatCompletionWithTimeout(
+            systemPrompt: systemPrompt,
+            userPrompt: content,
+            apiKey: apiKey,
+            timeout: 5.0
+        )
+        
+        return parseThemesResponse(response)
+    }
+    
     // MARK: - Private Methods
+    
+    private func buildReflectionPrompt(
+        reflectionType: ReflectionType,
+        periodType: ReflectionPeriodType?,
+        stats: ReflectionStats,
+        selectedEntries: [Entry],
+        project: Project?,
+        person: Person?,
+        openCommitments: [Commitment]
+    ) -> (system: String, user: String) {
+        
+        switch reflectionType {
+        case .quick:
+            return buildQuickReflectionPrompt(entries: selectedEntries)
+            
+        case .periodic:
+            return buildPeriodicReflectionPrompt(
+                periodType: periodType ?? .week,
+                stats: stats,
+                selectedEntries: selectedEntries,
+                openCommitments: openCommitments
+            )
+            
+        case .project:
+            return buildProjectReflectionPrompt(
+                project: project,
+                stats: stats,
+                selectedEntries: selectedEntries,
+                openCommitments: openCommitments
+            )
+            
+        case .relationship:
+            return buildRelationshipReflectionPrompt(
+                person: person,
+                selectedEntries: selectedEntries,
+                openCommitments: openCommitments
+            )
+        }
+    }
+    
+    private func buildQuickReflectionPrompt(entries: [Entry]) -> (String, String) {
+        let systemPrompt = """
+        Generate ONE concise reflection question about this activity.
+        Return as JSON: {"question": "Your question here?"}
+        """
+        
+        let entry = entries.first
+        let userPrompt = """
+        Entry: \(entry?.kind.displayName ?? "Activity") - \(entry?.title ?? "")
+        Content: \(entry?.displayContent.prefix(300) ?? "")
+        """
+        
+        return (systemPrompt, userPrompt)
+    }
+    
+    private func buildPeriodicReflectionPrompt(
+        periodType: ReflectionPeriodType,
+        stats: ReflectionStats,
+        selectedEntries: [Entry],
+        openCommitments: [Commitment]
+    ) -> (String, String) {
+        
+        let systemPrompt = """
+        You are a leadership coach helping a leader reflect on their \(periodType.displayName.lowercased()) work.
+        
+        Based on their specific activities and statistics:
+        1. Generate 3-5 thoughtful, SPECIFIC reflection questions
+        2. Questions should reference the actual events/entries provided when relevant
+        3. Include at least one question about patterns or recurring themes
+        4. Include at least one forward-looking question
+        5. Provide 2-3 actionable suggestions
+        
+        Return as JSON:
+        {
+            "questions": [
+                {"text": "Question text", "linkedEntryId": "uuid or null"}
+            ],
+            "suggestions": ["suggestion1", "suggestion2"]
+        }
+        """
+        
+        // Build context from selected entries
+        let entriesContext = selectedEntries.prefix(5).map { entry in
+            """
+            - [ID: \(entry.id.uuidString)] \(entry.kind.displayName): "\(entry.title)"
+              \(entry.displayContent.prefix(150))...
+              \(entry.isDecision ? "(Marked as key decision)" : "")
+            """
+        }.joined(separator: "\n")
+        
+        let iOweCount = openCommitments.filter { $0.direction == .iOwe }.count
+        let waitingCount = openCommitments.filter { $0.direction == .waitingFor }.count
+        
+        let userPrompt = """
+        Reflection Period: \(periodType.displayName)
+        
+        Statistics:
+        - Entries created: \(stats.entriesCreated)
+        - Meetings held: \(stats.meetingsHeld)
+        - Decisions recorded: \(stats.decisionsRecorded)
+        - Commitments created: \(stats.commitmentsCreated)
+        - Commitments completed: \(stats.commitmentsCompleted)
+        - Open commitments I owe: \(iOweCount)
+        - Open commitments waiting for: \(waitingCount)
+        
+        Key Events This Period:
+        \(entriesContext.isEmpty ? "No specific events selected" : entriesContext)
+        """
+        
+        return (systemPrompt, userPrompt)
+    }
+    
+    private func buildProjectReflectionPrompt(
+        project: Project?,
+        stats: ReflectionStats,
+        selectedEntries: [Entry],
+        openCommitments: [Commitment]
+    ) -> (String, String) {
+        
+        let systemPrompt = """
+        You are a leadership coach helping a leader reflect on their approach to a specific project.
+        
+        Generate 3-4 reflection questions that:
+        1. Are specific to this project's situation
+        2. Address leadership behaviors, not just project status
+        3. Surface potential blind spots
+        4. Encourage honest self-assessment
+        
+        Return as JSON:
+        {
+            "questions": [{"text": "Question", "linkedEntryId": null}],
+            "suggestions": ["suggestion1"]
+        }
+        """
+        
+        let projectCommitments = openCommitments.filter { $0.project?.id == project?.id }
+        let iOweCount = projectCommitments.filter { $0.direction == .iOwe }.count
+        let waitingCount = projectCommitments.filter { $0.direction == .waitingFor }.count
+        let overdueCount = projectCommitments.filter { $0.isOverdue }.count
+        
+        let entriesContext = selectedEntries.prefix(5).map { entry in
+            "- \(entry.kind.displayName): \(entry.title)"
+        }.joined(separator: "\n")
+        
+        let userPrompt = """
+        Project: \(project?.name ?? "Unknown")
+        Priority: \(project?.priority ?? 3)/5
+        Status: \(project?.status.displayName ?? "Active")
+        Days Since Last Activity: \(project?.daysSinceLastActive ?? 0)
+        
+        Commitment Status:
+        - I owe \(iOweCount) commitments
+        - Waiting for \(waitingCount) commitments
+        - \(overdueCount) commitments are overdue
+        
+        Recent Activity:
+        \(entriesContext.isEmpty ? "No recent entries" : entriesContext)
+        
+        Notes: \(project?.ownerNotes ?? "None")
+        """
+        
+        return (systemPrompt, userPrompt)
+    }
+    
+    private func buildRelationshipReflectionPrompt(
+        person: Person?,
+        selectedEntries: [Entry],
+        openCommitments: [Commitment]
+    ) -> (String, String) {
+        
+        let systemPrompt = """
+        You are a leadership coach helping a leader reflect on an important professional relationship.
+        
+        Generate 3-4 reflection questions that:
+        1. Focus on how the leader is showing up for this person
+        2. Address relationship dynamics, not just tasks
+        3. Surface potential tensions or opportunities
+        4. Are specific to the relationship context provided
+        
+        Return as JSON:
+        {
+            "questions": [{"text": "Question", "linkedEntryId": null}],
+            "suggestions": ["suggestion1"]
+        }
+        """
+        
+        let personCommitments = openCommitments.filter { $0.person?.id == person?.id }
+        let iOweCount = personCommitments.filter { $0.direction == .iOwe }.count
+        let waitingCount = personCommitments.filter { $0.direction == .waitingFor }.count
+        
+        let entriesContext = selectedEntries.prefix(3).map { entry in
+            "- \(entry.kind.displayName): \(entry.title)"
+        }.joined(separator: "\n")
+        
+        let userPrompt = """
+        Person: \(person?.name ?? "Unknown")
+        Relationship Type: \(person?.relationshipType?.displayName ?? "Unknown")
+        Organization: \(person?.organization ?? "Unknown")
+        Role: \(person?.role ?? "Unknown")
+        
+        Commitment Status:
+        - I owe them: \(iOweCount) commitments
+        - They owe me: \(waitingCount) commitments
+        
+        Recent Interactions:
+        \(entriesContext.isEmpty ? "No recent entries" : entriesContext)
+        
+        Days Since Last Interaction: \(person?.daysSinceLastInteraction ?? 0)
+        """
+        
+        return (systemPrompt, userPrompt)
+    }
     
     private func sendChatCompletion(
         systemPrompt: String,
@@ -215,13 +548,38 @@ actor AIService {
         return content
     }
     
+    /// Send chat completion with timeout (Guardrail: Reflection is never blocked by AI)
+    private func sendChatCompletionWithTimeout(
+        systemPrompt: String,
+        userPrompt: String,
+        apiKey: String,
+        timeout: TimeInterval
+    ) async throws -> String {
+        try await withThrowingTaskGroup(of: String.self) { group in
+            group.addTask {
+                try await self.sendChatCompletion(
+                    systemPrompt: systemPrompt,
+                    userPrompt: userPrompt,
+                    apiKey: apiKey
+                )
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
+                throw AIServiceError.timeout
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+    
     private func parseEntrySummaryResponse(_ response: String) throws -> EntrySummaryResult {
-        // Try to extract JSON from the response
         let jsonString = extractJSON(from: response)
         
         guard let data = jsonString.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            // If parsing fails, return the raw response as summary
             return EntrySummaryResult(summary: response, suggestedActions: [])
         }
         
@@ -253,7 +611,6 @@ actor AIService {
         
         guard let data = jsonString.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            // If parsing fails, try to extract questions from plain text
             let questions = response.components(separatedBy: "\n")
                 .map { $0.trimmingCharacters(in: .whitespaces) }
                 .filter { !$0.isEmpty && $0.first != "{" && $0.first != "[" }
@@ -266,8 +623,54 @@ actor AIService {
         return ReflectionPromptsResult(questions: questions, suggestions: suggestions)
     }
     
+    private func parseContextualReflectionResponse(_ response: String, selectedEntries: [Entry]) throws -> ContextualReflectionResult {
+        let jsonString = extractJSON(from: response)
+        
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            // Fallback: try to extract questions from plain text
+            let questions = response.components(separatedBy: "\n")
+                .map { $0.trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty && $0.first != "{" && $0.first != "[" }
+                .map { ContextualQuestion(text: $0, linkedEntryId: nil) }
+            return ContextualReflectionResult(questions: questions, suggestions: [])
+        }
+        
+        var questions: [ContextualQuestion] = []
+        
+        // Parse questions with optional entry links
+        if let questionsArray = json["questions"] as? [[String: Any]] {
+            for q in questionsArray {
+                let text = q["text"] as? String ?? ""
+                var linkedEntryId: UUID? = nil
+                if let idString = q["linkedEntryId"] as? String {
+                    linkedEntryId = UUID(uuidString: idString)
+                }
+                if !text.isEmpty {
+                    questions.append(ContextualQuestion(text: text, linkedEntryId: linkedEntryId))
+                }
+            }
+        } else if let simpleQuestions = json["questions"] as? [String] {
+            questions = simpleQuestions.map { ContextualQuestion(text: $0, linkedEntryId: nil) }
+        }
+        
+        let suggestions = json["suggestions"] as? [String] ?? []
+        
+        return ContextualReflectionResult(questions: questions, suggestions: suggestions)
+    }
+    
+    private func parseThemesResponse(_ response: String) -> [String] {
+        let jsonString = extractJSON(from: response)
+        
+        guard let data = jsonString.data(using: .utf8),
+              let themes = try? JSONDecoder().decode([String].self, from: data) else {
+            return []
+        }
+        
+        return themes.map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
+    }
+    
     private func extractJSON(from text: String) -> String {
-        // Find JSON object or array in the response
         if let start = text.firstIndex(of: "{"),
            let end = text.lastIndex(of: "}") {
             return String(text[start...end])
@@ -296,6 +699,23 @@ struct ReflectionPromptsResult {
     let suggestions: [String]
 }
 
+/// NEW: Contextual question with optional link to specific entry
+struct ContextualQuestion: Sendable {
+    let text: String
+    let linkedEntryId: UUID?
+}
+
+/// NEW: Result type for contextual reflection generation
+struct ContextualReflectionResult: Sendable {
+    let questions: [ContextualQuestion]
+    let suggestions: [String]
+    
+    /// Convert to ReflectionQA array
+    func toQAArray() -> [ReflectionQA] {
+        questions.map { ReflectionQA(question: $0.text, linkedEntryId: $0.linkedEntryId) }
+    }
+}
+
 // MARK: - Errors
 
 enum AIServiceError: LocalizedError {
@@ -303,6 +723,7 @@ enum AIServiceError: LocalizedError {
     case invalidResponse
     case httpError(Int)
     case apiError(String)
+    case timeout
     
     var errorDescription: String? {
         switch self {
@@ -314,7 +735,8 @@ enum AIServiceError: LocalizedError {
             return "HTTP error: \(code)"
         case .apiError(let message):
             return "API error: \(message)"
+        case .timeout:
+            return "AI request timed out"
         }
     }
 }
-

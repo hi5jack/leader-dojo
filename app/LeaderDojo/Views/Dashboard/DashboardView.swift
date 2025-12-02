@@ -121,24 +121,35 @@ struct DashboardView: View {
         }
     }
     
-    // MARK: - Reflection Section
+    // MARK: - Reflection Section (Enhanced)
     
     private var reflectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "Reflect", icon: "brain.head.profile", color: .purple)
-            
-            if shouldPromptWeeklyReflection {
+            HStack {
+                SectionHeader(title: "Reflect", icon: "brain.head.profile", color: .purple)
+                
+                Spacer()
+                
                 NavigationLink {
-                    NewReflectionView(periodType: .week)
+                    ReflectionInsightsView()
                 } label: {
-                    ReflectionPromptCard(
-                        title: "Weekly Reflection",
-                        message: "Take a few minutes to reflect on your week.",
-                        icon: "calendar.badge.clock"
-                    )
+                    Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.purple)
                 }
-                .buttonStyle(.plain)
-            } else if let lastReflection = reflections.first {
+            }
+            
+            // Smart prompting based on context (Guardrail: max 1 passive prompt per day)
+            getContextualReflectionPrompt()
+        }
+    }
+    
+    /// Smart contextual prompting - shows ONE relevant prompt based on user's situation
+    @ViewBuilder
+    private func getContextualReflectionPrompt() -> some View {
+        // If user already reflected today, don't show passive prompts, just recap
+        if hasReflectedToday {
+            if let lastReflection = reflections.first {
                 ReflectionSummaryCard(reflection: lastReflection)
             } else {
                 EmptyStateCard(
@@ -148,6 +159,63 @@ struct DashboardView: View {
                 )
             }
         }
+        // Weekly reflection prompt takes priority
+        else if shouldPromptWeeklyReflection {
+            NavigationLink {
+                NewReflectionView(periodType: .week)
+            } label: {
+                ReflectionPromptCard(
+                    title: "Weekly Reflection",
+                    message: "Take a few minutes to reflect on your week. You had \(entriesThisWeek) entries.",
+                    icon: "calendar.badge.clock"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        // Project needing reflection (hasn't been reflected on in 2+ weeks)
+        else if let projectNeedingReflection = projectNeedingReflection {
+            NavigationLink {
+                NewReflectionView(project: projectNeedingReflection)
+            } label: {
+                ReflectionPromptCard(
+                    title: "Project Check-In",
+                    message: "How are you showing up for \(projectNeedingReflection.name)?",
+                    icon: "folder.fill"
+                )
+            }
+            .buttonStyle(.plain)
+        }
+        // High activity week - suggest quick reflection
+        else if entriesThisWeek >= 5 && quickReflectionsToday < QuickReflectionTrigger.maxPromptsPerDay {
+            ReflectionPromptCard(
+                title: "Busy Week",
+                message: "You've been active! Consider a quick reflection on what's working.",
+                icon: "bolt.fill"
+            )
+        }
+        // Fallback: show latest reflection summary or empty state
+        else if let lastReflection = reflections.first {
+            ReflectionSummaryCard(reflection: lastReflection)
+        } else {
+            EmptyStateCard(
+                icon: "lightbulb",
+                title: "Start Reflecting",
+                message: "Create your first reflection to track your growth."
+            )
+        }
+    }
+    
+    private var hasReflectedToday: Bool {
+        let calendar = Calendar.current
+        return reflections.contains { calendar.isDateInToday($0.createdAt) }
+    }
+    
+    private var quickReflectionsToday: Int {
+        QuickReflectionTrigger.quickReflectionsToday(from: reflections)
+    }
+    
+    private var projectNeedingReflection: Project? {
+        activeProjects.first { $0.needsReflection }
     }
     
     // MARK: - Quick Stats Section
@@ -376,6 +444,6 @@ struct StatCard: View {
 
 #Preview {
     DashboardView()
-        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self], inMemory: true)
+        .modelContainer(for: [Project.self, Entry.self, Commitment.self, Reflection.self, Person.self], inMemory: true)
 }
 

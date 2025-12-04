@@ -9,7 +9,9 @@ actor AIService {
     }
     
     private let baseURL = "https://api.openai.com/v1/chat/completions"
+    private let transcriptionURL = "https://api.openai.com/v1/audio/transcriptions"
     private let model = "gpt-4o-mini"
+    private let transcriptionModel = "gpt-4o-mini-transcribe"
     
     /// Timeout for AI requests (Guardrail: Reflection is never blocked by AI)
     /// Increased to 15s to reduce unintended fallbacks to generic default questions,
@@ -21,6 +23,71 @@ actor AIService {
     /// Check if API key is configured
     var isConfigured: Bool {
         apiKey != nil && !(apiKey?.isEmpty ?? true)
+    }
+    
+    // MARK: - Audio Transcription
+    
+    /// Transcribe audio using OpenAI's Whisper API with automatic formatting
+    /// - Parameter audioData: Audio data in m4a format
+    /// - Returns: Transcribed and formatted text
+    func transcribeAudio(_ audioData: Data) async throws -> String {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            throw AIServiceError.apiKeyNotConfigured
+        }
+        
+        let boundary = UUID().uuidString
+        var request = URLRequest(url: URL(string: transcriptionURL)!)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        
+        // Build multipart form data
+        var body = Data()
+        
+        // Add model field
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"model\"\r\n\r\n".data(using: .utf8)!)
+        body.append("\(transcriptionModel)\r\n".data(using: .utf8)!)
+        
+        // Add prompt field for formatting guidance
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"prompt\"\r\n\r\n".data(using: .utf8)!)
+        body.append("Transcribe and format into readable paragraphs. Add line breaks between distinct topics or thoughts.\r\n".data(using: .utf8)!)
+        
+        // Add audio file
+        body.append("--\(boundary)\r\n".data(using: .utf8)!)
+        body.append("Content-Disposition: form-data; name=\"file\"; filename=\"audio.m4a\"\r\n".data(using: .utf8)!)
+        body.append("Content-Type: audio/m4a\r\n\r\n".data(using: .utf8)!)
+        body.append(audioData)
+        body.append("\r\n".data(using: .utf8)!)
+        
+        // Close boundary
+        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        
+        request.httpBody = body
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AIServiceError.invalidResponse
+        }
+        
+        guard httpResponse.statusCode == 200 else {
+            if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let error = errorJson["error"] as? [String: Any],
+               let message = error["message"] as? String {
+                throw AIServiceError.apiError(message)
+            }
+            throw AIServiceError.httpError(httpResponse.statusCode)
+        }
+        
+        // Parse transcription response
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let text = json["text"] as? String else {
+            throw AIServiceError.invalidResponse
+        }
+        
+        return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
     
     /// Generate summary and commitment suggestions from meeting/update content

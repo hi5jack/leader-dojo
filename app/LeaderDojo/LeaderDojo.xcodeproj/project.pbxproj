@@ -88,6 +88,8 @@
 		43EA49832EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */; };
 		43EA49842EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */; };
 		43EA49852EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */; };
+		43EA49862EE1B0000006D0E9 /* VoiceInputProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */; };
+		43EA49882EE1B0000006D0E9 /* VoiceInputProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -153,6 +155,7 @@
 		43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionReviewSheet.swift; sourceTree = "<group>"; };
 		43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionInsightsView.swift; sourceTree = "<group>"; };
 		43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputProvider.swift; sourceTree = "<group>"; };
 		43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputButton.swift; sourceTree = "<group>"; };
 		43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -342,6 +345,7 @@
 				002000000020 /* AIService.swift */,
 				002000000021 /* DataImportService.swift */,
 				43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */,
+				43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -597,6 +601,7 @@
 				001000000022 /* KeychainManager.swift in Sources */,
 				001000000023 /* Extensions.swift in Sources */,
 				43EA49802EE0C4000006D0E9 /* SpeechRecognitionService.swift in Sources */,
+				43EA49862EE1B0000006D0E9 /* VoiceInputProvider.swift in Sources */,
 				43EA49822EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */,
 				43EA49842EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */,
 			);
@@ -643,6 +648,7 @@
 				430C0B402ED961680035BE62 /* Entry.swift in Sources */,
 				430C0B4D2ED961A50035BE62 /* SettingsView.swift in Sources */,
 				43EA49812EE0C4000006D0E9 /* SpeechRecognitionService.swift in Sources */,
+				43EA49882EE1B0000006D0E9 /* VoiceInputProvider.swift in Sources */,
 				43EA49832EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */,
 				43EA49852EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */,
 			);

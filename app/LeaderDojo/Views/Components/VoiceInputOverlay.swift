@@ -1,5 +1,6 @@
 import SwiftUI
 import Speech
+import Combine
 
 #if canImport(UIKit)
 import UIKit
@@ -29,11 +30,23 @@ struct VoiceInputOverlay: View {
     var accentColor: Color = .blue
     
     @State private var showingPermissionAlert = false
+    @State private var selectedProvider: VoiceInputProvider = VoiceInputSettings.shared.defaultProvider
+    @State private var isOpenAIAvailable = false
+    @State private var elapsedTime: TimeInterval = 0
+    @State private var recordingStartTime: Date?
     @Environment(\.colorScheme) private var colorScheme
+    
+    /// Timer for updating elapsed time during recording
+    private let timer = Timer.publish(every: 0.1, on: .main, in: .common).autoconnect()
     
     /// Whether we're currently recording
     private var isRecording: Bool {
-        speechService.state == .listening
+        speechService.state.isListening
+    }
+    
+    /// Whether we're processing (OpenAI transcription)
+    private var isProcessing: Bool {
+        speechService.state.isProcessing
     }
     
     /// Whether we have text that can be used
@@ -43,7 +56,12 @@ struct VoiceInputOverlay: View {
     
     /// Whether we can show the "Use This Text" button
     private var canConfirm: Bool {
-        !isRecording && hasText
+        !isRecording && !isProcessing && hasText
+    }
+    
+    /// Whether the provider can be changed (only when idle)
+    private var canChangeProvider: Bool {
+        speechService.state == .idle || (speechService.state != .listening && speechService.state != .processing)
     }
     
     var body: some View {
@@ -56,6 +74,13 @@ struct VoiceInputOverlay: View {
             VStack(spacing: 0) {
                 // Header
                 header
+                
+                Divider()
+                
+                // Provider selector
+                providerSelector
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
                 
                 Divider()
                 
@@ -80,10 +105,20 @@ struct VoiceInputOverlay: View {
         .onAppear {
             // Clear any previous text when overlay appears
             speechService.clearText()
+            // Set the initial provider from settings
+            selectedProvider = VoiceInputSettings.shared.defaultProvider
+            speechService.provider = selectedProvider
+            // Check OpenAI availability
+            Task {
+                isOpenAIAvailable = await AIService.shared.isConfigured
+            }
         }
         .onDisappear {
             // Make sure we stop if overlay is dismissed
             speechService.cancelListening()
+        }
+        .onChange(of: selectedProvider) { _, newValue in
+            speechService.provider = newValue
         }
         .alert("Microphone Access Required", isPresented: $showingPermissionAlert) {
             Button("Open Settings") {
@@ -94,6 +129,21 @@ struct VoiceInputOverlay: View {
             }
         } message: {
             Text("Please enable microphone and speech recognition access in Settings to use voice input.")
+        }
+        .onReceive(timer) { _ in
+            if isRecording, let startTime = recordingStartTime {
+                elapsedTime = Date().timeIntervalSince(startTime)
+            }
+        }
+        .onChange(of: isRecording) { wasRecording, nowRecording in
+            if nowRecording && !wasRecording {
+                // Started recording
+                recordingStartTime = Date()
+                elapsedTime = 0
+            } else if !nowRecording && wasRecording {
+                // Stopped recording
+                recordingStartTime = nil
+            }
         }
     }
     
@@ -109,6 +159,7 @@ struct VoiceInputOverlay: View {
                     .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
+            .disabled(isProcessing)
             
             Spacer()
             
@@ -131,9 +182,17 @@ struct VoiceInputOverlay: View {
                 Circle()
                     .fill(.red)
                     .frame(width: 8, height: 8)
-                Text("Recording")
-                    .font(.caption)
+                Text(formattedElapsedTime)
+                    .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(.red)
+            }
+        } else if isProcessing {
+            HStack(spacing: 6) {
+                ProgressView()
+                    .scaleEffect(0.7)
+                Text("Processing")
+                    .font(.caption)
+                    .foregroundStyle(.blue)
             }
         } else if case .error = speechService.state {
             HStack(spacing: 6) {
@@ -155,6 +214,44 @@ struct VoiceInputOverlay: View {
         }
     }
     
+    // MARK: - Provider Selector
+    
+    private var providerSelector: some View {
+        VStack(spacing: 8) {
+            Picker("Voice Input Method", selection: $selectedProvider) {
+                ForEach(VoiceInputProvider.allCases) { provider in
+                    Label {
+                        Text(provider.shortName)
+                    } icon: {
+                        Image(systemName: provider.iconName)
+                    }
+                    .tag(provider)
+                }
+            }
+            .pickerStyle(.segmented)
+            .disabled(!canChangeProvider)
+            
+            // Provider info
+            HStack(spacing: 4) {
+                if selectedProvider == .openai && !isOpenAIAvailable {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                    Text("API key required in Settings")
+                        .font(.caption2)
+                        .foregroundStyle(.orange)
+                } else {
+                    Image(systemName: selectedProvider.supportsStreaming ? "waveform" : "cloud")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    Text(selectedProvider == .native ? "Real-time transcription" : "Better accuracy & formatting")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+    
     // MARK: - Transcription Area
     
     private var transcriptionArea: some View {
@@ -166,7 +263,9 @@ struct VoiceInputOverlay: View {
                 }
                 
                 // Main content
-                if isRecording {
+                if isProcessing {
+                    processingView
+                } else if isRecording {
                     recordingView
                 } else if hasText {
                     transcribedTextView
@@ -197,6 +296,18 @@ struct VoiceInputOverlay: View {
     /// View shown while recording
     private var recordingView: some View {
         VStack(spacing: 16) {
+            // Elapsed time display
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(.red)
+                    .frame(width: 10, height: 10)
+                
+                Text(formattedElapsedTime)
+                    .font(.system(size: 28, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.primary)
+            }
+            .padding(.bottom, 4)
+            
             VoiceWaveform(
                 audioLevel: speechService.audioLevel,
                 isActive: true,
@@ -205,20 +316,62 @@ struct VoiceInputOverlay: View {
             )
             .frame(height: 60)
             
-            if hasText {
+            // Duration warning
+            if elapsedTime > 60 {
+                HStack(spacing: 4) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                    Text("Long recordings may take longer to transcribe")
+                        .font(.caption)
+                }
+                .foregroundStyle(.orange)
+            }
+            
+            // For native provider, show real-time transcription
+            // For OpenAI, just show "Recording..." indicator
+            if selectedProvider == .native && hasText {
                 Text(speechService.transcribedText)
                     .font(.body)
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.top, 8)
+            } else if selectedProvider == .openai {
+                Text("Transcription will appear after you stop")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             } else {
                 Text("Listening...")
-                    .font(.title3)
+                    .font(.caption)
                     .foregroundStyle(.secondary)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
+    }
+    
+    /// Formatted elapsed time string (MM:SS)
+    private var formattedElapsedTime: String {
+        let minutes = Int(elapsedTime) / 60
+        let seconds = Int(elapsedTime) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    /// View shown while processing (OpenAI only)
+    private var processingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            
+            Text("Transcribing...")
+                .font(.title3)
+                .foregroundStyle(.secondary)
+            
+            Text("This may take a few seconds")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
     }
     
     /// View shown when we have transcribed text (after stopping)
@@ -227,7 +380,7 @@ struct VoiceInputOverlay: View {
             HStack {
                 Image(systemName: "checkmark.circle.fill")
                     .foregroundStyle(.green)
-                Text("Recording complete")
+                Text(selectedProvider == .openai ? "Transcription complete" : "Recording complete")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -274,6 +427,22 @@ struct VoiceInputOverlay: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                } else if error == .apiKeyNotConfigured {
+                    Button {
+                        openSettings()
+                    } label: {
+                        Label("Open Settings", systemImage: "gear")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    
+                    Button {
+                        selectedProvider = .native
+                    } label: {
+                        Label("Use Native", systemImage: "apple.logo")
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
                 }
                 Spacer()
             }
@@ -294,11 +463,11 @@ struct VoiceInputOverlay: View {
             return "waveform.slash"
         case .noSpeechDetected:
             return "mic.slash"
+        case .apiKeyNotConfigured:
+            return "key.slash"
+        case .transcriptionFailed:
+            return "exclamationmark.triangle"
         }
-    }
-    
-    private func errorMessage(for error: SpeechRecognitionError) -> String {
-        error.localizedDescription
     }
     
     private func errorTitle(for error: SpeechRecognitionError) -> String {
@@ -313,16 +482,20 @@ struct VoiceInputOverlay: View {
             return "Recognition Failed"
         case .noSpeechDetected:
             return "No Speech Detected"
+        case .apiKeyNotConfigured:
+            return "API Key Required"
+        case .transcriptionFailed:
+            return "Transcription Failed"
         }
     }
     
     private func errorColor(for error: SpeechRecognitionError) -> Color {
         switch error {
-        case .notAuthorized:
+        case .notAuthorized, .apiKeyNotConfigured:
             return .red
         case .notAvailable:
             return .gray
-        case .audioEngineError, .recognitionFailed:
+        case .audioEngineError, .recognitionFailed, .transcriptionFailed:
             return .orange
         case .noSpeechDetected:
             return .yellow
@@ -336,7 +509,7 @@ struct VoiceInputOverlay: View {
             // Main record/stop button
             recordButton
             
-            // "Use This Text" button - only when we have text and not recording
+            // "Use This Text" button - only when we have text and not recording/processing
             if canConfirm {
                 Button {
                     onComplete(speechService.transcribedText)
@@ -369,10 +542,10 @@ struct VoiceInputOverlay: View {
         Button {
             Task {
                 if isRecording {
-                    speechService.stopListening()
-                } else {
-                    // Check permissions first
-                    if speechService.authorizationStatus != .authorized {
+                    await speechService.stopListening()
+                } else if !isProcessing {
+                    // Check permissions first for native provider
+                    if selectedProvider == .native && speechService.authorizationStatus != .authorized {
                         let authorized = await speechService.requestAuthorization()
                         if !authorized {
                             showingPermissionAlert = true
@@ -397,21 +570,30 @@ struct VoiceInputOverlay: View {
                 
                 // Main button
                 Circle()
-                    .fill(isRecording ? Color.red : accentColor)
+                    .fill(isRecording ? Color.red : (isProcessing ? Color.gray : accentColor))
                     .frame(width: 64, height: 64)
                 
                 // Icon
-                Image(systemName: isRecording ? "stop.fill" : "mic.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(.white)
+                if isProcessing {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                        .tint(.white)
+                } else {
+                    Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                        .font(.system(size: 24, weight: .medium))
+                        .foregroundStyle(.white)
+                }
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isRecording ? "Stop recording" : "Start recording")
+        .disabled(isProcessing)
+        .accessibilityLabel(isRecording ? "Stop recording" : (isProcessing ? "Processing" : "Start recording"))
     }
     
     private var hintText: String {
-        if isRecording {
+        if isProcessing {
+            return "Please wait while your audio is being transcribed"
+        } else if isRecording {
             return "Tap the stop button when you're done"
         } else if canConfirm {
             return "Tap 'Use This Text' to confirm, or record again"

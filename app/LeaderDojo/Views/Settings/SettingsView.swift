@@ -9,6 +9,7 @@ struct SettingsView: View {
     @State private var alertMessage: String = ""
     @State private var isAPIKeyConfigured: Bool = false
     @State private var showImportSheet: Bool = false
+    @State private var voiceInputProvider: VoiceInputProvider = VoiceInputSettings.shared.defaultProvider
     
     var body: some View {
         #if os(macOS)
@@ -74,6 +75,47 @@ struct SettingsView: View {
                 Text("Your API key is stored securely in the Keychain and synced via iCloud Keychain. Get your key from [platform.openai.com](https://platform.openai.com/api-keys)")
             }
             
+            // Voice Input Section
+            Section {
+                Picker("Default Provider", selection: $voiceInputProvider) {
+                    ForEach(VoiceInputProvider.allCases) { provider in
+                        HStack {
+                            Image(systemName: provider.iconName)
+                            Text(provider.displayName)
+                        }
+                        .tag(provider)
+                    }
+                }
+                .onChange(of: voiceInputProvider) { _, newValue in
+                    VoiceInputSettings.shared.defaultProvider = newValue
+                }
+                
+                // Provider description
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
+                        Image(systemName: voiceInputProvider.iconName)
+                            .foregroundStyle(voiceInputProvider == .native ? .blue : .green)
+                        Text(voiceInputProvider.displayName)
+                            .fontWeight(.medium)
+                    }
+                    .font(.subheadline)
+                    
+                    Text(voiceInputProvider.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    if voiceInputProvider == .openai && !isAPIKeyConfigured {
+                        Label("Requires OpenAI API key", systemImage: "exclamationmark.triangle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                }
+            } header: {
+                Label("Voice Input", systemImage: "mic.fill")
+            } footer: {
+                Text("Choose your default voice transcription method. You can override this choice when recording.")
+            }
+            
             // Data Management Section
             Section {
                 Button {
@@ -129,6 +171,7 @@ struct SettingsView: View {
         .navigationBarTitleDisplayMode(.large)
         .onAppear {
             loadAPIKey()
+            voiceInputProvider = VoiceInputSettings.shared.defaultProvider
         }
         .alert("Settings", isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
@@ -166,6 +209,7 @@ struct SettingsView: View {
                     // Left Column
                     VStack(spacing: 20) {
                         apiKeyCard
+                        voiceInputCard
                         dataManagementCard
                     }
                     .frame(maxWidth: .infinity)
@@ -188,6 +232,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .onAppear {
             loadAPIKey()
+            voiceInputProvider = VoiceInputSettings.shared.defaultProvider
         }
         .alert("Settings", isPresented: $showAlert) {
             Button("OK", role: .cancel) { }
@@ -260,6 +305,73 @@ struct SettingsView: View {
                 
                 Link("Get your key from platform.openai.com →", destination: URL(string: "https://platform.openai.com/api-keys")!)
                     .font(.caption)
+            }
+        }
+        .padding(20)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var voiceInputCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Voice Input", systemImage: "mic.fill")
+                .font(.headline)
+                .foregroundStyle(.teal)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Default Provider")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                
+                Picker("Provider", selection: $voiceInputProvider) {
+                    ForEach(VoiceInputProvider.allCases) { provider in
+                        Label {
+                            Text(provider.displayName)
+                        } icon: {
+                            Image(systemName: provider.iconName)
+                        }
+                        .tag(provider)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: voiceInputProvider) { _, newValue in
+                    VoiceInputSettings.shared.defaultProvider = newValue
+                }
+                
+                // Provider info card
+                HStack(spacing: 12) {
+                    Image(systemName: voiceInputProvider.iconName)
+                        .font(.title2)
+                        .foregroundStyle(voiceInputProvider == .native ? .blue : .green)
+                        .frame(width: 32)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(voiceInputProvider.displayName)
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Text(voiceInputProvider.description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        if voiceInputProvider == .openai && !isAPIKeyConfigured {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                Text("Requires OpenAI API key")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                .padding(12)
+                .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+                
+                Text("You can override this choice when recording.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(20)

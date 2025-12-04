@@ -14,11 +14,24 @@ struct NewEntryView: View {
     let project: Project
     var preselectedKind: EntryKind?
     
+    // Optional initial values (for quick decision capture flow)
+    var initialTitle: String?
+    var initialRationale: String?
+    var initialReviewDate: Date?
+    
     @State private var kind: EntryKind = .note
     @State private var title: String = ""
     @State private var rawContent: String = ""
     @State private var occurredAt: Date = Date()
     @State private var isDecision: Bool = false
+    
+    // Decision details state
+    @State private var decisionRationale: String = ""
+    @State private var decisionAssumptions: String = ""
+    @State private var decisionConfidence: Int = 3
+    @State private var decisionStakes: DecisionStakes = .medium
+    @State private var decisionReviewDate: Date? = nil
+    @State private var showDecisionDetails: Bool = false
     
     // AI Summary state
     @State private var isGeneratingSummary: Bool = false
@@ -87,6 +100,112 @@ struct NewEntryView: View {
                     Toggle("Mark as Key Decision", isOn: $isDecision)
                 } footer: {
                     Text("Key decisions can be reviewed later for reflection.")
+                }
+            }
+            
+            // Decision Details Section (shown when kind is decision or isDecision is true)
+            if kind == .decision || isDecision {
+                Section {
+                    DisclosureGroup("Decision Details", isExpanded: $showDecisionDetails) {
+                        // Rationale
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Why are you making this decision?")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            TextEditor(text: $decisionRationale)
+                                .frame(minHeight: 80)
+                        }
+                        
+                        // Assumptions
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Key assumptions (what must be true?)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            TextEditor(text: $decisionAssumptions)
+                                .frame(minHeight: 60)
+                        }
+                        
+                        // Confidence
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Text("Confidence Level")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                Text(confidenceLabel(decisionConfidence))
+                                    .font(.caption)
+                                    .foregroundStyle(.purple)
+                            }
+                            Slider(value: Binding(
+                                get: { Double(decisionConfidence) },
+                                set: { decisionConfidence = Int($0) }
+                            ), in: 1...5, step: 1)
+                            .tint(.purple)
+                        }
+                        
+                        // Stakes
+                        Picker("Stakes Level", selection: $decisionStakes) {
+                            ForEach(DecisionStakes.allCases, id: \.self) { stakes in
+                                Text(stakes.displayName).tag(stakes)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        
+                        // Review Date
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Review Date")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            
+                            HStack(spacing: 8) {
+                                Button("1 Week") {
+                                    decisionReviewDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(reviewDateMatches(weeks: 1) ? .purple : .secondary)
+                                
+                                Button("1 Month") {
+                                    decisionReviewDate = Calendar.current.date(byAdding: .month, value: 1, to: Date())
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(reviewDateMatches(months: 1) ? .purple : .secondary)
+                                
+                                Button("3 Months") {
+                                    decisionReviewDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(reviewDateMatches(months: 3) ? .purple : .secondary)
+                            }
+                            .font(.caption)
+                            
+                            if let reviewDate = decisionReviewDate {
+                                HStack {
+                                    DatePicker("", selection: Binding(
+                                        get: { reviewDate },
+                                        set: { decisionReviewDate = $0 }
+                                    ), displayedComponents: .date)
+                                    .labelsHidden()
+                                    
+                                    Button {
+                                        decisionReviewDate = nil
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text("Decision Hypothesis")
+                        Spacer()
+                        Image(systemName: "lightbulb.fill")
+                            .foregroundStyle(.purple)
+                    }
+                } footer: {
+                    Text("Capture your reasoning and assumptions to learn from this decision later.")
                 }
             }
             
@@ -167,6 +286,20 @@ struct NewEntryView: View {
             if let preselected = preselectedKind {
                 kind = preselected
             }
+            // Set initial values from quick decision flow
+            if let initialTitle = initialTitle {
+                title = initialTitle
+            }
+            if let initialRationale = initialRationale {
+                decisionRationale = initialRationale
+            }
+            if let initialReviewDate = initialReviewDate {
+                decisionReviewDate = initialReviewDate
+            }
+            // Auto-expand decision details if coming from quick decision
+            if initialTitle != nil || initialRationale != nil {
+                showDecisionDetails = true
+            }
         }
     }
     #endif
@@ -200,6 +333,10 @@ struct NewEntryView: View {
                             optionsCard
                         }
                         
+                        if shouldShowDecisionDetails {
+                            decisionDetailsCard
+                        }
+                        
                         if kind.supportsAISummary && !rawContent.isEmpty {
                             aiAssistantCard
                         }
@@ -218,6 +355,20 @@ struct NewEntryView: View {
         .onAppear {
             if let preselected = preselectedKind {
                 kind = preselected
+            }
+            // Set initial values from quick decision flow
+            if let initialTitle = initialTitle {
+                title = initialTitle
+            }
+            if let initialRationale = initialRationale {
+                decisionRationale = initialRationale
+            }
+            if let initialReviewDate = initialReviewDate {
+                decisionReviewDate = initialReviewDate
+            }
+            // Auto-expand decision details if coming from quick decision
+            if initialTitle != nil || initialRationale != nil {
+                showDecisionDetails = true
             }
         }
     }
@@ -466,7 +617,205 @@ struct NewEntryView: View {
                 .stroke(.indigo.opacity(0.2), lineWidth: 1)
         )
     }
+    
+    private var decisionDetailsCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Label("Decision Hypothesis", systemImage: "lightbulb.fill")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.purple)
+                
+                Spacer()
+                
+                Button {
+                    showDecisionDetails.toggle()
+                } label: {
+                    Image(systemName: showDecisionDetails ? "chevron.up" : "chevron.down")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            if showDecisionDetails {
+                VStack(alignment: .leading, spacing: 14) {
+                    // Rationale
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Why are you making this decision?")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        MacTextEditor(text: $decisionRationale, placeholder: "Your reasoning...")
+                            .frame(height: 60)
+                    }
+                    
+                    // Assumptions
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Key assumptions")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        MacTextEditor(text: $decisionAssumptions, placeholder: "What must be true?")
+                            .frame(height: 50)
+                    }
+                    
+                    Divider()
+                    
+                    // Confidence
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Text("Confidence")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(confidenceLabel(decisionConfidence))
+                                .font(.caption)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.purple)
+                        }
+                        
+                        Slider(value: Binding(
+                            get: { Double(decisionConfidence) },
+                            set: { decisionConfidence = Int($0) }
+                        ), in: 1...5, step: 1)
+                        .tint(.purple)
+                    }
+                    
+                    // Stakes
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Stakes Level")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack(spacing: 6) {
+                            ForEach(DecisionStakes.allCases, id: \.self) { stakes in
+                                Button {
+                                    decisionStakes = stakes
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        Image(systemName: stakes.icon)
+                                            .font(.caption2)
+                                        Text(stakes.displayName)
+                                            .font(.caption)
+                                    }
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(
+                                        decisionStakes == stakes ? stakesColor(stakes).opacity(0.2) : Color.clear,
+                                        in: Capsule()
+                                    )
+                                    .foregroundStyle(decisionStakes == stakes ? stakesColor(stakes) : .secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    
+                    // Review Date
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Review Date")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack(spacing: 6) {
+                            Button("1w") {
+                                decisionReviewDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(reviewDateMatches(weeks: 1) ? .purple : .secondary)
+                            .controlSize(.small)
+                            
+                            Button("1m") {
+                                decisionReviewDate = Calendar.current.date(byAdding: .month, value: 1, to: Date())
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(reviewDateMatches(months: 1) ? .purple : .secondary)
+                            .controlSize(.small)
+                            
+                            Button("3m") {
+                                decisionReviewDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(reviewDateMatches(months: 3) ? .purple : .secondary)
+                            .controlSize(.small)
+                            
+                            Spacer()
+                            
+                            if decisionReviewDate != nil {
+                                Button {
+                                    decisionReviewDate = nil
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        
+                        if let reviewDate = decisionReviewDate {
+                            DatePicker("", selection: Binding(
+                                get: { reviewDate },
+                                set: { decisionReviewDate = $0 }
+                            ), displayedComponents: .date)
+                            .labelsHidden()
+                            .datePickerStyle(.field)
+                        }
+                    }
+                }
+            } else {
+                Text("Capture your reasoning and assumptions")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(16)
+        .background(.purple.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(.purple.opacity(0.2), lineWidth: 1)
+        )
+    }
+    
+    private func stakesColor(_ stakes: DecisionStakes) -> Color {
+        switch stakes {
+        case .low: return .green
+        case .medium: return .yellow
+        case .high: return .red
+        }
+    }
     #endif
+    
+    // MARK: - Decision Helpers
+    
+    private func confidenceLabel(_ value: Int) -> String {
+        switch value {
+        case 1: return "Very Uncertain"
+        case 2: return "Somewhat Uncertain"
+        case 3: return "Neutral"
+        case 4: return "Fairly Confident"
+        case 5: return "Very Confident"
+        default: return "Neutral"
+        }
+    }
+    
+    private func reviewDateMatches(weeks: Int = 0, months: Int = 0) -> Bool {
+        guard let reviewDate = decisionReviewDate else { return false }
+        let calendar = Calendar.current
+        var targetDate: Date?
+        
+        if weeks > 0 {
+            targetDate = calendar.date(byAdding: .weekOfYear, value: weeks, to: Date())
+        } else if months > 0 {
+            targetDate = calendar.date(byAdding: .month, value: months, to: Date())
+        }
+        
+        guard let target = targetDate else { return false }
+        return calendar.isDate(reviewDate, inSameDayAs: target)
+    }
+    
+    /// Whether decision details section should be visible
+    private var shouldShowDecisionDetails: Bool {
+        kind == .decision || isDecision
+    }
     
     // MARK: - Actions
     
@@ -485,6 +834,18 @@ struct NewEntryView: View {
                 await MainActor.run {
                     aiSummary = result.summary
                     suggestedActions = result.suggestedActions
+                    
+                    // For decision entries, use AI-suggested assumptions and review date
+                    if kind == .decision || isDecision {
+                        if let aiAssumptions = result.assumptions, !aiAssumptions.isEmpty {
+                            decisionAssumptions = aiAssumptions
+                        }
+                        if let reviewDays = result.suggestedReviewDays {
+                            decisionReviewDate = Calendar.current.date(byAdding: .day, value: reviewDays, to: Date())
+                        }
+                        showDecisionDetails = true  // Auto-expand decision details
+                    }
+                    
                     showAIResults = true
                     isGeneratingSummary = false
                 }
@@ -508,6 +869,16 @@ struct NewEntryView: View {
         )
         
         entry.project = project
+        
+        // Store decision hypothesis fields if this is a decision
+        if shouldShowDecisionDetails {
+            entry.decisionRationale = decisionRationale.isEmpty ? nil : decisionRationale
+            entry.decisionAssumptions = decisionAssumptions.isEmpty ? nil : decisionAssumptions
+            entry.decisionConfidence = decisionConfidence
+            entry.decisionStakes = decisionStakes
+            entry.decisionReviewDate = decisionReviewDate
+            entry.decisionOutcome = .pending  // Initialize with pending outcome
+        }
         
         // Store suggested actions
         if !suggestedActions.isEmpty {

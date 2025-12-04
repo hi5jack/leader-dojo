@@ -8,6 +8,7 @@ struct EntryDetailView: View {
     @State private var showingEditEntry: Bool = false
     @State private var showingDeleteAlert: Bool = false
     @State private var showingNewCommitment: Bool = false
+    @State private var showingDecisionReview: Bool = false
     
     var body: some View {
         ScrollView {
@@ -26,6 +27,11 @@ struct EntryDetailView: View {
                 
                 if let decisions = entry.decisions, !decisions.isEmpty {
                     decisionsSection(decisions)
+                }
+                
+                // Decision Hypothesis Section (for decision entries)
+                if entry.isDecisionEntry {
+                    decisionHypothesisSection
                 }
                 
                 // Related Commitments
@@ -81,6 +87,9 @@ struct EntryDetailView: View {
             }
         } message: {
             Text("Are you sure you want to delete this entry? This action cannot be undone.")
+        }
+        .sheet(isPresented: $showingDecisionReview) {
+            DecisionReviewSheet(entry: entry)
         }
     }
     
@@ -168,6 +177,221 @@ struct EntryDetailView: View {
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+    }
+    
+    // MARK: - Decision Hypothesis Section
+    
+    private var decisionHypothesisSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Header with outcome badge
+            HStack {
+                Label("Decision Hypothesis", systemImage: "lightbulb.fill")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.purple)
+                
+                Spacer()
+                
+                if let outcome = entry.decisionOutcome, outcome != .pending {
+                    outcomeBadge(outcome)
+                } else if entry.needsDecisionReview {
+                    Button {
+                        showingDecisionReview = true
+                    } label: {
+                        Label("Review", systemImage: "exclamationmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(.orange, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            
+            // Rationale
+            if let rationale = entry.decisionRationale, !rationale.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Rationale")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(rationale)
+                        .font(.subheadline)
+                }
+            }
+            
+            // Assumptions
+            if let assumptions = entry.decisionAssumptions, !assumptions.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Key Assumptions")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(assumptions)
+                        .font(.subheadline)
+                }
+            }
+            
+            // Confidence and Stakes row
+            HStack(spacing: 16) {
+                if let confidence = entry.decisionConfidence {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Confidence")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            ForEach(1...5, id: \.self) { level in
+                                Circle()
+                                    .fill(level <= confidence ? .purple : .purple.opacity(0.2))
+                                    .frame(width: 8, height: 8)
+                            }
+                            if let text = entry.confidenceDisplayText {
+                                Text(text)
+                                    .font(.caption2)
+                                    .foregroundStyle(.purple)
+                            }
+                        }
+                    }
+                }
+                
+                if let stakes = entry.decisionStakes {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Stakes")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                        HStack(spacing: 4) {
+                            Image(systemName: stakes.icon)
+                                .font(.caption)
+                            Text(stakes.displayName)
+                                .font(.caption)
+                        }
+                        .foregroundStyle(stakesColor(stakes))
+                    }
+                }
+            }
+            
+            // Review Date
+            if let reviewDate = entry.decisionReviewDate {
+                HStack {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.caption)
+                    
+                    if let days = entry.daysUntilReview {
+                        if days < 0 {
+                            Text("Review overdue by \(abs(days)) days")
+                                .font(.caption)
+                                .foregroundStyle(.red)
+                        } else if days == 0 {
+                            Text("Review due today")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        } else {
+                            Text("Review in \(days) days (\(reviewDate.formatted(date: .abbreviated, time: .omitted)))")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            
+            // Outcome section (if reviewed)
+            if let outcome = entry.decisionOutcome, outcome != .pending {
+                Divider()
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Outcome")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.secondary)
+                        
+                        Spacer()
+                        
+                        if let outcomeDate = entry.decisionOutcomeDate {
+                            Text(outcomeDate.formatted(date: .abbreviated, time: .omitted))
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    
+                    if let notes = entry.decisionOutcomeNotes, !notes.isEmpty {
+                        Text(notes)
+                            .font(.caption)
+                    }
+                    
+                    if let assumptionResults = entry.decisionAssumptionResults, !assumptionResults.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Assumption Results")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(assumptionResults)
+                                .font(.caption)
+                        }
+                    }
+                    
+                    if let learning = entry.decisionLearning, !learning.isEmpty {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Key Learning")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(learning)
+                                .font(.caption)
+                                .italic()
+                        }
+                    }
+                }
+            }
+            
+            // Review button (if not yet reviewed)
+            if entry.decisionOutcome == nil || entry.decisionOutcome == .pending {
+                Button {
+                    showingDecisionReview = true
+                } label: {
+                    Label("Record Outcome", systemImage: "checkmark.circle")
+                        .font(.subheadline)
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.bordered)
+                .tint(.purple)
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.purple.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(.purple.opacity(0.2), lineWidth: 1)
+        )
+    }
+    
+    private func outcomeBadge(_ outcome: DecisionOutcome) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: outcome.icon)
+                .font(.caption2)
+            Text(outcome.displayName)
+                .font(.caption)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(outcomeColor(outcome).opacity(0.2), in: Capsule())
+        .foregroundStyle(outcomeColor(outcome))
+    }
+    
+    private func stakesColor(_ stakes: DecisionStakes) -> Color {
+        switch stakes {
+        case .low: return .green
+        case .medium: return .yellow
+        case .high: return .red
+        }
+    }
+    
+    private func outcomeColor(_ outcome: DecisionOutcome) -> Color {
+        switch outcome {
+        case .pending: return .gray
+        case .validated: return .green
+        case .invalidated: return .red
+        case .mixed: return .yellow
+        case .superseded: return .blue
+        }
     }
     
     // MARK: - Commitments Section
@@ -294,6 +518,104 @@ struct EditEntryView: View {
                 Toggle("Key Decision", isOn: $entry.isDecision)
             }
             
+            // Decision Details - show when it's a decision
+            if entry.isDecisionEntry {
+                Section("Decision Details") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Rationale")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextEditor(text: Binding(
+                            get: { entry.decisionRationale ?? "" },
+                            set: { entry.decisionRationale = $0.isEmpty ? nil : $0 }
+                        ))
+                        .frame(minHeight: 80)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Key Assumptions")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        TextEditor(text: Binding(
+                            get: { entry.decisionAssumptions ?? "" },
+                            set: { entry.decisionAssumptions = $0.isEmpty ? nil : $0 }
+                        ))
+                        .frame(minHeight: 60)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("Confidence")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(confidenceLabel(entry.decisionConfidence ?? 3))
+                                .font(.caption)
+                                .foregroundStyle(.purple)
+                        }
+                        Slider(value: Binding(
+                            get: { Double(entry.decisionConfidence ?? 3) },
+                            set: { entry.decisionConfidence = Int($0) }
+                        ), in: 1...5, step: 1)
+                        .tint(.purple)
+                    }
+                    
+                    Picker("Stakes Level", selection: Binding(
+                        get: { entry.decisionStakes ?? .medium },
+                        set: { entry.decisionStakes = $0 }
+                    )) {
+                        ForEach(DecisionStakes.allCases) { stakes in
+                            Text(stakes.displayName).tag(stakes)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Review Date")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        
+                        HStack(spacing: 8) {
+                            Button("1 Week") {
+                                entry.decisionReviewDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.cyan)
+                            
+                            Button("1 Month") {
+                                entry.decisionReviewDate = Calendar.current.date(byAdding: .month, value: 1, to: Date())
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.cyan)
+                            
+                            Button("3 Months") {
+                                entry.decisionReviewDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.cyan)
+                        }
+                        .font(.caption)
+                        
+                        if let reviewDate = entry.decisionReviewDate {
+                            HStack {
+                                DatePicker("", selection: Binding(
+                                    get: { reviewDate },
+                                    set: { entry.decisionReviewDate = $0 }
+                                ), displayedComponents: .date)
+                                .labelsHidden()
+                                
+                                Button {
+                                    entry.decisionReviewDate = nil
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             if entry.aiSummary != nil {
                 Section("AI Summary") {
                     TextEditor(text: Binding(
@@ -320,6 +642,17 @@ struct EditEntryView: View {
                     dismiss()
                 }
             }
+        }
+    }
+    
+    private func confidenceLabel(_ value: Int) -> String {
+        switch value {
+        case 1: return "Very Low"
+        case 2: return "Low"
+        case 3: return "Medium"
+        case 4: return "High"
+        case 5: return "Very High"
+        default: return "Medium"
         }
     }
     #endif
@@ -349,8 +682,9 @@ struct EditEntryView: View {
                     VStack(spacing: 20) {
                         editMetadataCard
                         editOptionsCard
+                        editDecisionDetailsCard
                     }
-                    .frame(width: 280)
+                    .frame(width: 300)
                 }
                 .padding(24)
             }
@@ -558,6 +892,177 @@ struct EditEntryView: View {
         .padding(16)
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    @ViewBuilder
+    private var editDecisionDetailsCard: some View {
+        if entry.isDecisionEntry {
+            VStack(alignment: .leading, spacing: 16) {
+                Label("Decision Details", systemImage: "checkmark.seal.fill")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.purple)
+                
+                // Rationale
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Rationale")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    MacTextEditor(
+                        text: Binding(
+                            get: { entry.decisionRationale ?? "" },
+                            set: { entry.decisionRationale = $0.isEmpty ? nil : $0 }
+                        ),
+                        placeholder: "Why are you making this decision?"
+                    )
+                    .frame(height: 60)
+                }
+                
+                // Assumptions
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Key Assumptions")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    MacTextEditor(
+                        text: Binding(
+                            get: { entry.decisionAssumptions ?? "" },
+                            set: { entry.decisionAssumptions = $0.isEmpty ? nil : $0 }
+                        ),
+                        placeholder: "What must be true for this to work?"
+                    )
+                    .frame(height: 50)
+                }
+                
+                Divider()
+                
+                // Confidence
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack {
+                        Text("Confidence")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(macOSConfidenceLabel(entry.decisionConfidence ?? 3))
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.purple)
+                    }
+                    
+                    Slider(value: Binding(
+                        get: { Double(entry.decisionConfidence ?? 3) },
+                        set: { entry.decisionConfidence = Int($0) }
+                    ), in: 1...5, step: 1)
+                    .tint(.purple)
+                }
+                
+                // Stakes
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Stakes Level")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    HStack(spacing: 6) {
+                        ForEach(DecisionStakes.allCases, id: \.self) { stakes in
+                            Button {
+                                entry.decisionStakes = stakes
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: stakes.icon)
+                                        .font(.caption)
+                                    Text(stakes.displayName)
+                                        .font(.caption)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(
+                                    entry.decisionStakes == stakes ? macOSStakesColor(stakes).opacity(0.2) : Color.clear,
+                                    in: Capsule()
+                                )
+                                .foregroundStyle(entry.decisionStakes == stakes ? macOSStakesColor(stakes) : .secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // Review Date
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Review Date")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    HStack(spacing: 6) {
+                        Button("1w") {
+                            entry.decisionReviewDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: Date())
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .tint(.cyan)
+                        
+                        Button("1m") {
+                            entry.decisionReviewDate = Calendar.current.date(byAdding: .month, value: 1, to: Date())
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .tint(.cyan)
+                        
+                        Button("3m") {
+                            entry.decisionReviewDate = Calendar.current.date(byAdding: .month, value: 3, to: Date())
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                        .tint(.cyan)
+                        
+                        Spacer()
+                        
+                        if entry.decisionReviewDate != nil {
+                            Button {
+                                entry.decisionReviewDate = nil
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    
+                    if let reviewDate = entry.decisionReviewDate {
+                        DatePicker("", selection: Binding(
+                            get: { reviewDate },
+                            set: { entry.decisionReviewDate = $0 }
+                        ), displayedComponents: .date)
+                        .labelsHidden()
+                    }
+                }
+            }
+            .padding(16)
+            .background(.purple.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(.purple.opacity(0.2), lineWidth: 1)
+            )
+        }
+    }
+    
+    private func macOSConfidenceLabel(_ value: Int) -> String {
+        switch value {
+        case 1: return "Very Low"
+        case 2: return "Low"
+        case 3: return "Medium"
+        case 4: return "High"
+        case 5: return "Very High"
+        default: return "Medium"
+        }
+    }
+    
+    private func macOSStakesColor(_ stakes: DecisionStakes) -> Color {
+        switch stakes {
+        case .low: return .green
+        case .medium: return .yellow
+        case .high: return .red
+        }
     }
     #endif
 }

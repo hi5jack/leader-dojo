@@ -143,16 +143,33 @@ struct EntryRowView: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Kind icon
-            Image(systemName: entry.kind.icon)
-                .font(.title3)
-                .foregroundStyle(kindColor)
-                .frame(width: 32)
+            // Kind icon with decision indicator
+            ZStack(alignment: .bottomTrailing) {
+                Image(systemName: entry.kind.icon)
+                    .font(.title3)
+                    .foregroundStyle(kindColor)
+                    .frame(width: 32)
+                
+                // Decision badge overlay
+                if entry.isDecisionEntry && entry.kind != .decision {
+                    Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(.purple)
+                        .offset(x: 4, y: 4)
+                }
+            }
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+                HStack(spacing: 6) {
+                    Text(entry.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    // Decision outcome badge
+                    if entry.isDecisionEntry {
+                        decisionStatusBadge
+                    }
+                }
                 
                 if !entry.displayContent.isEmpty {
                     Text(entry.displayContent)
@@ -161,9 +178,22 @@ struct EntryRowView: View {
                         .lineLimit(2)
                 }
                 
-                Text(entry.occurredAt, style: .date)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 8) {
+                    Text(entry.occurredAt, style: .date)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    
+                    // Review indicator for decisions
+                    if entry.needsDecisionReview {
+                        HStack(spacing: 2) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.caption2)
+                            Text("Needs review")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(.orange)
+                    }
+                }
             }
             
             Spacer()
@@ -176,6 +206,20 @@ struct EntryRowView: View {
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
     }
     
+    @ViewBuilder
+    private var decisionStatusBadge: some View {
+        if let outcome = entry.decisionOutcome, outcome != .pending {
+            HStack(spacing: 2) {
+                Image(systemName: outcome.icon)
+                    .font(.system(size: 8))
+            }
+            .padding(.horizontal, 4)
+            .padding(.vertical, 2)
+            .background(outcomeColor(outcome).opacity(0.2), in: Capsule())
+            .foregroundStyle(outcomeColor(outcome))
+        }
+    }
+    
     private var kindColor: Color {
         switch entry.kind {
         case .meeting: return .blue
@@ -184,6 +228,16 @@ struct EntryRowView: View {
         case .note: return .orange
         case .prep: return .cyan
         case .reflection: return .pink
+        }
+    }
+    
+    private func outcomeColor(_ outcome: DecisionOutcome) -> Color {
+        switch outcome {
+        case .pending: return .gray
+        case .validated: return .green
+        case .invalidated: return .red
+        case .mixed: return .yellow
+        case .superseded: return .blue
         }
     }
 }

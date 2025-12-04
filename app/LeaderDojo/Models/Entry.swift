@@ -54,8 +54,8 @@ enum EntryKind: String, CaseIterable, Sendable {
     /// Whether this entry type supports AI summarization
     nonisolated var supportsAISummary: Bool {
         switch self {
-        case .meeting, .update: return true
-        case .decision, .note, .prep, .reflection: return false
+        case .meeting, .update, .decision: return true
+        case .note, .prep, .reflection: return false
         }
     }
 }
@@ -66,6 +66,106 @@ extension EntryKind: Codable {
         let container = try decoder.singleValueContainer()
         let rawValue = try container.decode(String.self)
         self = EntryKind(rawValue: rawValue) ?? .note
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
+    }
+}
+
+// MARK: - Decision Stakes
+
+/// Stakes level for a decision (low/medium/high impact)
+enum DecisionStakes: String, CaseIterable, Sendable {
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+    
+    var displayName: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .low: return "arrow.down.circle"
+        case .medium: return "equal.circle"
+        case .high: return "arrow.up.circle.fill"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .low: return "green"
+        case .medium: return "yellow"
+        case .high: return "red"
+        }
+    }
+}
+
+extension DecisionStakes: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = DecisionStakes(rawValue: rawValue) ?? .medium
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
+    }
+}
+
+// MARK: - Decision Outcome
+
+/// Outcome status for a decision after review
+enum DecisionOutcome: String, CaseIterable, Sendable {
+    case pending = "pending"
+    case validated = "validated"
+    case invalidated = "invalidated"
+    case mixed = "mixed"
+    case superseded = "superseded"
+    
+    var displayName: String {
+        switch self {
+        case .pending: return "Pending"
+        case .validated: return "Validated"
+        case .invalidated: return "Invalidated"
+        case .mixed: return "Mixed"
+        case .superseded: return "Superseded"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .pending: return "clock.fill"
+        case .validated: return "checkmark.circle.fill"
+        case .invalidated: return "xmark.circle.fill"
+        case .mixed: return "plusminus.circle.fill"
+        case .superseded: return "arrow.uturn.right.circle.fill"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .pending: return "gray"
+        case .validated: return "green"
+        case .invalidated: return "red"
+        case .mixed: return "yellow"
+        case .superseded: return "blue"
+        }
+    }
+}
+
+extension DecisionOutcome: Codable {
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let rawValue = try container.decode(String.self)
+        self = DecisionOutcome(rawValue: rawValue) ?? .pending
     }
     
     func encode(to encoder: Encoder) throws {
@@ -112,7 +212,42 @@ final class Entry {
     var updatedAt: Date = Date()
     var deletedAt: Date?
     
-    // Relationships
+    // MARK: - Decision Hypothesis Fields (Phase 1)
+    
+    /// Why are you making this decision? The rationale and reasoning.
+    var decisionRationale: String?
+    
+    /// What must be true for this decision to work? Key assumptions.
+    var decisionAssumptions: String?
+    
+    /// Confidence level 1-5 (1=very uncertain, 5=very confident)
+    var decisionConfidence: Int?
+    
+    /// Stakes level: low, medium, high
+    var decisionStakes: DecisionStakes?
+    
+    /// When should this decision be reviewed?
+    var decisionReviewDate: Date?
+    
+    // MARK: - Decision Outcome Fields (Phase 2)
+    
+    /// Outcome after review: pending, validated, invalidated, mixed, superseded
+    var decisionOutcome: DecisionOutcome?
+    
+    /// When was the outcome recorded?
+    var decisionOutcomeDate: Date?
+    
+    /// What actually happened? Notes on the outcome.
+    var decisionOutcomeNotes: String?
+    
+    /// Which assumptions held or broke?
+    var decisionAssumptionResults: String?
+    
+    /// What would you do differently? Key learning.
+    var decisionLearning: String?
+    
+    // MARK: - Relationships
+    
     var project: Project?
     
     @Relationship(deleteRule: .nullify, inverse: \Commitment.sourceEntry)
@@ -185,6 +320,46 @@ final class Entry {
     
     var isDeleted: Bool {
         deletedAt != nil
+    }
+    
+    // MARK: - Decision Computed Properties
+    
+    /// Whether this entry represents a decision (either by kind or flag)
+    var isDecisionEntry: Bool {
+        kind == .decision || isDecision
+    }
+    
+    /// Whether this decision needs review (review date passed and no outcome yet)
+    var needsDecisionReview: Bool {
+        guard isDecisionEntry else { return false }
+        guard let reviewDate = decisionReviewDate else { return false }
+        guard decisionOutcome == nil || decisionOutcome == .pending else { return false }
+        return reviewDate <= Date()
+    }
+    
+    /// Days until review date (negative if overdue)
+    var daysUntilReview: Int? {
+        guard let reviewDate = decisionReviewDate else { return nil }
+        return Calendar.current.dateComponents([.day], from: Date(), to: reviewDate).day
+    }
+    
+    /// Whether this decision has been reviewed (has an outcome other than pending)
+    var hasBeenReviewed: Bool {
+        guard let outcome = decisionOutcome else { return false }
+        return outcome != .pending
+    }
+    
+    /// Confidence display text
+    var confidenceDisplayText: String? {
+        guard let confidence = decisionConfidence else { return nil }
+        switch confidence {
+        case 1: return "Very Uncertain"
+        case 2: return "Somewhat Uncertain"
+        case 3: return "Neutral"
+        case 4: return "Fairly Confident"
+        case 5: return "Very Confident"
+        default: return nil
+        }
     }
 }
 

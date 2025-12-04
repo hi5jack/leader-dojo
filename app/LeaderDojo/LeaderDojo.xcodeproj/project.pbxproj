@@ -78,6 +78,10 @@
 		43EA49242EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */; };
 		43EA49252EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */; };
 		43EA49262EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */; };
+		43EA49772EE13C850006D0E9 /* DecisionReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */; };
+		43EA49782EE13C850006D0E9 /* DecisionReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */; };
+		43EA497A2EE13C990006D0E9 /* DecisionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */; };
+		43EA497B2EE13C990006D0E9 /* DecisionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -140,6 +144,8 @@
 		43EA49142EDBD7BF0006D0E9 /* PersonPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonPicker.swift; sourceTree = "<group>"; };
 		43EA49212EDE95B20006D0E9 /* QuickReflectionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickReflectionSheet.swift; sourceTree = "<group>"; };
 		43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionInsightsView.swift; sourceTree = "<group>"; };
+		43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionReviewSheet.swift; sourceTree = "<group>"; };
+		43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionInsightsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -258,6 +264,7 @@
 		005000000007 /* Dashboard */ = {
 			isa = PBXGroup;
 			children = (
+				43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */,
 				002000000007 /* DashboardView.swift */,
 			);
 			path = Dashboard;
@@ -275,6 +282,7 @@
 		005000000009 /* Entries */ = {
 			isa = PBXGroup;
 			children = (
+				43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */,
 				002000000010 /* NewEntryView.swift */,
 				002000000011 /* EntryDetailView.swift */,
 				002000000012 /* PrepBriefingView.swift */,
@@ -559,7 +567,9 @@
 				001000000014 /* CommitmentDetailView.swift in Sources */,
 				43EA49252EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */,
 				43EA49262EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */,
+				43EA497B2EE13C990006D0E9 /* DecisionInsightsView.swift in Sources */,
 				43EA49052EDBD26C0006D0E9 /* Person.swift in Sources */,
+				43EA49772EE13C850006D0E9 /* DecisionReviewSheet.swift in Sources */,
 				43EA490C2EDBD2890006D0E9 /* NewPersonView.swift in Sources */,
 				43EA490D2EDBD2890006D0E9 /* EditPersonView.swift in Sources */,
 				43EA490E2EDBD2890006D0E9 /* PersonDetailView.swift in Sources */,
@@ -600,7 +610,9 @@
 				430C0B4A2ED961990035BE62 /* ReflectionsListView.swift in Sources */,
 				43EA49232EDE95B20006D0E9 /* ReflectionInsightsView.swift in Sources */,
 				43EA49242EDE95B20006D0E9 /* QuickReflectionSheet.swift in Sources */,
+				43EA497A2EE13C990006D0E9 /* DecisionInsightsView.swift in Sources */,
 				430C0B4B2ED961990035BE62 /* ReflectionDetailView.swift in Sources */,
+				43EA49782EE13C850006D0E9 /* DecisionReviewSheet.swift in Sources */,
 				43EA49062EDBD26C0006D0E9 /* Person.swift in Sources */,
 				43EA49102EDBD2890006D0E9 /* NewPersonView.swift in Sources */,
 				43EA49112EDBD2890006D0E9 /* EditPersonView.swift in Sources */,

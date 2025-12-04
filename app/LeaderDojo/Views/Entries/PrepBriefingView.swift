@@ -32,6 +32,9 @@ struct PrepBriefingView: View {
                     // Past Reflection Insights (NEW)
                     reflectionInsightsSection
                     
+                    // Decision Context Section (NEW)
+                    decisionContextSection
+                    
                     // Commitments Summary
                     commitmentsSummary
                     
@@ -235,6 +238,173 @@ struct PrepBriefingView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.pink.opacity(0.2), lineWidth: 1)
         )
+    }
+    
+    // MARK: - Decision Context Section (NEW)
+    
+    @ViewBuilder
+    private var decisionContextSection: some View {
+        let projectDecisions = getProjectDecisions()
+        let decisionsNeedingReview = projectDecisions.filter { $0.needsDecisionReview }
+        let pendingDecisions = projectDecisions.filter { 
+            ($0.decisionOutcome == nil || $0.decisionOutcome == .pending) && !$0.needsDecisionReview
+        }
+        
+        if !projectDecisions.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Decision Context", systemImage: "checkmark.seal.fill")
+                    .font(.headline)
+                    .foregroundStyle(.purple)
+                
+                // Decisions needing review - these are actionable
+                if !decisionsNeedingReview.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Due for Review (\(decisionsNeedingReview.count))", systemImage: "exclamationmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                        
+                        ForEach(decisionsNeedingReview.prefix(3)) { entry in
+                            decisionCard(entry, showReviewIndicator: true)
+                        }
+                    }
+                }
+                
+                // Pending decisions - context for the meeting
+                if !pendingDecisions.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Open Decisions", systemImage: "clock.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        
+                        ForEach(pendingDecisions.prefix(3)) { entry in
+                            decisionCard(entry, showReviewIndicator: false)
+                        }
+                    }
+                }
+                
+                // Key assumptions that could be validated
+                let assumptionsToValidate = getAssumptionsToValidate()
+                if !assumptionsToValidate.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Assumptions to Validate", systemImage: "questionmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.cyan)
+                        
+                        ForEach(assumptionsToValidate, id: \.decision.id) { item in
+                            assumptionCard(decision: item.decision, assumption: item.assumption)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func decisionCard(_ entry: Entry, showReviewIndicator: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(entry.title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                if showReviewIndicator {
+                    if let days = entry.daysUntilReview, days < 0 {
+                        Text("\(abs(days))d overdue")
+                            .font(.caption2)
+                            .foregroundStyle(.orange)
+                    }
+                } else {
+                    Text(entry.occurredAt, style: .date)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            // Show rationale summary
+            if let rationale = entry.decisionRationale, !rationale.isEmpty {
+                Text("Why: \(rationale)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            
+            // Show stakes if set
+            if let stakes = entry.decisionStakes {
+                HStack(spacing: 4) {
+                    Image(systemName: stakes.icon)
+                        .font(.caption2)
+                    Text(stakes.displayName + " stakes")
+                        .font(.caption2)
+                }
+                .foregroundStyle(stakesColor(stakes))
+            }
+        }
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.purple.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+        )
+    }
+    
+    private func assumptionCard(decision: Entry, assumption: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("From: \(decision.title)")
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            
+            Text("• \(assumption)")
+                .font(.caption)
+                .foregroundStyle(.primary)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(.cyan.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+    }
+    
+    private func stakesColor(_ stakes: DecisionStakes) -> Color {
+        switch stakes {
+        case .low: return .green
+        case .medium: return .yellow
+        case .high: return .red
+        }
+    }
+    
+    /// Get decisions related to this project
+    private func getProjectDecisions() -> [Entry] {
+        let entries = project.entries ?? []
+        return entries
+            .filter { $0.isDecisionEntry && !$0.isDeleted }
+            .sorted { $0.occurredAt > $1.occurredAt }
+    }
+    
+    /// Extract assumptions that could be validated in this meeting
+    private func getAssumptionsToValidate() -> [(decision: Entry, assumption: String)] {
+        var results: [(decision: Entry, assumption: String)] = []
+        
+        let pendingDecisions = getProjectDecisions().filter { 
+            $0.decisionOutcome == nil || $0.decisionOutcome == .pending
+        }
+        
+        for decision in pendingDecisions.prefix(5) {
+            if let assumptions = decision.decisionAssumptions, !assumptions.isEmpty {
+                // Split assumptions by newlines or bullet points
+                let assumptionLines = assumptions
+                    .components(separatedBy: CharacterSet.newlines)
+                    .map { $0.trimmingCharacters(in: .whitespaces) }
+                    .map { $0.hasPrefix("•") || $0.hasPrefix("-") ? String($0.dropFirst()).trimmingCharacters(in: .whitespaces) : $0 }
+                    .filter { !$0.isEmpty }
+                
+                for assumption in assumptionLines.prefix(2) {
+                    results.append((decision: decision, assumption: assumption))
+                }
+            }
+        }
+        
+        return Array(results.prefix(5))
     }
     
     // MARK: - Commitments Summary

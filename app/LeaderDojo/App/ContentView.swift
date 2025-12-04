@@ -249,6 +249,10 @@ struct ContentView: View {
             }
         case .newPeriodicReflection(let periodType):
             NewReflectionView(periodType: periodType)
+        case .reflectionInsights:
+            ReflectionInsightsView()
+        case .decisionInsights:
+            DecisionInsightsView()
             }
     }
     #endif

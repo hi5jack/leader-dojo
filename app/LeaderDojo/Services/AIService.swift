@@ -33,24 +33,57 @@ actor AIService {
             throw AIServiceError.apiKeyNotConfigured
         }
         
-        let systemPrompt = """
-        You are an executive assistant helping a leader process meeting notes and updates.
-        Analyze the content and provide:
-        1. A structured summary (background, key points, decisions, open questions)
-        2. A list of commitments (things the user owes others, or things others owe the user)
-        
-        Format your response as JSON with the following structure:
-        {
-            "summary": "Structured summary text",
-            "commitments": [
-                {
-                    "direction": "i_owe" or "waiting_for",
-                    "title": "Brief commitment description",
-                    "counterparty": "Person or team name if mentioned"
-                }
-            ]
+        // Use decision-specific prompt for decision entries
+        let systemPrompt: String
+        if entryKind == .decision {
+            systemPrompt = """
+            You are an executive coach helping a leader document and analyze an important decision.
+            Analyze the decision content and provide:
+            1. A structured summary of the decision (what was decided, context, rationale)
+            2. Key assumptions that underlie this decision
+            3. Suggested review timeframe based on the decision type
+            4. A list of any commitments that arise from this decision
+            
+            Format your response as JSON with the following structure:
+            {
+                "summary": "Structured summary of the decision",
+                "assumptions": "Key assumptions that must be true for this decision to succeed (as bullet points)",
+                "suggestedReviewDays": 30,
+                "commitments": [
+                    {
+                        "direction": "i_owe" or "waiting_for",
+                        "title": "Brief commitment description",
+                        "counterparty": "Person or team name if mentioned"
+                    }
+                ]
+            }
+            
+            For suggestedReviewDays:
+            - Strategic decisions: 90 days
+            - Hiring/team decisions: 60 days
+            - Process changes: 30 days
+            - Tactical decisions: 14 days
+            """
+        } else {
+            systemPrompt = """
+            You are an executive assistant helping a leader process meeting notes and updates.
+            Analyze the content and provide:
+            1. A structured summary (background, key points, decisions, open questions)
+            2. A list of commitments (things the user owes others, or things others owe the user)
+            
+            Format your response as JSON with the following structure:
+            {
+                "summary": "Structured summary text",
+                "commitments": [
+                    {
+                        "direction": "i_owe" or "waiting_for",
+                        "title": "Brief commitment description",
+                        "counterparty": "Person or team name if mentioned"
+                    }
+                ]
+            }
+            """
         }
-        """
         
         let userPrompt = """
         Project: \(projectName)
@@ -66,7 +99,7 @@ actor AIService {
             apiKey: apiKey
         )
         
-        return try parseEntrySummaryResponse(response)
+        return try parseEntrySummaryResponse(response, isDecision: entryKind == .decision)
     }
     
     /// Generate prep briefing for an upcoming meeting
@@ -286,6 +319,93 @@ actor AIService {
         )
         
         return parseThemesResponse(response)
+    }
+    
+    /// Analyze decision-making patterns and generate insights (NEW)
+    func analyzeDecisionPatterns(
+        decisions: [Entry]
+    ) async throws -> DecisionPatternAnalysis {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            throw AIServiceError.apiKeyNotConfigured
+        }
+        
+        guard decisions.count >= 3 else {
+            // Not enough decisions for meaningful pattern analysis
+            return DecisionPatternAnalysis(
+                calibrationInsight: nil,
+                stakesPatternInsight: nil,
+                timingInsight: nil,
+                overallRecommendation: "Record more decisions to see pattern insights. You need at least 3 reviewed decisions."
+            )
+        }
+        
+        // Prepare decision data for analysis
+        let decisionData = decisions.prefix(20).map { entry -> String in
+            let outcome = entry.decisionOutcome?.rawValue ?? "pending"
+            let confidence = entry.decisionConfidence ?? 3
+            let stakes = entry.decisionStakes?.rawValue ?? "medium"
+            let daysSinceDecision = Calendar.current.dateComponents([.day], from: entry.occurredAt, to: Date()).day ?? 0
+            
+            return """
+            - Title: \(entry.title)
+              Stakes: \(stakes)
+              Confidence: \(confidence)/5
+              Outcome: \(outcome)
+              Days ago: \(daysSinceDecision)
+              Rationale: \(entry.decisionRationale?.prefix(100) ?? "Not recorded")
+              Learning: \(entry.decisionLearning?.prefix(100) ?? "Not recorded")
+            """
+        }.joined(separator: "\n\n")
+        
+        // Calculate basic stats for context
+        let reviewedDecisions = decisions.filter { $0.hasBeenReviewed }
+        let validatedCount = reviewedDecisions.filter { $0.decisionOutcome == .validated }.count
+        let validationRate = reviewedDecisions.isEmpty ? 0 : Int(Double(validatedCount) / Double(reviewedDecisions.count) * 100)
+        
+        let highStakesDecisions = decisions.filter { $0.decisionStakes == .high }
+        let highStakesValidated = highStakesDecisions.filter { $0.decisionOutcome == .validated }.count
+        
+        let systemPrompt = """
+        You are a leadership coach analyzing a leader's decision-making patterns.
+        
+        Based on their decision history, provide:
+        1. Calibration insight: How well does their confidence match outcomes?
+        2. Stakes pattern insight: Any patterns in high vs low stakes decisions?
+        3. Timing insight: Are decisions being reviewed at appropriate intervals?
+        4. Overall recommendation: One actionable suggestion for better decision-making
+        
+        Be specific and reference actual patterns you see. Keep each insight to 1-2 sentences.
+        
+        Return as JSON:
+        {
+            "calibrationInsight": "Insight about confidence calibration...",
+            "stakesPatternInsight": "Insight about stakes patterns...",
+            "timingInsight": "Insight about review timing...",
+            "overallRecommendation": "One key suggestion..."
+        }
+        """
+        
+        let userPrompt = """
+        Decision History Analysis:
+        
+        Total decisions: \(decisions.count)
+        Reviewed decisions: \(reviewedDecisions.count)
+        Overall validation rate: \(validationRate)%
+        High-stakes decisions: \(highStakesDecisions.count)
+        High-stakes validated: \(highStakesValidated)
+        
+        Recent Decisions:
+        \(decisionData)
+        """
+        
+        let response = try await sendChatCompletionWithTimeout(
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
+            apiKey: apiKey,
+            timeout: 12.0
+        )
+        
+        return try parseDecisionPatternResponse(response)
     }
     
     // MARK: - Private Methods
@@ -604,12 +724,12 @@ actor AIService {
         }
     }
     
-    private func parseEntrySummaryResponse(_ response: String) throws -> EntrySummaryResult {
+    private func parseEntrySummaryResponse(_ response: String, isDecision: Bool = false) throws -> EntrySummaryResult {
         let jsonString = extractJSON(from: response)
         
         guard let data = jsonString.data(using: .utf8),
               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return EntrySummaryResult(summary: response, suggestedActions: [])
+            return EntrySummaryResult(summary: response, suggestedActions: [], assumptions: nil, suggestedReviewDays: nil)
         }
         
         let summary = json["summary"] as? String ?? response
@@ -632,7 +752,21 @@ actor AIService {
             }
         }
         
-        return EntrySummaryResult(summary: summary, suggestedActions: actions)
+        // Parse decision-specific fields
+        var assumptions: String? = nil
+        var suggestedReviewDays: Int? = nil
+        
+        if isDecision {
+            assumptions = json["assumptions"] as? String
+            suggestedReviewDays = json["suggestedReviewDays"] as? Int
+        }
+        
+        return EntrySummaryResult(
+            summary: summary,
+            suggestedActions: actions,
+            assumptions: assumptions,
+            suggestedReviewDays: suggestedReviewDays
+        )
     }
     
     private func parseReflectionPromptsResponse(_ response: String) throws -> ReflectionPromptsResult {
@@ -699,6 +833,28 @@ actor AIService {
         return themes.map { $0.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) }
     }
     
+    private func parseDecisionPatternResponse(_ response: String) throws -> DecisionPatternAnalysis {
+        let jsonString = extractJSON(from: response)
+        
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            // Fallback if JSON parsing fails
+            return DecisionPatternAnalysis(
+                calibrationInsight: nil,
+                stakesPatternInsight: nil,
+                timingInsight: nil,
+                overallRecommendation: response.prefix(200).description
+            )
+        }
+        
+        return DecisionPatternAnalysis(
+            calibrationInsight: json["calibrationInsight"] as? String,
+            stakesPatternInsight: json["stakesPatternInsight"] as? String,
+            timingInsight: json["timingInsight"] as? String,
+            overallRecommendation: json["overallRecommendation"] as? String ?? "Continue tracking your decisions to build better insights."
+        )
+    }
+    
     private func extractJSON(from text: String) -> String {
         if let start = text.firstIndex(of: "{"),
            let end = text.lastIndex(of: "}") {
@@ -717,6 +873,10 @@ actor AIService {
 struct EntrySummaryResult {
     let summary: String
     let suggestedActions: [SuggestedAction]
+    
+    // Decision-specific fields
+    let assumptions: String?
+    let suggestedReviewDays: Int?
 }
 
 struct PrepBriefingResult {
@@ -742,6 +902,19 @@ struct ContextualReflectionResult: Sendable {
     /// Convert to ReflectionQA array
     func toQAArray() -> [ReflectionQA] {
         questions.map { ReflectionQA(question: $0.text, linkedEntryId: $0.linkedEntryId) }
+    }
+}
+
+/// NEW: Result type for decision pattern analysis
+struct DecisionPatternAnalysis: Sendable {
+    let calibrationInsight: String?
+    let stakesPatternInsight: String?
+    let timingInsight: String?
+    let overallRecommendation: String
+    
+    /// Check if there are meaningful insights to show
+    var hasInsights: Bool {
+        calibrationInsight != nil || stakesPatternInsight != nil || timingInsight != nil
     }
 }
 

@@ -25,11 +25,14 @@ struct DashboardView: View {
                 // Weekly Focus Section
                 weeklyFocusSection
                 
-                // Projects Needing Attention
-                attentionProjectsSection
+                // Decisions Section
+                decisionsSection
                 
                 // Reflection Prompt
                 reflectionSection
+                
+                // Projects Needing Attention
+                attentionProjectsSection
                 
                 // Quick Stats
                 quickStatsSection
@@ -115,6 +118,88 @@ struct DashboardView: View {
         }
     }
     
+    // MARK: - Decisions Section
+    
+    private var decisionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                SectionHeader(title: "Decisions", icon: "checkmark.seal.fill", color: .purple)
+                
+                Spacer()
+                
+                #if os(macOS)
+                // Use value-based navigation so it integrates with NavigationStack(path:)
+                // and sidebar clicks can pop the view by clearing the path.
+                NavigationLink(value: AppRoute.decisionInsights) {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.purple)
+                }
+                #else
+                NavigationLink {
+                    DecisionInsightsView()
+                } label: {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.purple)
+                }
+                #endif
+            }
+            
+            if decisionsNeedingReview.isEmpty && pendingDecisions.isEmpty {
+                EmptyStateCard(
+                    icon: "checkmark.seal",
+                    title: "No Decisions to Review",
+                    message: "Your decisions are on track. Keep recording key decisions to build your learning history."
+                )
+            } else {
+                // Decisions needing review (overdue)
+                if !decisionsNeedingReview.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Due for Review (\(decisionsNeedingReview.count))", systemImage: "exclamationmark.circle.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.orange)
+                        
+                        ForEach(decisionsNeedingReview.prefix(3)) { entry in
+                            NavigationLink {
+                                EntryDetailView(entry: entry)
+                            } label: {
+                                DecisionReviewRow(entry: entry)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                
+                // Pending decisions (30+ days old without outcome)
+                if !pendingDecisions.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Pending Outcome (\(pendingDecisions.count))", systemImage: "clock.fill")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                        
+                        ForEach(pendingDecisions.prefix(2)) { entry in
+                            NavigationLink {
+                                EntryDetailView(entry: entry)
+                            } label: {
+                                DecisionReviewRow(entry: entry)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                
+                // Quick decision stats
+                if decisionsThisQuarter > 0 {
+                    HStack(spacing: 12) {
+                        MiniStatCard(title: "This Quarter", value: "\(decisionsThisQuarter)", color: .purple)
+                        MiniStatCard(title: "Validated", value: "\(validatedRate)%", color: .green)
+                    }
+                }
+            }
+        }
+    }
+    
     // MARK: - Reflection Section (Enhanced)
     
     private var reflectionSection: some View {
@@ -124,6 +209,15 @@ struct DashboardView: View {
                 
                 Spacer()
                 
+                #if os(macOS)
+                // Use value-based navigation so it integrates with NavigationStack(path:)
+                // and sidebar clicks can pop the view by clearing the path.
+                NavigationLink(value: AppRoute.reflectionInsights) {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.purple)
+                }
+                #else
                 NavigationLink {
                     ReflectionInsightsView()
                 } label: {
@@ -131,6 +225,7 @@ struct DashboardView: View {
                         .font(.subheadline)
                         .foregroundStyle(.purple)
                 }
+                #endif
             }
             
             // Smart prompting based on context (Guardrail: max 1 passive prompt per day)
@@ -277,6 +372,49 @@ struct DashboardView: View {
     
     private var entriesThisWeek: Int {
         allEntries.filter { !$0.isDeleted && isDateInThisWeek($0.occurredAt) }.count
+    }
+    
+    // MARK: - Decision Computed Properties
+    
+    private var allDecisions: [Entry] {
+        allEntries.filter { $0.isDecisionEntry && !$0.isDeleted }
+    }
+    
+    private var decisionsNeedingReview: [Entry] {
+        allDecisions.filter { $0.needsDecisionReview }
+    }
+    
+    private var pendingDecisions: [Entry] {
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
+        return allDecisions.filter { entry in
+            (entry.decisionOutcome == nil || entry.decisionOutcome == .pending) &&
+            entry.occurredAt < thirtyDaysAgo &&
+            !entry.needsDecisionReview  // Don't double-count with decisionsNeedingReview
+        }
+    }
+    
+    private var decisionsThisQuarter: Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let quarter = calendar.component(.quarter, from: now)
+        let year = calendar.component(.year, from: now)
+        
+        var components = DateComponents()
+        components.year = year
+        components.month = (quarter - 1) * 3 + 1
+        components.day = 1
+        
+        guard let quarterStart = calendar.date(from: components) else { return 0 }
+        
+        return allDecisions.filter { $0.occurredAt >= quarterStart }.count
+    }
+    
+    private var validatedRate: Int {
+        let reviewedDecisions = allDecisions.filter { $0.hasBeenReviewed }
+        guard !reviewedDecisions.isEmpty else { return 0 }
+        
+        let validated = reviewedDecisions.filter { $0.decisionOutcome == .validated }.count
+        return Int(Double(validated) / Double(reviewedDecisions.count) * 100)
     }
     
     private func isDateInThisWeek(_ date: Date) -> Bool {
@@ -446,6 +584,80 @@ struct StatCard: View {
         }
         .padding()
         .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct DecisionReviewRow: View {
+    let entry: Entry
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.title3)
+                .foregroundStyle(.purple)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                
+                HStack(spacing: 8) {
+                    if let projectName = entry.project?.name {
+                        Text(projectName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    if entry.needsDecisionReview {
+                        if let days = entry.daysUntilReview, days < 0 {
+                            Text("\(abs(days)) days overdue")
+                                .font(.caption)
+                                .foregroundStyle(.orange)
+                        }
+                    } else {
+                        Text(entry.occurredAt, style: .date)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            if entry.needsDecisionReview {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .foregroundStyle(.orange)
+            }
+            
+            Image(systemName: "chevron.right")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+struct MiniStatCard: View {
+    let title: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
+                .foregroundStyle(color)
+            
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 8))
     }
 }
 

@@ -10,6 +10,7 @@ struct ProjectDetailView: View {
     @State private var showingEditProject: Bool = false
     @State private var showingNewCommitment: Bool = false
     @State private var showingProjectReflection: Bool = false
+    @State private var showingQuickDecision: Bool = false
     @State private var selectedEntryKind: EntryKind? = nil
     @State private var selectedCommitmentDirection: CommitmentDirection = .iOwe
     
@@ -87,6 +88,9 @@ struct ProjectDetailView: View {
         .sheet(isPresented: $showingProjectReflection) {
             NewReflectionView(project: project)
         }
+        .sheet(isPresented: $showingQuickDecision) {
+            QuickDecisionSheet(project: project)
+        }
     }
     
     // MARK: - Project Header
@@ -142,8 +146,7 @@ struct ProjectDetailView: View {
                 }
                 
                 QuickActionButton(title: "Decision", icon: "checkmark.seal.fill", color: .purple) {
-                    selectedEntryKind = .decision
-                    showingNewEntry = true
+                    showingQuickDecision = true
                 }
                 
                 QuickActionButton(title: "Commitment", icon: "checkmark.circle", color: .indigo) {
@@ -746,6 +749,168 @@ struct ProjectEntriesListView: View {
         }
         
         return entries.sorted { $0.occurredAt > $1.occurredAt }
+    }
+}
+
+// MARK: - Quick Decision Sheet
+
+/// Streamlined 3-field modal for fast decision capture
+struct QuickDecisionSheet: View {
+    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss) private var dismiss
+    
+    let project: Project
+    
+    @State private var title: String = ""
+    @State private var rationale: String = ""
+    @State private var reviewDate: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+    @State private var showingFullForm: Bool = false
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 24) {
+                // Quick capture form
+                VStack(alignment: .leading, spacing: 16) {
+                    // Decision title
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("What did you decide?", systemImage: "checkmark.seal.fill")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.purple)
+                        
+                        TextField("e.g., We'll use React for the new dashboard", text: $title, axis: .vertical)
+                            .lineLimit(2...4)
+                            .padding()
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    // Rationale
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Why? (1-2 sentences)", systemImage: "lightbulb.fill")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.orange)
+                        
+                        TextField("What's the main reason behind this decision?", text: $rationale, axis: .vertical)
+                            .lineLimit(2...4)
+                            .padding()
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    }
+                    
+                    // Review date with quick chips
+                    VStack(alignment: .leading, spacing: 8) {
+                        Label("Review when?", systemImage: "calendar")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.cyan)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                quickDateChip("1 week", days: 7)
+                                quickDateChip("2 weeks", days: 14)
+                                quickDateChip("1 month", days: 30)
+                                quickDateChip("3 months", days: 90)
+                                quickDateChip("6 months", days: 180)
+                            }
+                        }
+                        
+                        Text("Review: \(reviewDate.formatted(date: .abbreviated, time: .omitted))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                // Action buttons
+                VStack(spacing: 12) {
+                    Button {
+                        showingFullForm = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle")
+                            Text("Add More Details")
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
+                    
+                    Button(action: saveDecision) {
+                        Text("Save Decision")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(title.isEmpty ? Color.gray.opacity(0.3) : Color.purple, in: RoundedRectangle(cornerRadius: 12))
+                            .foregroundStyle(.white)
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
+            .padding()
+            .navigationTitle("Quick Decision")
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+            .sheet(isPresented: $showingFullForm) {
+                NewEntryView(
+                    project: project, 
+                    preselectedKind: .decision,
+                    initialTitle: title,
+                    initialRationale: rationale,
+                    initialReviewDate: reviewDate
+                )
+            }
+        }
+    }
+    
+    private func quickDateChip(_ label: String, days: Int) -> some View {
+        let targetDate = Calendar.current.date(byAdding: .day, value: days, to: Date()) ?? Date()
+        let isSelected = Calendar.current.isDate(reviewDate, equalTo: targetDate, toGranularity: .day)
+        
+        return Button {
+            reviewDate = targetDate
+        } label: {
+            Text(label)
+                .font(.caption)
+                .fontWeight(.medium)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(isSelected ? Color.cyan : Color.secondary.opacity(0.2), in: Capsule())
+                .foregroundStyle(isSelected ? .white : .primary)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    private func saveDecision() {
+        let entry = Entry(
+            kind: .decision,
+            title: title,
+            occurredAt: Date(),
+            rawContent: nil,
+            aiSummary: nil,
+            isDecision: true
+        )
+        
+        entry.project = project
+        entry.decisionRationale = rationale.isEmpty ? nil : rationale
+        entry.decisionReviewDate = reviewDate
+        entry.decisionConfidence = 3  // Default to medium
+        entry.decisionStakes = .medium  // Default to medium
+        
+        modelContext.insert(entry)
+        
+        // Update project's lastActiveAt
+        project.lastActiveAt = Date()
+        
+        try? modelContext.save()
+        dismiss()
     }
 }
 

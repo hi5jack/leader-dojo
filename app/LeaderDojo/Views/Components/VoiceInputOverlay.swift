@@ -23,7 +23,7 @@ struct VoiceInputOverlay: View {
     var title: String = "Voice Input"
     
     /// Placeholder text when no speech detected yet
-    var placeholder: String = "Start speaking..."
+    var placeholder: String = "Tap the microphone to start recording"
     
     /// Accent color for the UI
     var accentColor: Color = .blue
@@ -31,14 +31,26 @@ struct VoiceInputOverlay: View {
     @State private var showingPermissionAlert = false
     @Environment(\.colorScheme) private var colorScheme
     
+    /// Whether we're currently recording
+    private var isRecording: Bool {
+        speechService.state == .listening
+    }
+    
+    /// Whether we have text that can be used
+    private var hasText: Bool {
+        !speechService.transcribedText.isEmpty
+    }
+    
+    /// Whether we can show the "Use This Text" button
+    private var canConfirm: Bool {
+        !isRecording && hasText
+    }
+    
     var body: some View {
         ZStack {
             // Dimmed background
             Color.black.opacity(colorScheme == .dark ? 0.8 : 0.6)
                 .ignoresSafeArea()
-                .onTapGesture {
-                    // Don't dismiss on background tap while listening
-                }
             
             // Main content card
             VStack(spacing: 0) {
@@ -65,8 +77,13 @@ struct VoiceInputOverlay: View {
             .padding(.vertical, 60)
             .frame(maxWidth: 500)
         }
-        .task {
-            await startListeningIfNeeded()
+        .onAppear {
+            // Clear any previous text when overlay appears
+            speechService.clearText()
+        }
+        .onDisappear {
+            // Make sure we stop if overlay is dismissed
+            speechService.cancelListening()
         }
         .alert("Microphone Access Required", isPresented: $showingPermissionAlert) {
             Button("Open Settings") {
@@ -85,10 +102,8 @@ struct VoiceInputOverlay: View {
     private var header: some View {
         HStack {
             Button {
-                Task {
-                    await speechService.cancelListening()
-                    onCancel()
-                }
+                speechService.cancelListening()
+                onCancel()
             } label: {
                 Text("Cancel")
                     .foregroundStyle(.secondary)
@@ -111,8 +126,7 @@ struct VoiceInputOverlay: View {
     
     @ViewBuilder
     private var statusBadge: some View {
-        switch speechService.state {
-        case .listening:
+        if isRecording {
             HStack(spacing: 6) {
                 Circle()
                     .fill(.red)
@@ -121,17 +135,7 @@ struct VoiceInputOverlay: View {
                     .font(.caption)
                     .foregroundStyle(.red)
             }
-            
-        case .processing:
-            HStack(spacing: 6) {
-                ProgressView()
-                    .scaleEffect(0.7)
-                Text("Processing")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            
-        case .error:
+        } else if case .error = speechService.state {
             HStack(spacing: 6) {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .font(.caption)
@@ -140,8 +144,11 @@ struct VoiceInputOverlay: View {
                     .font(.caption)
                     .foregroundStyle(.orange)
             }
-            
-        default:
+        } else if hasText {
+            Text("Ready")
+                .font(.caption)
+                .foregroundStyle(.green)
+        } else {
             Text("Ready")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -158,32 +165,25 @@ struct VoiceInputOverlay: View {
                     errorView(error)
                 }
                 
-                // Transcribed text or placeholder
-                if speechService.transcribedText.isEmpty {
-                    placeholderView
-                } else {
+                // Main content
+                if isRecording {
+                    recordingView
+                } else if hasText {
                     transcribedTextView
+                } else {
+                    idleView
                 }
             }
             .padding(24)
         }
     }
     
-    private var placeholderView: some View {
+    /// View shown when idle (not recording, no text yet)
+    private var idleView: some View {
         VStack(spacing: 16) {
-            if speechService.state == .listening {
-                VoiceWaveform(
-                    audioLevel: speechService.audioLevel,
-                    isActive: true,
-                    barCount: 7,
-                    color: accentColor
-                )
-                .frame(height: 60)
-            } else {
-                Image(systemName: "mic.circle")
-                    .font(.system(size: 60))
-                    .foregroundStyle(accentColor.opacity(0.5))
-            }
+            Image(systemName: "mic.circle")
+                .font(.system(size: 60))
+                .foregroundStyle(accentColor.opacity(0.5))
             
             Text(placeholder)
                 .font(.title3)
@@ -194,24 +194,45 @@ struct VoiceInputOverlay: View {
         .padding(.vertical, 40)
     }
     
+    /// View shown while recording
+    private var recordingView: some View {
+        VStack(spacing: 16) {
+            VoiceWaveform(
+                audioLevel: speechService.audioLevel,
+                isActive: true,
+                barCount: 7,
+                color: accentColor
+            )
+            .frame(height: 60)
+            
+            if hasText {
+                Text(speechService.transcribedText)
+                    .font(.body)
+                    .foregroundStyle(.primary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 8)
+            } else {
+                Text("Listening...")
+                    .font(.title3)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+    }
+    
+    /// View shown when we have transcribed text (after stopping)
     private var transcribedTextView: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Waveform indicator while listening
-            if speechService.state == .listening {
-                HStack {
-                    VoiceWaveform(
-                        audioLevel: speechService.audioLevel,
-                        isActive: true,
-                        barCount: 5,
-                        color: accentColor
-                    )
-                    .frame(height: 24)
-                    
-                    Spacer()
-                }
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text("Recording complete")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                Spacer()
             }
             
-            // Transcribed text
             Text(speechService.transcribedText)
                 .font(.body)
                 .foregroundStyle(.primary)
@@ -232,9 +253,12 @@ struct VoiceInputOverlay: View {
                         .font(.subheadline)
                         .fontWeight(.medium)
                     
-                    Text(error.localizedDescription)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    if let description = error.errorDescription {
+                        Text(description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 
                 Spacer()
@@ -250,18 +274,7 @@ struct VoiceInputOverlay: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
-                } else {
-                    Button {
-                        Task {
-                            await speechService.startListening()
-                        }
-                    } label: {
-                        Label("Try Again", systemImage: "arrow.clockwise")
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
                 }
-                
                 Spacer()
             }
         }
@@ -282,6 +295,10 @@ struct VoiceInputOverlay: View {
         case .noSpeechDetected:
             return "mic.slash"
         }
+    }
+    
+    private func errorMessage(for error: SpeechRecognitionError) -> String {
+        error.localizedDescription
     }
     
     private func errorTitle(for error: SpeechRecognitionError) -> String {
@@ -316,33 +333,13 @@ struct VoiceInputOverlay: View {
     
     private var controlsArea: some View {
         VStack(spacing: 16) {
-            // Main action button
-            HStack(spacing: 20) {
-                // Microphone button
-                VoiceInputButton(
-                    isListening: speechService.state == .listening,
-                    audioLevel: speechService.audioLevel,
-                    action: {
-                        Task {
-                            if speechService.state == .listening {
-                                await speechService.stopListening()
-                            } else {
-                                await speechService.startListening()
-                            }
-                        }
-                    },
-                    size: 64,
-                    color: accentColor
-                )
-            }
+            // Main record/stop button
+            recordButton
             
-            // Done button (only when we have text)
-            if !speechService.transcribedText.isEmpty {
+            // "Use This Text" button - only when we have text and not recording
+            if canConfirm {
                 Button {
-                    Task {
-                        await speechService.stopListening()
-                        onComplete(speechService.transcribedText)
-                    }
+                    onComplete(speechService.transcribedText)
                 } label: {
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
@@ -367,40 +364,65 @@ struct VoiceInputOverlay: View {
         .padding(.vertical, 20)
     }
     
-    private var hintText: String {
-        switch speechService.state {
-        case .listening:
-            return "Tap the mic to stop recording"
-        case .processing:
-            return "Processing your speech..."
-        case .error:
-            return "Tap the mic to try again"
-        default:
-            if speechService.transcribedText.isEmpty {
-                return "Tap the mic to start speaking"
-            } else {
-                return "Tap 'Use This Text' to confirm or record more"
+    /// The main record/stop button
+    private var recordButton: some View {
+        Button {
+            Task {
+                if isRecording {
+                    speechService.stopListening()
+                } else {
+                    // Check permissions first
+                    if speechService.authorizationStatus != .authorized {
+                        let authorized = await speechService.requestAuthorization()
+                        if !authorized {
+                            showingPermissionAlert = true
+                            return
+                        }
+                    }
+                    await speechService.startListening()
+                }
             }
+        } label: {
+            ZStack {
+                // Background pulse animation when recording
+                if isRecording {
+                    Circle()
+                        .fill(Color.red.opacity(0.2))
+                        .frame(width: 80, height: 80)
+                    
+                    Circle()
+                        .fill(Color.red.opacity(0.1))
+                        .frame(width: 96, height: 96)
+                }
+                
+                // Main button
+                Circle()
+                    .fill(isRecording ? Color.red : accentColor)
+                    .frame(width: 64, height: 64)
+                
+                // Icon
+                Image(systemName: isRecording ? "stop.fill" : "mic.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(.white)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isRecording ? "Stop recording" : "Start recording")
+    }
+    
+    private var hintText: String {
+        if isRecording {
+            return "Tap the stop button when you're done"
+        } else if canConfirm {
+            return "Tap 'Use This Text' to confirm, or record again"
+        } else if case .error = speechService.state {
+            return "Tap the microphone to try again"
+        } else {
+            return "Tap the microphone to start recording"
         }
     }
     
     // MARK: - Actions
-    
-    private func startListeningIfNeeded() async {
-        guard speechService.state == .idle else { return }
-        
-        // Check if we need to request permissions
-        if speechService.authorizationStatus != .authorized {
-            let authorized = await speechService.requestAuthorization()
-            if !authorized {
-                showingPermissionAlert = true
-                return
-            }
-        }
-        
-        // Start listening automatically
-        await speechService.startListening()
-    }
     
     private func openSettings() {
         #if os(iOS)
@@ -457,6 +479,7 @@ extension View {
                 accentColor: accentColor
             )
             .interactiveDismissDisabled(speechService.state.isActive)
+            .frame(minWidth: 400, minHeight: 500)
         }
         #endif
     }
@@ -489,4 +512,3 @@ extension View {
         )
     }
 }
-

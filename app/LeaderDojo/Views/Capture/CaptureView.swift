@@ -21,6 +21,13 @@ enum CaptureMode: String, CaseIterable {
     }
 }
 
+/// Which field is being targeted for voice input
+enum VoiceInputTarget {
+    case entryContent
+    case commitmentTitle
+    case commitmentNotes
+}
+
 struct CaptureView: View {
     @Environment(\.modelContext) private var modelContext
     
@@ -54,6 +61,11 @@ struct CaptureView: View {
     @State private var commitmentNotes: String = ""
     @State private var hasDueDate: Bool = false
     @State private var dueDate: Date = Date()
+    
+    // Voice input state
+    @State private var speechService = SpeechRecognitionService()
+    @State private var showVoiceOverlay: Bool = false
+    @State private var voiceInputTarget: VoiceInputTarget = .entryContent
     
     @FocusState private var isTextEditorFocused: Bool
     
@@ -131,6 +143,14 @@ struct CaptureView: View {
                 toastView
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
+        }
+        .voiceInputOverlay(
+            isPresented: $showVoiceOverlay,
+            speechService: speechService,
+            title: voiceInputOverlayTitle,
+            accentColor: captureMode.color
+        ) { text in
+            handleVoiceInputComplete(text)
         }
     }
     
@@ -323,20 +343,27 @@ struct CaptureView: View {
                     .foregroundStyle(.secondary)
             }
             
-            TextEditor(text: $noteContent)
-                .focused($isTextEditorFocused)
-                .frame(minHeight: 200)
-                .padding()
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .topLeading) {
-                    if noteContent.isEmpty {
-                        Text(contentPlaceholder)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 28)
-                            .allowsHitTesting(false)
+            ZStack(alignment: .bottomTrailing) {
+                TextEditor(text: $noteContent)
+                    .focused($isTextEditorFocused)
+                    .frame(minHeight: 200)
+                    .padding()
+                    .padding(.bottom, 40) // Extra space for voice button
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(alignment: .topLeading) {
+                        if noteContent.isEmpty {
+                            Text(contentPlaceholder)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 28)
+                                .allowsHitTesting(false)
+                        }
                     }
-                }
+                
+                // Voice input button
+                voiceInputButton(for: .entryContent, color: captureMode.color)
+                    .padding(12)
+            }
         }
     }
     
@@ -447,10 +474,21 @@ struct CaptureView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             
-            TextField("Describe the commitment...", text: $commitmentTitle)
-                .textFieldStyle(.plain)
-                .padding()
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            HStack(spacing: 8) {
+                TextField("Describe the commitment...", text: $commitmentTitle)
+                    .textFieldStyle(.plain)
+                    .padding()
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                
+                InlineVoiceButton(
+                    isListening: false,
+                    action: {
+                        voiceInputTarget = .commitmentTitle
+                        showVoiceOverlay = true
+                    },
+                    color: CaptureMode.commitment.color
+                )
+            }
         }
     }
     
@@ -485,20 +523,27 @@ struct CaptureView: View {
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             
-            TextEditor(text: $commitmentNotes)
-                .focused($isTextEditorFocused)
-                .frame(minHeight: 100)
-                .padding()
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .overlay(alignment: .topLeading) {
-                    if commitmentNotes.isEmpty {
-                        Text("Additional context or details...")
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 28)
-                            .allowsHitTesting(false)
+            ZStack(alignment: .bottomTrailing) {
+                TextEditor(text: $commitmentNotes)
+                    .focused($isTextEditorFocused)
+                    .frame(minHeight: 100)
+                    .padding()
+                    .padding(.bottom, 40) // Extra space for voice button
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(alignment: .topLeading) {
+                        if commitmentNotes.isEmpty {
+                            Text("Additional context or details...")
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 28)
+                                .allowsHitTesting(false)
+                        }
                     }
-                }
+                
+                // Voice input button
+                voiceInputButton(for: .commitmentNotes, color: CaptureMode.commitment.color)
+                    .padding(12)
+            }
         }
     }
     
@@ -703,6 +748,78 @@ struct CaptureView: View {
         }
         
         isSaving = false
+    }
+    
+    // MARK: - Voice Input Helpers
+    
+    /// Creates a voice input button for the specified target
+    private func voiceInputButton(for target: VoiceInputTarget, color: Color) -> some View {
+        Button {
+            voiceInputTarget = target
+            showVoiceOverlay = true
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "mic.fill")
+                    .font(.subheadline)
+                Text("Voice")
+                    .font(.caption)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(color.opacity(0.15), in: Capsule())
+            .foregroundStyle(color)
+        }
+        .buttonStyle(.plain)
+    }
+    
+    /// Title for the voice input overlay based on the target field
+    private var voiceInputOverlayTitle: String {
+        switch voiceInputTarget {
+        case .entryContent:
+            return "Voice \(selectedEntryKind.displayName)"
+        case .commitmentTitle:
+            return "Voice Commitment"
+        case .commitmentNotes:
+            return "Voice Notes"
+        }
+    }
+    
+    /// Placeholder for the voice input overlay based on the target field
+    private var voiceInputOverlayPlaceholder: String {
+        switch voiceInputTarget {
+        case .entryContent:
+            return contentPlaceholder
+        case .commitmentTitle:
+            return "Describe your commitment..."
+        case .commitmentNotes:
+            return "Add any additional context..."
+        }
+    }
+    
+    /// Handle completed voice input by updating the appropriate field
+    private func handleVoiceInputComplete(_ text: String) {
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+        
+        switch voiceInputTarget {
+        case .entryContent:
+            // Append to existing content with a space/newline if needed
+            if noteContent.isEmpty {
+                noteContent = trimmedText
+            } else {
+                noteContent += "\n\n" + trimmedText
+            }
+        case .commitmentTitle:
+            // Replace commitment title
+            commitmentTitle = trimmedText
+        case .commitmentNotes:
+            // Append to existing notes
+            if commitmentNotes.isEmpty {
+                commitmentNotes = trimmedText
+            } else {
+                commitmentNotes += "\n\n" + trimmedText
+            }
+        }
     }
     
     private func generateTitle() -> String {

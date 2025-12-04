@@ -41,6 +41,10 @@
 	<array>
 		<string>remote-notification</string>
 	</array>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>LeaderDojo uses the microphone to capture your voice notes after meetings</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>LeaderDojo uses speech recognition to convert your voice to text for quick capture</string>
 </dict>
 </plist>
 

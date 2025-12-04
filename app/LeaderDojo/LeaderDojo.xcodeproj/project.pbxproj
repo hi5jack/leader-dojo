@@ -82,6 +82,12 @@
 		43EA49782EE13C850006D0E9 /* DecisionReviewSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */; };
 		43EA497A2EE13C990006D0E9 /* DecisionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */; };
 		43EA497B2EE13C990006D0E9 /* DecisionInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */; };
+		43EA49802EE0C4000006D0E9 /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */; };
+		43EA49812EE0C4000006D0E9 /* SpeechRecognitionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */; };
+		43EA49822EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */; };
+		43EA49832EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */; };
+		43EA49842EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */; };
+		43EA49852EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,6 +152,9 @@
 		43EA49222EDE95B20006D0E9 /* ReflectionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReflectionInsightsView.swift; sourceTree = "<group>"; };
 		43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionReviewSheet.swift; sourceTree = "<group>"; };
 		43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionInsightsView.swift; sourceTree = "<group>"; };
+		43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
+		43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputButton.swift; sourceTree = "<group>"; };
+		43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputOverlay.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -332,6 +341,7 @@
 			children = (
 				002000000020 /* AIService.swift */,
 				002000000021 /* DataImportService.swift */,
+				43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -359,6 +369,8 @@
 				43EA49142EDBD7BF0006D0E9 /* PersonPicker.swift */,
 				43EA48BD2ED989710006D0E9 /* MarkdownText.swift */,
 				43EA48B92ED97B5D0006D0E9 /* SharedComponents.swift */,
+				43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */,
+				43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -584,6 +596,9 @@
 				001000000021 /* DataImportService.swift in Sources */,
 				001000000022 /* KeychainManager.swift in Sources */,
 				001000000023 /* Extensions.swift in Sources */,
+				43EA49802EE0C4000006D0E9 /* SpeechRecognitionService.swift in Sources */,
+				43EA49822EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */,
+				43EA49842EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -627,6 +642,9 @@
 				430C0B4F2ED961B00035BE62 /* DataImportService.swift in Sources */,
 				430C0B402ED961680035BE62 /* Entry.swift in Sources */,
 				430C0B4D2ED961A50035BE62 /* SettingsView.swift in Sources */,
+				43EA49812EE0C4000006D0E9 /* SpeechRecognitionService.swift in Sources */,
+				43EA49832EE0C4000006D0E9 /* VoiceInputButton.swift in Sources */,
+				43EA49852EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -870,6 +888,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LeaderDojo uses the microphone to capture your voice notes after meetings";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LeaderDojo uses speech recognition to convert your voice to text for quick capture";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -910,6 +930,8 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LeaderDojo uses the microphone to capture your voice notes after meetings";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LeaderDojo uses speech recognition to convert your voice to text for quick capture";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

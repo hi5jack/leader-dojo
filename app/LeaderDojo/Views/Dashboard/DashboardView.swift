@@ -128,8 +128,6 @@ struct DashboardView: View {
                 Spacer()
                 
                 #if os(macOS)
-                // Use value-based navigation so it integrates with NavigationStack(path:)
-                // and sidebar clicks can pop the view by clearing the path.
                 NavigationLink(value: AppRoute.decisionInsights) {
                     Image(systemName: "chart.bar.fill")
                         .font(.subheadline)
@@ -146,46 +144,50 @@ struct DashboardView: View {
                 #endif
             }
             
-            if decisionsNeedingReview.isEmpty && pendingDecisions.isEmpty {
+            if !hasDecisionsToShow {
                 EmptyStateCard(
                     icon: "checkmark.seal",
                     title: "No Decisions to Review",
                     message: "Your decisions are on track. Keep recording key decisions to build your learning history."
                 )
             } else {
-                // Decisions needing review (overdue)
-                if !decisionsNeedingReview.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Due for Review (\(decisionsNeedingReview.count))", systemImage: "exclamationmark.circle.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.orange)
-                        
-                        ForEach(decisionsNeedingReview.prefix(3)) { entry in
-                            NavigationLink {
-                                EntryDetailView(entry: entry)
-                            } label: {
-                                DecisionReviewRow(entry: entry)
-                            }
-                            .buttonStyle(.plain)
+                // Prioritized decision list (max 4 items)
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(prioritizedDecisionReviews, id: \.entry.id) { item in
+                        NavigationLink {
+                            EntryDetailView(entry: item.entry)
+                        } label: {
+                            PrioritizedDecisionRow(entry: item.entry, priority: item.priority)
                         }
+                        .buttonStyle(.plain)
                     }
-                }
-                
-                // Pending decisions (30+ days old without outcome)
-                if !pendingDecisions.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Label("Pending Outcome (\(pendingDecisions.count))", systemImage: "clock.fill")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                        
-                        ForEach(pendingDecisions.prefix(2)) { entry in
-                            NavigationLink {
-                                EntryDetailView(entry: entry)
-                            } label: {
-                                DecisionReviewRow(entry: entry)
+                    
+                    // Show "See all" link if there are more decisions
+                    let totalCount = overdueDecisions.count + decisionsDueSoon.count + staleDecisions.count
+                    if totalCount > 4 {
+                        #if os(macOS)
+                        NavigationLink(value: AppRoute.decisionInsights) {
+                            HStack {
+                                Text("See all \(totalCount) decisions")
+                                    .font(.caption)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
                             }
-                            .buttonStyle(.plain)
+                            .foregroundStyle(.purple)
                         }
+                        #else
+                        NavigationLink {
+                            DecisionInsightsView()
+                        } label: {
+                            HStack {
+                                Text("See all \(totalCount) decisions")
+                                    .font(.caption)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
+                            }
+                            .foregroundStyle(.purple)
+                        }
+                        #endif
                     }
                 }
                 
@@ -380,17 +382,59 @@ struct DashboardView: View {
         allEntries.filter { $0.isDecisionEntry && !$0.isDeleted }
     }
     
-    private var decisionsNeedingReview: [Entry] {
-        allDecisions.filter { $0.needsDecisionReview }
+    /// Overdue decisions (review date has passed, no outcome yet)
+    private var overdueDecisions: [Entry] {
+        allDecisions
+            .filter { $0.needsDecisionReview }
+            .sorted { ($0.decisionReviewDate ?? .distantPast) < ($1.decisionReviewDate ?? .distantPast) }
     }
     
-    private var pendingDecisions: [Entry] {
+    /// Decisions due within next 7 days (not yet overdue)
+    private var decisionsDueSoon: [Entry] {
+        let now = Date()
+        let sevenDaysFromNow = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now
+        return allDecisions.filter { entry in
+            guard let reviewDate = entry.decisionReviewDate else { return false }
+            guard entry.decisionOutcome == nil || entry.decisionOutcome == .pending else { return false }
+            return reviewDate > now && reviewDate <= sevenDaysFromNow
+        }
+        .sorted { ($0.decisionReviewDate ?? .distantFuture) < ($1.decisionReviewDate ?? .distantFuture) }
+    }
+    
+    /// Stale decisions (30+ days old, no outcome, no review date set)
+    private var staleDecisions: [Entry] {
         let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         return allDecisions.filter { entry in
             (entry.decisionOutcome == nil || entry.decisionOutcome == .pending) &&
             entry.occurredAt < thirtyDaysAgo &&
-            !entry.needsDecisionReview  // Don't double-count with decisionsNeedingReview
+            entry.decisionReviewDate == nil  // No review date set
         }
+    }
+    
+    /// Combined prioritized list for dashboard (max 4 items)
+    private var prioritizedDecisionReviews: [(entry: Entry, priority: DecisionReviewPriority)] {
+        var results: [(Entry, DecisionReviewPriority)] = []
+        
+        // Add overdue first
+        for entry in overdueDecisions {
+            results.append((entry, .overdue))
+        }
+        
+        // Add due soon
+        for entry in decisionsDueSoon {
+            results.append((entry, .dueSoon))
+        }
+        
+        // Add stale
+        for entry in staleDecisions {
+            results.append((entry, .stale))
+        }
+        
+        return Array(results.prefix(4))
+    }
+    
+    private var hasDecisionsToShow: Bool {
+        !overdueDecisions.isEmpty || !decisionsDueSoon.isEmpty || !staleDecisions.isEmpty
     }
     
     private var decisionsThisQuarter: Int {
@@ -579,6 +623,94 @@ struct StatCard: View {
                 .fontWeight(.bold)
             
             Text(title)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Decision Review Priority
+
+enum DecisionReviewPriority {
+    case overdue    // Review date has passed
+    case dueSoon    // Review date within 7 days
+    case stale      // 30+ days old, no review date
+    
+    var badgeText: (Entry) -> String {
+        return { entry in
+            switch self {
+            case .overdue:
+                if let days = entry.daysUntilReview, days < 0 {
+                    return "\(abs(days))d overdue"
+                }
+                return "overdue"
+            case .dueSoon:
+                if let days = entry.daysUntilReview, days >= 0 {
+                    return days == 0 ? "due today" : "due in \(days)d"
+                }
+                return "due soon"
+            case .stale:
+                return "needs review"
+            }
+        }
+    }
+    
+    var badgeColor: Color {
+        switch self {
+        case .overdue: return .red
+        case .dueSoon: return .orange
+        case .stale: return .secondary
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .overdue: return "exclamationmark.circle.fill"
+        case .dueSoon: return "clock.fill"
+        case .stale: return "questionmark.circle"
+        }
+    }
+}
+
+struct PrioritizedDecisionRow: View {
+    let entry: Entry
+    let priority: DecisionReviewPriority
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "checkmark.seal.fill")
+                .font(.title3)
+                .foregroundStyle(.purple)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(entry.title)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+                    .lineLimit(1)
+                
+                HStack(spacing: 8) {
+                    if let projectName = entry.project?.name {
+                        Text(projectName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    // Priority badge
+                    HStack(spacing: 3) {
+                        Image(systemName: priority.icon)
+                            .font(.caption2)
+                        Text(priority.badgeText(entry))
+                            .font(.caption)
+                    }
+                    .foregroundStyle(priority.badgeColor)
+                }
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

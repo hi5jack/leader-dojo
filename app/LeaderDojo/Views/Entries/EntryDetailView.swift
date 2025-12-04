@@ -564,7 +564,7 @@ struct EditEntryView: View {
                         get: { entry.decisionStakes ?? .medium },
                         set: { entry.decisionStakes = $0 }
                     )) {
-                        ForEach(DecisionStakes.allCases) { stakes in
+                        ForEach(DecisionStakes.allCases, id: \.self) { stakes in
                             Text(stakes.displayName).tag(stakes)
                         }
                     }

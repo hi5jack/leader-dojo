@@ -60,26 +60,59 @@ struct DashboardView: View {
         VStack(alignment: .leading, spacing: 12) {
             SectionHeader(title: "Weekly Focus", icon: "target", color: .orange)
             
-            if topCommitments.isEmpty {
-                EmptyStateCard(
-                    icon: "checkmark.circle",
-                    title: "All Clear",
-                    message: "No open commitments. Great job staying on top of things!"
-                )
-            } else {
-                ForEach(topCommitments) { commitment in
-                    CommitmentRow(commitment: commitment) {
-                        markCommitmentDone(commitment)
-                    }
+            if !hasCommitmentsToShow {
+                // Smart empty state
+                if !staleWaitingFor.isEmpty {
+                    // User has no I Owe but has stale Waiting For
+                    EmptyStateCard(
+                        icon: "clock.badge.questionmark",
+                        title: "Follow Up Time?",
+                        message: "No tasks due, but \(staleWaitingFor.count) item\(staleWaitingFor.count == 1 ? "" : "s") waiting on others for 14+ days."
+                    )
+                } else {
+                    EmptyStateCard(
+                        icon: "checkmark.circle",
+                        title: "All Clear",
+                        message: "No open commitments. Great job staying on top of things!"
+                    )
                 }
-                
-                if openIOweCommitments.count > 5 {
-                    NavigationLink {
-                        CommitmentsListView()
-                    } label: {
-                        Text("View all \(openIOweCommitments.count) commitments")
-                            .font(.subheadline)
-                            .foregroundStyle(.blue)
+            } else {
+                // Prioritized commitment list
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(prioritizedCommitments, id: \.commitment.id) { item in
+                        PrioritizedCommitmentRow(
+                            commitment: item.commitment,
+                            urgency: item.urgency
+                        ) {
+                            markCommitmentDone(item.commitment)
+                        }
+                    }
+                    
+                    // Stale Waiting For callout (if any and we have room)
+                    if !staleWaitingFor.isEmpty {
+                        HStack(spacing: 6) {
+                            Image(systemName: "person.badge.clock")
+                                .font(.caption)
+                            Text("\(staleWaitingFor.count) item\(staleWaitingFor.count == 1 ? "" : "s") waiting on others for 14+ days")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                    }
+                    
+                    // "See all" link
+                    if openIOweCommitments.count > 5 {
+                        NavigationLink {
+                            CommitmentsListView()
+                        } label: {
+                            HStack {
+                                Text("View all \(openIOweCommitments.count) commitments")
+                                    .font(.caption)
+                                Image(systemName: "chevron.right")
+                                    .font(.caption2)
+                            }
+                            .foregroundStyle(.orange)
+                        }
                     }
                 }
             }
@@ -346,6 +379,72 @@ struct DashboardView: View {
         allCommitments.filter { $0.direction == .iOwe && $0.status == .open }
     }
     
+    private var openWaitingForCommitments: [Commitment] {
+        allCommitments.filter { $0.direction == .waitingFor && $0.status == .open }
+    }
+    
+    // MARK: - Urgency-Based Commitment Sorting
+    
+    /// Overdue commitments (past due date)
+    private var overdueCommitments: [Commitment] {
+        openIOweCommitments
+            .filter { $0.isOverdue }
+            .sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
+    }
+    
+    /// Commitments due within next 7 days (not yet overdue)
+    private var commitmentsDueThisWeek: [Commitment] {
+        let now = Date()
+        let sevenDaysFromNow = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now
+        return openIOweCommitments.filter { commitment in
+            guard let dueDate = commitment.dueDate else { return false }
+            return dueDate > now && dueDate <= sevenDaysFromNow
+        }
+        .sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
+    }
+    
+    /// High priority commitments without due date
+    private var highPriorityNoDueDate: [Commitment] {
+        openIOweCommitments.filter { commitment in
+            commitment.dueDate == nil && commitment.priorityScore > 50
+        }
+        .sorted { $0.priorityScore > $1.priorityScore }
+    }
+    
+    /// Stale "Waiting For" items (14+ days old)
+    private var staleWaitingFor: [Commitment] {
+        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        return openWaitingForCommitments.filter { $0.createdAt < fourteenDaysAgo }
+    }
+    
+    /// Combined prioritized list for Weekly Focus (max 5 items)
+    private var prioritizedCommitments: [(commitment: Commitment, urgency: CommitmentUrgency)] {
+        var results: [(Commitment, CommitmentUrgency)] = []
+        
+        // Add overdue first (max 2)
+        for commitment in overdueCommitments.prefix(2) {
+            results.append((commitment, .overdue))
+        }
+        
+        // Add due this week (max 2, but fill remaining slots)
+        let remainingAfterOverdue = 4 - results.count
+        for commitment in commitmentsDueThisWeek.prefix(remainingAfterOverdue) {
+            results.append((commitment, .dueThisWeek))
+        }
+        
+        // Add high priority no date (fill remaining up to 5)
+        let remainingSlots = 5 - results.count
+        for commitment in highPriorityNoDueDate.prefix(remainingSlots) {
+            results.append((commitment, .highPriority))
+        }
+        
+        return results
+    }
+    
+    private var hasCommitmentsToShow: Bool {
+        !overdueCommitments.isEmpty || !commitmentsDueThisWeek.isEmpty || !highPriorityNoDueDate.isEmpty
+    }
+    
     private var topCommitments: [Commitment] {
         Array(openIOweCommitments.sorted { $0.priorityScore > $1.priorityScore }.prefix(5))
     }
@@ -558,13 +657,15 @@ struct ProjectAttentionRow: View {
 struct ReflectionPromptCard: View {
     let title: String
     let message: String
-    let icon: String
+    let icon: String  // Kept for API compatibility but no longer displayed
     
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title)
-                .foregroundStyle(.purple)
+        HStack(spacing: 0) {
+            // Subtle left accent bar (matches decision row style)
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.purple.opacity(0.6))
+                .frame(width: 3)
+                .padding(.vertical, 4)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
@@ -574,6 +675,7 @@ struct ReflectionPromptCard: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            .padding(.leading, 12)
             
             Spacer()
             
@@ -631,6 +733,95 @@ struct StatCard: View {
     }
 }
 
+// MARK: - Commitment Urgency
+
+enum CommitmentUrgency {
+    case overdue        // Past due date
+    case dueThisWeek    // Due within 7 days
+    case highPriority   // High priority, no due date
+    
+    var badgeText: (Commitment) -> String {
+        return { commitment in
+            switch self {
+            case .overdue:
+                if let dueDate = commitment.dueDate {
+                    let days = Calendar.current.dateComponents([.day], from: dueDate, to: Date()).day ?? 0
+                    return days == 0 ? "due today" : "\(days)d overdue"
+                }
+                return "overdue"
+            case .dueThisWeek:
+                if let dueDate = commitment.dueDate {
+                    let days = Calendar.current.dateComponents([.day], from: Date(), to: dueDate).day ?? 0
+                    return days == 0 ? "due today" : "due in \(days)d"
+                }
+                return "this week"
+            case .highPriority:
+                return "high priority"
+            }
+        }
+    }
+    
+    var badgeColor: Color {
+        switch self {
+        case .overdue: return .red
+        case .dueThisWeek: return .orange
+        case .highPriority: return .secondary
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .overdue: return "exclamationmark.circle.fill"
+        case .dueThisWeek: return "clock.fill"
+        case .highPriority: return "star.fill"
+        }
+    }
+}
+
+struct PrioritizedCommitmentRow: View {
+    let commitment: Commitment
+    let urgency: CommitmentUrgency
+    let onComplete: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Button(action: onComplete) {
+                Image(systemName: "circle")
+                    .font(.title2)
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(commitment.title)
+                    .font(.subheadline)
+                    .lineLimit(2)
+                
+                HStack(spacing: 8) {
+                    if let projectName = commitment.project?.name {
+                        Text(projectName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    // Urgency badge
+                    HStack(spacing: 3) {
+                        Image(systemName: urgency.icon)
+                            .font(.caption2)
+                        Text(urgency.badgeText(commitment))
+                            .font(.caption)
+                    }
+                    .foregroundStyle(urgency.badgeColor)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding()
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
 // MARK: - Decision Review Priority
 
 enum DecisionReviewPriority {
@@ -679,10 +870,12 @@ struct PrioritizedDecisionRow: View {
     let priority: DecisionReviewPriority
     
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.seal.fill")
-                .font(.title3)
-                .foregroundStyle(.purple)
+        HStack(spacing: 0) {
+            // Subtle left accent bar instead of icon
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color.purple.opacity(0.6))
+                .frame(width: 3)
+                .padding(.vertical, 4)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.title)
@@ -707,6 +900,7 @@ struct PrioritizedDecisionRow: View {
                     .foregroundStyle(priority.badgeColor)
                 }
             }
+            .padding(.leading, 12)
             
             Spacer()
             

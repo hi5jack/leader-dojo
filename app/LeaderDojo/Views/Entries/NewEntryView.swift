@@ -1,6 +1,21 @@
 import SwiftUI
 import SwiftData
 
+/// Voice input targets for new entry
+private enum EntryVoiceTarget {
+    case content
+    case rationale
+    case assumptions
+    
+    var title: String {
+        switch self {
+        case .content: return "Notes"
+        case .rationale: return "Rationale"
+        case .assumptions: return "Assumptions"
+        }
+    }
+}
+
 struct NewEntryView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -44,6 +59,11 @@ struct NewEntryView: View {
     @State private var showQuickReflection: Bool = false
     @State private var savedEntry: Entry? = nil
     
+    // Voice input state
+    @State private var speechService = SpeechRecognitionService()
+    @State private var showVoiceOverlay: Bool = false
+    @State private var voiceTarget: EntryVoiceTarget = .content
+    
     var body: some View {
         NavigationStack {
             #if os(macOS)
@@ -84,8 +104,19 @@ struct NewEntryView: View {
             Section {
                 TextField("Title", text: $title)
                 
-                TextEditor(text: $rawContent)
-                    .frame(minHeight: 150)
+                HStack(alignment: .top, spacing: 8) {
+                    TextEditor(text: $rawContent)
+                        .frame(minHeight: 150)
+                    
+                    InlineVoiceButton(
+                        isListening: false,
+                        action: {
+                            voiceTarget = .content
+                            showVoiceOverlay = true
+                        },
+                        color: .blue
+                    )
+                }
             } header: {
                 Text("Content")
             } footer: {
@@ -109,18 +140,40 @@ struct NewEntryView: View {
                     DisclosureGroup("Decision Details", isExpanded: $showDecisionDetails) {
                         // Rationale
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Why are you making this decision?")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            HStack {
+                                Text("Why are you making this decision?")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                InlineVoiceButton(
+                                    isListening: false,
+                                    action: {
+                                        voiceTarget = .rationale
+                                        showVoiceOverlay = true
+                                    },
+                                    color: .purple
+                                )
+                            }
                             TextEditor(text: $decisionRationale)
                                 .frame(minHeight: 80)
                         }
                         
                         // Assumptions
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Key assumptions (what must be true?)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                            HStack {
+                                Text("Key assumptions (what must be true?)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Spacer()
+                                InlineVoiceButton(
+                                    isListening: false,
+                                    action: {
+                                        voiceTarget = .assumptions
+                                        showVoiceOverlay = true
+                                    },
+                                    color: .purple
+                                )
+                            }
                             TextEditor(text: $decisionAssumptions)
                                 .frame(minHeight: 60)
                         }
@@ -301,8 +354,39 @@ struct NewEntryView: View {
                 showDecisionDetails = true
             }
         }
+        .voiceInputOverlay(
+            isPresented: $showVoiceOverlay,
+            speechService: speechService,
+            title: voiceTarget.title,
+            accentColor: kind == .decision || isDecision ? .purple : .blue
+        ) { text in
+            handleVoiceInputComplete(text)
+        }
     }
     #endif
+    
+    private func handleVoiceInputComplete(_ text: String) {
+        switch voiceTarget {
+        case .content:
+            if rawContent.isEmpty {
+                rawContent = text
+            } else {
+                rawContent += "\n\n" + text
+            }
+        case .rationale:
+            if decisionRationale.isEmpty {
+                decisionRationale = text
+            } else {
+                decisionRationale += "\n\n" + text
+            }
+        case .assumptions:
+            if decisionAssumptions.isEmpty {
+                decisionAssumptions = text
+            } else {
+                decisionAssumptions += "\n\n" + text
+            }
+        }
+    }
     
     // MARK: - macOS Layout (Card-based)
     
@@ -370,6 +454,14 @@ struct NewEntryView: View {
             if initialTitle != nil || initialRationale != nil {
                 showDecisionDetails = true
             }
+        }
+        .voiceInputOverlay(
+            isPresented: $showVoiceOverlay,
+            speechService: speechService,
+            title: voiceTarget.title,
+            accentColor: kind == .decision || isDecision ? .purple : .blue
+        ) { text in
+            handleVoiceInputComplete(text)
         }
     }
     
@@ -443,6 +535,15 @@ struct NewEntryView: View {
                             .font(.caption2)
                             .foregroundStyle(.purple)
                     }
+                    
+                    InlineVoiceButton(
+                        isListening: false,
+                        action: {
+                            voiceTarget = .content
+                            showVoiceOverlay = true
+                        },
+                        color: .blue
+                    )
                 }
                 
                 MacTextEditor(text: $rawContent, placeholder: "Add your meeting notes, thoughts, or any raw content here...")
@@ -642,18 +743,40 @@ struct NewEntryView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     // Rationale
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Why are you making this decision?")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            Text("Why are you making this decision?")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            InlineVoiceButton(
+                                isListening: false,
+                                action: {
+                                    voiceTarget = .rationale
+                                    showVoiceOverlay = true
+                                },
+                                color: .purple
+                            )
+                        }
                         MacTextEditor(text: $decisionRationale, placeholder: "Your reasoning...")
                             .frame(height: 60)
                     }
                     
                     // Assumptions
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Key assumptions")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        HStack {
+                            Text("Key assumptions")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            InlineVoiceButton(
+                                isListening: false,
+                                action: {
+                                    voiceTarget = .assumptions
+                                    showVoiceOverlay = true
+                                },
+                                color: .purple
+                            )
+                        }
                         MacTextEditor(text: $decisionAssumptions, placeholder: "What must be true?")
                             .frame(height: 50)
                     }

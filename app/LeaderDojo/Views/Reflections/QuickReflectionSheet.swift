@@ -17,6 +17,10 @@ struct QuickReflectionSheet: View {
     @State private var isSaving: Bool = false
     @State private var confidenceLevel: Int = 3 // 1-5 scale
     
+    // Voice input state
+    @State private var speechService = SpeechRecognitionService()
+    @State private var showVoiceOverlay: Bool = false
+    
     /// Quick mood options for fast selection
     private let quickMoods: [ReflectionMood] = [.confident, .uncertain, .energized, .drained, .neutral]
     
@@ -60,6 +64,19 @@ struct QuickReflectionSheet: View {
             }
             .task {
                 await loadQuestion()
+            }
+            .voiceInputOverlay(
+                isPresented: $showVoiceOverlay,
+                speechService: speechService,
+                title: "Quick Thought",
+                accentColor: .purple
+            ) { text in
+                // Append voice text to existing answer
+                if answer.isEmpty {
+                    answer = text
+                } else {
+                    answer += " " + text
+                }
             }
         }
         #if os(iOS)
@@ -208,6 +225,17 @@ struct QuickReflectionSheet: View {
                 Text("(optional)")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
+                
+                Spacer()
+                
+                // Voice input button
+                InlineVoiceButton(
+                    isListening: false,
+                    action: {
+                        showVoiceOverlay = true
+                    },
+                    color: .purple
+                )
             }
             
             TextField("What's on your mind?", text: $answer, axis: .vertical)

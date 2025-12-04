@@ -311,6 +311,16 @@ struct DashboardView: View {
         }
         // Project needing reflection (hasn't been reflected on in 2+ weeks)
         else if let projectNeedingReflection = projectNeedingReflection {
+            #if os(macOS)
+            NavigationLink(value: AppRoute.newProjectReflection(projectNeedingReflection.persistentModelID)) {
+                ReflectionPromptCard(
+                    title: "Project Check-In",
+                    message: "How are you showing up for \(projectNeedingReflection.name)?",
+                    icon: "folder.fill"
+                )
+            }
+            .buttonStyle(.plain)
+            #else
             NavigationLink {
                 NewReflectionView(project: projectNeedingReflection)
             } label: {
@@ -321,6 +331,7 @@ struct DashboardView: View {
                 )
             }
             .buttonStyle(.plain)
+            #endif
         }
         // High activity week - suggest quick reflection
         else if entriesThisWeek >= 5 && quickReflectionsToday < QuickReflectionTrigger.maxPromptsPerDay {

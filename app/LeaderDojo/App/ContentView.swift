@@ -249,6 +249,10 @@ struct ContentView: View {
             }
         case .newPeriodicReflection(let periodType):
             NewReflectionView(periodType: periodType)
+        case .newProjectReflection(let id):
+            if let project = modelContext.model(for: id) as? Project {
+                NewReflectionView(project: project)
+            }
         case .reflectionInsights:
             ReflectionInsightsView()
         case .decisionInsights:

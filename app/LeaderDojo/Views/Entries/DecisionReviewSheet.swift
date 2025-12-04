@@ -1,6 +1,21 @@
 import SwiftUI
 import SwiftData
 
+/// Voice input targets for decision review
+private enum DecisionVoiceTarget {
+    case outcome
+    case assumptions
+    case learning
+    
+    var title: String {
+        switch self {
+        case .outcome: return "Outcome Notes"
+        case .assumptions: return "Assumption Check"
+        case .learning: return "Key Learning"
+        }
+    }
+}
+
 /// Sheet for reviewing a decision and recording its outcome
 struct DecisionReviewSheet: View {
     @Environment(\.modelContext) private var modelContext
@@ -13,6 +28,11 @@ struct DecisionReviewSheet: View {
     @State private var learning: String = ""
     @State private var createFollowUpCommitment: Bool = false
     @State private var followUpTitle: String = ""
+    
+    // Voice input state
+    @State private var speechService = SpeechRecognitionService()
+    @State private var showVoiceOverlay: Bool = false
+    @State private var voiceTarget: DecisionVoiceTarget = .outcome
     
     var body: some View {
         NavigationStack {
@@ -94,8 +114,19 @@ struct DecisionReviewSheet: View {
                 }
                 .pickerStyle(.menu)
                 
-                TextEditor(text: $outcomeNotes)
-                    .frame(minHeight: 80)
+                HStack(alignment: .top, spacing: 8) {
+                    TextEditor(text: $outcomeNotes)
+                        .frame(minHeight: 80)
+                    
+                    InlineVoiceButton(
+                        isListening: false,
+                        action: {
+                            voiceTarget = .outcome
+                            showVoiceOverlay = true
+                        },
+                        color: .purple
+                    )
+                }
             } header: {
                 Text("What Happened?")
             } footer: {
@@ -104,8 +135,19 @@ struct DecisionReviewSheet: View {
             
             // Assumption Results
             Section {
-                TextEditor(text: $assumptionResults)
-                    .frame(minHeight: 60)
+                HStack(alignment: .top, spacing: 8) {
+                    TextEditor(text: $assumptionResults)
+                        .frame(minHeight: 60)
+                    
+                    InlineVoiceButton(
+                        isListening: false,
+                        action: {
+                            voiceTarget = .assumptions
+                            showVoiceOverlay = true
+                        },
+                        color: .secondary
+                    )
+                }
             } header: {
                 Text("Assumption Check")
             } footer: {
@@ -114,8 +156,19 @@ struct DecisionReviewSheet: View {
             
             // Learning
             Section {
-                TextEditor(text: $learning)
-                    .frame(minHeight: 80)
+                HStack(alignment: .top, spacing: 8) {
+                    TextEditor(text: $learning)
+                        .frame(minHeight: 80)
+                    
+                    InlineVoiceButton(
+                        isListening: false,
+                        action: {
+                            voiceTarget = .learning
+                            showVoiceOverlay = true
+                        },
+                        color: .yellow
+                    )
+                }
             } header: {
                 HStack {
                     Text("Key Learning")
@@ -169,8 +222,39 @@ struct DecisionReviewSheet: View {
                 learning = existingLearning
             }
         }
+        .voiceInputOverlay(
+            isPresented: $showVoiceOverlay,
+            speechService: speechService,
+            title: voiceTarget.title,
+            accentColor: .purple
+        ) { text in
+            handleVoiceInputComplete(text)
+        }
     }
     #endif
+    
+    private func handleVoiceInputComplete(_ text: String) {
+        switch voiceTarget {
+        case .outcome:
+            if outcomeNotes.isEmpty {
+                outcomeNotes = text
+            } else {
+                outcomeNotes += "\n\n" + text
+            }
+        case .assumptions:
+            if assumptionResults.isEmpty {
+                assumptionResults = text
+            } else {
+                assumptionResults += "\n\n" + text
+            }
+        case .learning:
+            if learning.isEmpty {
+                learning = text
+            } else {
+                learning += "\n\n" + text
+            }
+        }
+    }
     
     // MARK: - macOS Layout
     
@@ -212,6 +296,14 @@ struct DecisionReviewSheet: View {
             if let existingLearning = entry.decisionLearning {
                 learning = existingLearning
             }
+        }
+        .voiceInputOverlay(
+            isPresented: $showVoiceOverlay,
+            speechService: speechService,
+            title: voiceTarget.title,
+            accentColor: .purple
+        ) { text in
+            handleVoiceInputComplete(text)
         }
     }
     
@@ -343,10 +435,23 @@ struct DecisionReviewSheet: View {
     
     private var outcomeCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Outcome", systemImage: "checkmark.seal")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.purple)
+            HStack {
+                Label("Outcome", systemImage: "checkmark.seal")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.purple)
+                
+                Spacer()
+                
+                InlineVoiceButton(
+                    isListening: false,
+                    action: {
+                        voiceTarget = .outcome
+                        showVoiceOverlay = true
+                    },
+                    color: .purple
+                )
+            }
             
             // Outcome picker as buttons
             HStack(spacing: 6) {
@@ -389,10 +494,23 @@ struct DecisionReviewSheet: View {
     
     private var assumptionCard: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Assumption Check", systemImage: "checklist")
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
+            HStack {
+                Label("Assumption Check", systemImage: "checklist")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
+                
+                Spacer()
+                
+                InlineVoiceButton(
+                    isListening: false,
+                    action: {
+                        voiceTarget = .assumptions
+                        showVoiceOverlay = true
+                    },
+                    color: .secondary
+                )
+            }
             
             Text("Which assumptions held? Which broke?")
                 .font(.caption)
@@ -413,6 +531,17 @@ struct DecisionReviewSheet: View {
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(.yellow)
+                
+                Spacer()
+                
+                InlineVoiceButton(
+                    isListening: false,
+                    action: {
+                        voiceTarget = .learning
+                        showVoiceOverlay = true
+                    },
+                    color: .yellow
+                )
             }
             
             Text("What would you do differently?")

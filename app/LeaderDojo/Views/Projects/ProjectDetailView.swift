@@ -50,11 +50,17 @@ struct ProjectDetailView: View {
                         Label("Prep Briefing", systemImage: "doc.text.fill")
                     }
                     
+                    #if os(macOS)
+                    NavigationLink(value: AppRoute.newProjectReflection(project.persistentModelID)) {
+                        Label("Reflect on Project", systemImage: "brain.head.profile")
+                    }
+                    #else
                     Button {
                         showingProjectReflection = true
                     } label: {
                         Label("Reflect on Project", systemImage: "brain.head.profile")
                     }
+                    #endif
                     
                     Divider()
                     
@@ -85,9 +91,11 @@ struct ProjectDetailView: View {
                 preselectedDirection: selectedCommitmentDirection
             )
         }
+        #if os(iOS)
         .sheet(isPresented: $showingProjectReflection) {
             NewReflectionView(project: project)
         }
+        #endif
         .sheet(isPresented: $showingQuickDecision) {
             QuickDecisionSheet(project: project)
         }

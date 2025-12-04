@@ -13,6 +13,8 @@ enum AppRoute: Hashable {
     case person(PersistentIdentifier)
     /// New periodic reflection creation (e.g. weekly reflection flow)
     case newPeriodicReflection(ReflectionPeriodType)
+    /// New project-specific reflection creation
+    case newProjectReflection(PersistentIdentifier)
     /// Aggregate insights views
     case reflectionInsights
     case decisionInsights

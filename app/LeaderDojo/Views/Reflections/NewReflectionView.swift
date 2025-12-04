@@ -46,6 +46,11 @@ struct NewReflectionView: View {
     @State private var mood: ReflectionMood? = nil
     @State private var usedFallbackQuestions: Bool = false
     
+    // Voice input state
+    @State private var speechService = SpeechRecognitionService()
+    @State private var showVoiceOverlay: Bool = false
+    @State private var voiceTargetQuestionIndex: Int = 0
+    
     // Convenience initializer for periodic reflections
     init(periodType: ReflectionPeriodType) {
         self.reflectionType = .periodic
@@ -128,6 +133,31 @@ struct NewReflectionView: View {
         }
         .task {
             await initializeReflection()
+        }
+        .voiceInputOverlay(
+            isPresented: $showVoiceOverlay,
+            speechService: speechService,
+            title: currentQuestionTitle,
+            accentColor: .purple
+        ) { text in
+            handleVoiceInputComplete(text)
+        }
+    }
+    
+    private var currentQuestionTitle: String {
+        guard voiceTargetQuestionIndex < questionsAnswers.count else {
+            return "Reflect"
+        }
+        return "Q\(voiceTargetQuestionIndex + 1)"
+    }
+    
+    private func handleVoiceInputComplete(_ text: String) {
+        guard voiceTargetQuestionIndex < questionsAnswers.count else { return }
+        // Append voice text to existing answer
+        if questionsAnswers[voiceTargetQuestionIndex].answer.isEmpty {
+            questionsAnswers[voiceTargetQuestionIndex].answer = text
+        } else {
+            questionsAnswers[voiceTargetQuestionIndex].answer += "\n\n" + text
         }
     }
     
@@ -545,22 +575,36 @@ struct NewReflectionView: View {
                     .fontWeight(.medium)
                 
                 // Answer input
-                TextEditor(text: qa.answer)
-                    .frame(minHeight: 150)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.gray.opacity(0.1))
-                    )
-                    .overlay(alignment: .topLeading) {
-                        if qa.wrappedValue.answer.isEmpty {
-                            Text("Your thoughts...")
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 20)
-                                .allowsHitTesting(false)
+                ZStack(alignment: .bottomTrailing) {
+                    TextEditor(text: qa.answer)
+                        .frame(minHeight: 150)
+                        .padding(12)
+                        .padding(.bottom, 40) // Space for voice button
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.gray.opacity(0.1))
+                        )
+                        .overlay(alignment: .topLeading) {
+                            if qa.wrappedValue.answer.isEmpty {
+                                Text("Your thoughts...")
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 20)
+                                    .allowsHitTesting(false)
+                            }
                         }
-                    }
+                    
+                    // Voice input button
+                    InlineVoiceButton(
+                        isListening: false,
+                        action: {
+                            voiceTargetQuestionIndex = index
+                            showVoiceOverlay = true
+                        },
+                        color: .purple
+                    )
+                    .padding(12)
+                }
                 
                 // Mood selector (on first question)
                 if index == 0 {
@@ -622,6 +666,18 @@ struct NewReflectionView: View {
                 Text(qa.wrappedValue.question)
                     .font(.subheadline)
                     .fontWeight(.medium)
+                
+                Spacer()
+                
+                // Voice input button
+                InlineVoiceButton(
+                    isListening: false,
+                    action: {
+                        voiceTargetQuestionIndex = index
+                        showVoiceOverlay = true
+                    },
+                    color: .purple
+                )
             }
             
             TextEditor(text: qa.answer)

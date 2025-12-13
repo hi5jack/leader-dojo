@@ -140,7 +140,12 @@ actor AIService {
             
             Format your response as JSON with the following structure:
             {
-                "summary": "Structured summary text",
+                "summary": {
+                    "background": "1–3 sentences of context for the meeting",
+                    "key_points": ["Key point 1", "Key point 2"],
+                    "decisions": ["Decision 1", "Decision 2"],
+                    "open_questions": ["Question 1", "Question 2"]
+                },
                 "commitments": [
                     {
                         "direction": "i_owe" or "waiting_for",
@@ -149,6 +154,8 @@ actor AIService {
                     }
                 ]
             }
+            
+            Do not add any explanation outside of this JSON object.
             """
         }
         
@@ -794,12 +801,73 @@ actor AIService {
     private func parseEntrySummaryResponse(_ response: String, isDecision: Bool = false) throws -> EntrySummaryResult {
         let jsonString = extractJSON(from: response)
         
-        guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        // Helper to decode JSON with a bit of tolerance for common LLM mistakes (like trailing commas)
+        func decodeLoosely(_ text: String) -> [String: Any]? {
+            // First try strict JSON decoding
+            if let data = text.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                return json
+            }
+            
+            // Best-effort cleanup: remove trailing commas before } or ] that often break JSON
+            var cleaned = text
+            if let regex = try? NSRegularExpression(pattern: ",\\s*([}\\]])", options: []) {
+                let range = NSRange(location: 0, length: cleaned.utf16.count)
+                cleaned = regex.stringByReplacingMatches(in: cleaned, options: [], range: range, withTemplate: "$1")
+            }
+            
+            guard let data = cleaned.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return nil
+            }
+            
+            return json
+        }
+        
+        guard let json = decodeLoosely(jsonString) else {
+            // If we truly can't understand the JSON, just show the raw response so nothing is lost
             return EntrySummaryResult(summary: response, suggestedActions: [], assumptions: nil, suggestedReviewDays: nil)
         }
         
-        let summary = json["summary"] as? String ?? response
+        // Support both legacy string summaries and the newer structured summary object
+        let summary: String
+        if let summaryString = json["summary"] as? String {
+            summary = summaryString
+        } else if let summaryDict = json["summary"] as? [String: Any] {
+            let background = summaryDict["background"] as? String
+            
+            let keyPoints = summaryDict["key_points"] as? [String] ??
+                summaryDict["keyPoints"] as? [String] ?? []
+            let decisionsList = summaryDict["decisions"] as? [String] ?? []
+            let openQuestions = summaryDict["open_questions"] as? [String] ??
+                summaryDict["openQuestions"] as? [String] ?? []
+            
+            var parts: [String] = []
+            
+            if let background = background, !background.isEmpty {
+                parts.append("**Background**\n\(background)")
+            }
+            
+            if !keyPoints.isEmpty {
+                let bullets = keyPoints.map { "- \($0)" }.joined(separator: "\n")
+                parts.append("**Key Points**\n\(bullets)")
+            }
+            
+            if !decisionsList.isEmpty {
+                let bullets = decisionsList.map { "- \($0)" }.joined(separator: "\n")
+                parts.append("**Decisions**\n\(bullets)")
+            }
+            
+            if !openQuestions.isEmpty {
+                let bullets = openQuestions.map { "- \($0)" }.joined(separator: "\n")
+                parts.append("**Open Questions**\n\(bullets)")
+            }
+            
+            summary = parts.isEmpty ? jsonString : parts.joined(separator: "\n\n")
+        } else {
+            // Fallback to raw response if we can't interpret the JSON
+            summary = response
+        }
         var actions: [SuggestedAction] = []
         
         if let commitments = json["commitments"] as? [[String: Any]] {

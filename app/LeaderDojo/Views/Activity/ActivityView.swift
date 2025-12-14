@@ -615,49 +615,92 @@ struct ActivityView: View {
     
     // MARK: - Date Grouping
     
-    private var groupedEntries: [(String, [Entry])] {
-        let grouped = Dictionary(grouping: filteredEntries) { entry -> String in
-            getDateGroup(for: entry.occurredAt)
+    private enum ActivityDateGroupKey: Hashable {
+        case today
+        case yesterday
+        case thisWeek
+        /// Normalized to start-of-day in current calendar/timezone.
+        case day(Date)
+        
+        var rank: Int {
+            switch self {
+            case .today: return 0
+            case .yesterday: return 1
+            case .thisWeek: return 2
+            case .day: return 3
+            }
         }
         
-        // Sort groups: Today, Yesterday, This Week, then by date descending
-        let sortOrder = ["Today", "Yesterday", "This Week"]
-        
-        return grouped.sorted { lhs, rhs in
-            let lhsIndex = sortOrder.firstIndex(of: lhs.key)
-            let rhsIndex = sortOrder.firstIndex(of: rhs.key)
-            
-            if let li = lhsIndex, let ri = rhsIndex {
-                return li < ri
-            } else if lhsIndex != nil {
-                return true
-            } else if rhsIndex != nil {
-                return false
-            } else {
-                // Both are specific dates, sort descending
-                return lhs.key > rhs.key
+        var dayStart: Date? {
+            switch self {
+            case .today, .yesterday, .thisWeek:
+                return nil
+            case .day(let date):
+                return date
             }
         }
     }
     
-    private func getDateGroup(for date: Date) -> String {
+    private var groupedEntries: [(String, [Entry])] {
         let calendar = Calendar.current
         
-        if calendar.isDateInToday(date) {
-            return "Today"
-        } else if calendar.isDateInYesterday(date) {
-            return "Yesterday"
-        } else if isDateInThisWeek(date) {
-            return "This Week"
-        } else {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MMMM d, yyyy"
-            return formatter.string(from: date)
+        // Group by a stable, sortable key (NOT by the label string).
+        let grouped = Dictionary(grouping: filteredEntries) { entry in
+            dateGroupKey(for: entry.occurredAt, calendar: calendar)
+        }
+        
+        // Sort groups: Today, Yesterday, This Week, then actual dates descending.
+        let sortedKeys = grouped.keys.sorted { a, b in
+            if a.rank != b.rank {
+                return a.rank < b.rank
+            }
+            // Both are .day(...) groups: sort by actual date (newest first).
+            if case let (.day(aDate), .day(bDate)) = (a, b) {
+                return aDate > bDate
+            }
+            // Same rank and not .day: keep deterministic order.
+            return String(describing: a) < String(describing: b)
+        }
+        
+        return sortedKeys.map { key in
+            let entries = (grouped[key] ?? []).sorted { $0.occurredAt > $1.occurredAt }
+            return (dateGroupLabel(for: key), entries)
         }
     }
     
-    private func isDateInThisWeek(_ date: Date) -> Bool {
-        let calendar = Calendar.current
+    private func dateGroupKey(for date: Date, calendar: Calendar) -> ActivityDateGroupKey {
+        if calendar.isDateInToday(date) {
+            return .today
+        }
+        if calendar.isDateInYesterday(date) {
+            return .yesterday
+        }
+        if isDateInThisWeek(date, calendar: calendar) {
+            return .thisWeek
+        }
+        return .day(calendar.startOfDay(for: date))
+    }
+    
+    private func dateGroupLabel(for key: ActivityDateGroupKey) -> String {
+        switch key {
+        case .today:
+            return "Today"
+        case .yesterday:
+            return "Yesterday"
+        case .thisWeek:
+            return "This Week"
+        case .day(let date):
+            return Self.dateHeaderFormatter.string(from: date)
+        }
+    }
+    
+    private static let dateHeaderFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMMM d, yyyy"
+        return formatter
+    }()
+    
+    private func isDateInThisWeek(_ date: Date, calendar: Calendar) -> Bool {
         let now = Date()
         
         guard let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)),

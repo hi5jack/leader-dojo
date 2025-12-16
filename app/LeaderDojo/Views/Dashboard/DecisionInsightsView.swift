@@ -353,12 +353,21 @@ struct DecisionInsightsView: View {
                 )
             } else {
                 ForEach(decisions.prefix(5)) { entry in
+                    #if os(macOS)
+                    // Use value-based navigation on macOS so it integrates with
+                    // NavigationStack(path:) and sidebar clicks can pop the view.
+                    NavigationLink(value: AppRoute.entry(entry.persistentModelID)) {
+                        RecentDecisionRow(entry: entry)
+                    }
+                    .buttonStyle(.plain)
+                    #else
                     NavigationLink {
                         EntryDetailView(entry: entry)
                     } label: {
                         RecentDecisionRow(entry: entry)
                     }
                     .buttonStyle(.plain)
+                    #endif
                 }
             }
         }

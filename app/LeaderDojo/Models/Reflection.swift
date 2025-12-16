@@ -480,61 +480,80 @@ final class Reflection {
 extension Reflection {
     
     /// Default questions for when AI is unavailable (Guardrail: Reflection is never blocked by AI)
+    /// These questions are designed to surface leadership growth opportunities
     static func defaultQuestions(for type: ReflectionType, periodType: ReflectionPeriodType? = nil) -> [String] {
         switch type {
         case .quick:
             return [
-                "How confident are you in how this went?"
+                "What's the one thing I'd do differently next time?"
             ]
             
         case .periodic:
             switch periodType {
             case .week:
                 return [
-                    "What was your biggest win this week?",
-                    "What commitment did you struggle to keep? Why?",
-                    "Which conversation or decision would you handle differently?",
-                    "What pattern do you notice in how you spent your time?",
-                    "What's one thing you want to do better next week?"
+                    "What decision this week am I most proud of? What made it effective?",
+                    "Where did I avoid a difficult conversation I should have had?",
+                    "What commitment did I break, and what does that reveal about my priorities?",
+                    "Who did I help grow this week? Who helped me grow?"
                 ]
             case .month:
                 return [
-                    "What progress did you make on your most important projects?",
-                    "Which relationships received the most attention? Which were neglected?",
-                    "What decisions are you most and least confident about?",
-                    "What feedback have you received and how have you acted on it?",
-                    "What's the most important lesson you learned this month?"
+                    "What pattern do I see in the commitments I kept vs. the ones I dropped?",
+                    "Which relationship has strengthened? Which has weakened? Why?",
+                    "What's a decision I made that I'm now uncertain about?",
+                    "Where am I spending time that isn't moving the needle?",
+                    "What feedback did I receive that I haven't acted on?"
                 ]
             case .quarter:
                 return [
-                    "Looking at your projects, what themes emerge in where you invested time?",
-                    "How has your leadership style evolved this quarter?",
-                    "What commitments did you consistently keep or break?",
-                    "What were the three most impactful decisions you made?",
-                    "What do you want to be different about next quarter?"
+                    "What's the biggest shift in how I lead compared to last quarter?",
+                    "Which of my decisions had the most impact—positive or negative?",
+                    "What responsibility have I been avoiding that I need to own?",
+                    "Who have I developed, and who have I neglected to develop?",
+                    "If I could only accomplish one thing next quarter, what must it be?"
                 ]
             case .none:
                 return [
-                    "What's on your mind right now?",
-                    "What would you do differently if you could?"
+                    "What's weighing on me that I haven't addressed?",
+                    "What truth am I avoiding?"
                 ]
             }
             
         case .project:
             return [
-                "How am I showing up for this project?",
-                "What's blocking progress that I haven't addressed?",
-                "What conversation am I avoiding?",
-                "What would success look like in the next 2 weeks?"
+                "Am I leading this project or managing it? What's the difference here?",
+                "What conversation would unblock the biggest obstacle?",
+                "Who on this project am I not developing that I should be?",
+                "What would I tell my successor to do differently?"
             ]
             
         case .relationship:
             return [
-                "How would this person rate my reliability?",
-                "What have I promised that I haven't delivered?",
-                "What's one thing I could do to strengthen this relationship?",
-                "What difficult conversation am I avoiding with this person?"
+                "If this person rated my reliability 1-10, what would they say? Why?",
+                "What have I promised—explicitly or implicitly—that I haven't delivered?",
+                "What does this person need from me that I'm not providing?",
+                "What's the conversation I've been avoiding with them?"
             ]
         }
     }
+    
+    /// Leadership themes that can be extracted from reflections
+    static let leadershipThemes: [String] = [
+        "accountability",
+        "communication",
+        "decision-making",
+        "delegation",
+        "feedback",
+        "conflict",
+        "prioritization",
+        "trust",
+        "growth",
+        "influence",
+        "execution",
+        "vision",
+        "empathy",
+        "resilience",
+        "integrity"
+    ]
 }

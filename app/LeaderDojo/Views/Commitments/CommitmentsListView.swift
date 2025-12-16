@@ -26,6 +26,7 @@ struct CommitmentsListView: View {
     @State private var viewMode: CommitmentsViewMode = .list
     @State private var selectedCommitment: Commitment? = nil
     @State private var searchText: String = ""
+    @State private var showCompletedHistory: Bool = false
     
     @Query
     private var allProjects: [Project]
@@ -52,6 +53,88 @@ struct CommitmentsListView: View {
         }
     }
     
+    // MARK: - Completion Stats
+    
+    private var completionStats: (thisWeek: Int, lastWeek: Int, total: Int) {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Start of this week
+        let thisWeekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) ?? now
+        // Start of last week
+        let lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart) ?? now
+        
+        let directionFiltered = commitments.filter { $0.direction == selectedDirection && $0.status == .done }
+        
+        let thisWeek = directionFiltered.filter { commitment in
+            guard let completedAt = commitment.completedAt else { return false }
+            return completedAt >= thisWeekStart
+        }.count
+        
+        let lastWeek = directionFiltered.filter { commitment in
+            guard let completedAt = commitment.completedAt else { return false }
+            return completedAt >= lastWeekStart && completedAt < thisWeekStart
+        }.count
+        
+        return (thisWeek, lastWeek, directionFiltered.count)
+    }
+    
+    private var completedCommitments: [Commitment] {
+        let directionFiltered = commitments.filter { $0.direction == selectedDirection && $0.status == .done }
+        
+        var result = directionFiltered
+        
+        if let project = selectedProject {
+            result = result.filter { $0.project?.id == project.id }
+        }
+        
+        // Search filter
+        if !searchText.isEmpty {
+            result = result.filter { commitment in
+                commitment.title.localizedCaseInsensitiveContains(searchText) ||
+                (commitment.person?.name.localizedCaseInsensitiveContains(searchText) ?? false) ||
+                (commitment.notes?.localizedCaseInsensitiveContains(searchText) ?? false)
+            }
+        }
+        
+        // Sort by completion date (most recent first)
+        result.sort { ($0.completedAt ?? $0.updatedAt) > ($1.completedAt ?? $1.updatedAt) }
+        
+        return result
+    }
+    
+    private var groupedCompletedCommitments: [(String, [Commitment])] {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Calculate date boundaries
+        let thisWeekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) ?? now
+        let lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: thisWeekStart) ?? now
+        let thisMonthStart = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        
+        let grouped = Dictionary(grouping: completedCommitments) { commitment -> String in
+            let completedAt = commitment.completedAt ?? commitment.updatedAt
+            
+            if completedAt >= thisWeekStart {
+                return "This Week"
+            } else if completedAt >= lastWeekStart {
+                return "Last Week"
+            } else if completedAt >= thisMonthStart {
+                return "Earlier This Month"
+            } else {
+                return "Older"
+            }
+        }
+        
+        let order = ["This Week", "Last Week", "Earlier This Month", "Older"]
+        let sortedKeys = grouped.keys.sorted { order.firstIndex(of: $0) ?? 99 < order.firstIndex(of: $1) ?? 99 }
+        
+        return sortedKeys.compactMap { key in
+            guard let items = grouped[key] else { return nil }
+            return (key, items)
+        }
+    }
+    
     var body: some View {
         #if os(iOS)
         if UIDevice.current.userInterfaceIdiom == .pad {
@@ -71,7 +154,7 @@ struct CommitmentsListView: View {
         VStack(spacing: 0) {
             directionTabs
             
-            if filteredCommitments.isEmpty {
+            if filteredCommitments.isEmpty && completedCommitments.isEmpty {
                 emptyState
             } else {
                 iPhoneCommitmentsList
@@ -100,6 +183,20 @@ struct CommitmentsListView: View {
     
     private var iPhoneCommitmentsList: some View {
         List {
+            // Completion Stats Card
+            if completionStats.thisWeek > 0 || completionStats.lastWeek > 0 {
+                Section {
+                    CompletionStatsCard(
+                        thisWeek: completionStats.thisWeek,
+                        lastWeek: completionStats.lastWeek,
+                        total: completionStats.total
+                    )
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+            
+            // Active commitments
             ForEach(groupedCommitments, id: \.0) { group, items in
                 Section(group) {
                     ForEach(items) { commitment in
@@ -131,6 +228,51 @@ struct CommitmentsListView: View {
                     }
                 }
             }
+            
+            // Completed History Section
+            if !completedCommitments.isEmpty {
+                Section {
+                    DisclosureGroup(isExpanded: $showCompletedHistory) {
+                        ForEach(groupedCompletedCommitments, id: \.0) { group, items in
+                            Section {
+                                ForEach(items) { commitment in
+                                    NavigationLink {
+                                        CommitmentDetailView(commitment: commitment)
+                                    } label: {
+                                        CompletedCommitmentRow(commitment: commitment)
+                                    }
+                                    .swipeActions(edge: .leading) {
+                                        Button {
+                                            toggleStatus(commitment)
+                                        } label: {
+                                            Label("Reopen", systemImage: "arrow.uturn.backward")
+                                        }
+                                        .tint(.orange)
+                                    }
+                                }
+                            } header: {
+                                Text(group)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Text("Completed History")
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text("\(completedCommitments.count)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(.secondary.opacity(0.15), in: Capsule())
+                        }
+                    }
+                }
+            }
         }
         .listStyle(.insetGrouped)
     }
@@ -149,7 +291,7 @@ struct CommitmentsListView: View {
                 iPadFilterBar
                 
                 // List
-                if filteredCommitments.isEmpty {
+                if filteredCommitments.isEmpty && completedCommitments.isEmpty {
                     emptyState
                 } else {
                     iPadCommitmentsList
@@ -250,6 +392,20 @@ struct CommitmentsListView: View {
     
     private var iPadCommitmentsList: some View {
         List(selection: $selectedCommitment) {
+            // Completion Stats Card
+            if completionStats.thisWeek > 0 || completionStats.lastWeek > 0 {
+                Section {
+                    CompletionStatsCard(
+                        thisWeek: completionStats.thisWeek,
+                        lastWeek: completionStats.lastWeek,
+                        total: completionStats.total
+                    )
+                }
+                .listRowInsets(EdgeInsets())
+                .listRowBackground(Color.clear)
+            }
+            
+            // Active commitments
             ForEach(groupedCommitments, id: \.0) { group, items in
                 Section {
                     ForEach(items) { commitment in
@@ -268,6 +424,47 @@ struct CommitmentsListView: View {
                         Text("\(items.count)")
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            // Completed History Section
+            if !completedCommitments.isEmpty {
+                Section {
+                    DisclosureGroup(isExpanded: $showCompletedHistory) {
+                        ForEach(groupedCompletedCommitments, id: \.0) { group, items in
+                            Section {
+                                ForEach(items) { commitment in
+                                    CompletedCommitmentRow(commitment: commitment)
+                                        .tag(commitment)
+                                        .contextMenu {
+                                            Button {
+                                                toggleStatus(commitment)
+                                            } label: {
+                                                Label("Reopen", systemImage: "arrow.uturn.backward")
+                                            }
+                                        }
+                                }
+                            } header: {
+                                Text(group)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                            Text("Completed History")
+                                .fontWeight(.medium)
+                            Spacer()
+                            Text("\(completedCommitments.count)")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 2)
+                                .background(.secondary.opacity(0.15), in: Capsule())
+                        }
                     }
                 }
             }
@@ -459,10 +656,23 @@ struct CommitmentsListView: View {
     
     private var macListView: some View {
         Group {
-            if filteredCommitments.isEmpty {
+            if filteredCommitments.isEmpty && completedCommitments.isEmpty {
                 emptyState
             } else {
                 List(selection: $selectedCommitment) {
+                    // Completion Stats Card
+                    if completionStats.thisWeek > 0 || completionStats.lastWeek > 0 {
+                        Section {
+                            MacCompletionStatsCard(
+                                thisWeek: completionStats.thisWeek,
+                                lastWeek: completionStats.lastWeek,
+                                total: completionStats.total
+                            )
+                        }
+                        .listRowInsets(EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8))
+                    }
+                    
+                    // Active commitments
                     ForEach(groupedCommitments, id: \.0) { group, items in
                         Section {
                             ForEach(items) { commitment in
@@ -485,6 +695,60 @@ struct CommitmentsListView: View {
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 2)
                                     .background(.secondary.opacity(0.2), in: Capsule())
+                            }
+                        }
+                    }
+                    
+                    // Completed History Section
+                    if !completedCommitments.isEmpty {
+                        Section {
+                            DisclosureGroup(isExpanded: $showCompletedHistory) {
+                                ForEach(groupedCompletedCommitments, id: \.0) { group, items in
+                                    Section {
+                                        ForEach(items) { commitment in
+                                            MacCompletedCommitmentRow(commitment: commitment) {
+                                                toggleStatus(commitment)
+                                            }
+                                            .tag(commitment)
+                                            .contextMenu {
+                                                Button {
+                                                    toggleStatus(commitment)
+                                                } label: {
+                                                    Label("Reopen", systemImage: "arrow.uturn.backward")
+                                                }
+                                                
+                                                Divider()
+                                                
+                                                Button(role: .destructive) {
+                                                    deleteCommitment(commitment)
+                                                } label: {
+                                                    Label("Delete", systemImage: "trash")
+                                                }
+                                            }
+                                        }
+                                    } header: {
+                                        Text(group)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.title3)
+                                        .foregroundStyle(.green)
+                                    Text("Completed History")
+                                        .font(.subheadline)
+                                        .fontWeight(.semibold)
+                                    Spacer()
+                                    Text("\(completedCommitments.count)")
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 2)
+                                        .background(.green.opacity(0.15), in: Capsule())
+                                        .foregroundStyle(.green)
+                                }
                             }
                         }
                     }
@@ -1107,6 +1371,314 @@ struct PriorityIndicator: View {
 #endif
 
 // MARK: - Kanban Column
+
+// MARK: - Completion Stats Card
+
+struct CompletionStatsCard: View {
+    let thisWeek: Int
+    let lastWeek: Int
+    let total: Int
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // This Week
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                    Text("\(thisWeek)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.green)
+                }
+                Text("This Week")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Divider()
+                .frame(height: 40)
+            
+            // Last Week
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 4) {
+                    Text("\(lastWeek)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.secondary)
+                }
+                Text("Last Week")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Divider()
+                .frame(height: 40)
+            
+            // Total
+            VStack(alignment: .leading, spacing: 4) {
+                Text("\(total)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.primary)
+                Text("All Time")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(.green.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(.green.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+    }
+}
+
+// MARK: - Completed Commitment Row
+
+struct CompletedCommitmentRow: View {
+    let commitment: Commitment
+    
+    private var completedDate: String {
+        guard let completedAt = commitment.completedAt else {
+            return ""
+        }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: completedAt)
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Checkmark
+            Image(systemName: "checkmark.circle.fill")
+                .font(.title2)
+                .foregroundStyle(.green)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(commitment.title)
+                    .font(.subheadline)
+                    .strikethrough()
+                    .foregroundStyle(.secondary)
+                
+                HStack(spacing: 8) {
+                    if let project = commitment.project {
+                        Text(project.name)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    if let person = commitment.person {
+                        Text("•")
+                            .foregroundStyle(.secondary)
+                        Text(person.name)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Completed date
+            if !completedDate.isEmpty {
+                Text(completedDate)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - macOS Completion Stats Card
+
+#if os(macOS)
+struct MacCompletionStatsCard: View {
+    let thisWeek: Int
+    let lastWeek: Int
+    let total: Int
+    
+    private var trend: String {
+        if lastWeek == 0 && thisWeek > 0 { return "New streak!" }
+        if thisWeek > lastWeek { return "↑ \(thisWeek - lastWeek) more than last week" }
+        if thisWeek < lastWeek { return "↓ \(lastWeek - thisWeek) less than last week" }
+        return "Same as last week"
+    }
+    
+    private var trendColor: Color {
+        if thisWeek > lastWeek { return .green }
+        if thisWeek < lastWeek { return .orange }
+        return .secondary
+    }
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            // This Week - Highlighted
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(.green.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.green)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(thisWeek)")
+                        .font(.title)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.green)
+                    Text("Completed This Week")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            // Trend indicator
+            Text(trend)
+                .font(.caption)
+                .foregroundStyle(trendColor)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(trendColor.opacity(0.1), in: Capsule())
+            
+            Divider()
+                .frame(height: 36)
+            
+            // Last Week
+            VStack(alignment: .center, spacing: 2) {
+                Text("\(lastWeek)")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Text("Last Week")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 70)
+            
+            // Total
+            VStack(alignment: .center, spacing: 2) {
+                Text("\(total)")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Text("All Time")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            .frame(width: 70)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(nsColor: .controlBackgroundColor))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(.green.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - macOS Completed Commitment Row
+
+struct MacCompletedCommitmentRow: View {
+    let commitment: Commitment
+    let onReopen: () -> Void
+    
+    private var completedDate: String {
+        guard let completedAt = commitment.completedAt else {
+            return ""
+        }
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: completedAt)
+    }
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Reopen button
+            Button(action: onReopen) {
+                ZStack {
+                    Circle()
+                        .fill(.green.opacity(0.15))
+                        .frame(width: 24, height: 24)
+                    
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(.green)
+                }
+            }
+            .buttonStyle(.plain)
+            .help("Click to reopen this commitment")
+            
+            VStack(alignment: .leading, spacing: 3) {
+                Text(commitment.title)
+                    .font(.body)
+                    .strikethrough()
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                
+                HStack(spacing: 6) {
+                    if let project = commitment.project {
+                        HStack(spacing: 3) {
+                            Image(systemName: "folder.fill")
+                                .font(.system(size: 9))
+                            Text(project.name)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.secondary.opacity(0.1), in: Capsule())
+                    }
+                    
+                    if let person = commitment.person {
+                        HStack(spacing: 3) {
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 9))
+                            Text(person.name)
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Completed date badge
+            if !completedDate.isEmpty {
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle")
+                        .font(.caption2)
+                    Text(completedDate)
+                        .font(.caption)
+                }
+                .foregroundStyle(.green)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.green.opacity(0.1), in: RoundedRectangle(cornerRadius: 6))
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+#endif
 
 #if os(macOS)
 struct KanbanColumn: View {

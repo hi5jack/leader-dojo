@@ -37,17 +37,92 @@ enum ReflectionFilterType: String, CaseIterable {
     }
 }
 
+// MARK: - Weekly Rhythm Status
+enum WeeklyRhythmStatus {
+    case onTrack       // Already reflected this week
+    case dueToday      // Today is a good day to reflect
+    case overdue       // Missed this week's reflection
+    case streak(Int)   // On a streak of consecutive weeks
+    
+    var label: String {
+        switch self {
+        case .onTrack: return "On Track"
+        case .dueToday: return "Due Today"
+        case .overdue: return "Time to Reflect"
+        case .streak(let weeks): return "\(weeks) Week Streak"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .onTrack, .streak: return .green
+        case .dueToday: return .orange
+        case .overdue: return .red
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .onTrack: return "checkmark.circle.fill"
+        case .dueToday: return "clock.fill"
+        case .overdue: return "exclamationmark.triangle.fill"
+        case .streak: return "flame.fill"
+        }
+    }
+}
+
+// MARK: - Date Group for Better Categorization
+enum ReflectionDateGroup: String, CaseIterable {
+    case today = "Today"
+    case thisWeek = "This Week"
+    case lastWeek = "Last Week"
+    case thisMonth = "Earlier This Month"
+    case lastMonth = "Last Month"
+    case older = "Older"
+    
+    static func group(for date: Date) -> ReflectionDateGroup {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        if calendar.isDateInToday(date) {
+            return .today
+        }
+        
+        if calendar.isDate(date, equalTo: now, toGranularity: .weekOfYear) {
+            return .thisWeek
+        }
+        
+        let lastWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: now)!
+        if calendar.isDate(date, equalTo: lastWeek, toGranularity: .weekOfYear) {
+            return .lastWeek
+        }
+        
+        if calendar.isDate(date, equalTo: now, toGranularity: .month) {
+            return .thisMonth
+        }
+        
+        let lastMonth = calendar.date(byAdding: .month, value: -1, to: now)!
+        if calendar.isDate(date, equalTo: lastMonth, toGranularity: .month) {
+            return .lastMonth
+        }
+        
+        return .older
+    }
+}
+
 struct ReflectionsListView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Reflection.createdAt, order: .reverse) private var reflections: [Reflection]
     
     @State private var showingNewReflection: Bool = false
     @State private var selectedPeriodType: ReflectionPeriodType = .week
+    @State private var selectedReflectionType: ReflectionType = .periodic
     @State private var selectedReflection: Reflection? = nil
     @State private var filterType: ReflectionFilterType = .all
     @State private var filterPeriodType: ReflectionPeriodType? = nil
     @State private var viewMode: ReflectionsViewMode = .grid
     @State private var searchText: String = ""
+    @State private var showSuggestedSection: Bool = true
     
     var body: some View {
         #if os(iOS)
@@ -92,14 +167,60 @@ struct ReflectionsListView: View {
             }
         }
         .sheet(isPresented: $showingNewReflection) {
-            NewReflectionView(periodType: selectedPeriodType)
+            if selectedReflectionType == .quick {
+                NewReflectionView(reflectionType: .quick, periodType: nil)
+            } else {
+                NewReflectionView(reflectionType: selectedReflectionType, periodType: selectedPeriodType)
+            }
         }
     }
     
     private var reflectionsList: some View {
         List {
-            ForEach(groupedReflections, id: \.0) { month, items in
-                Section(month) {
+            // Stats Header Section
+            Section {
+                ReflectionStatsCard(
+                    streak: weeklyStreak,
+                    thisWeekCount: thisWeekReflections.count,
+                    rhythmStatus: rhythmStatus,
+                    topThemes: topThemes
+                )
+            }
+            .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            .listRowBackground(Color.clear)
+            
+            // Suggested Reflections Section
+            if showSuggestedSection && !suggestedReflections.isEmpty {
+                Section {
+                    ForEach(suggestedReflections, id: \.title) { suggestion in
+                        SuggestedReflectionRow(suggestion: suggestion) {
+                            selectedReflectionType = suggestion.type
+                            if let periodType = suggestion.periodType {
+                                selectedPeriodType = periodType
+                            }
+                            showingNewReflection = true
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Text("Suggested")
+                        Spacer()
+                        Button {
+                            withAnimation {
+                                showSuggestedSection = false
+                            }
+                        } label: {
+                            Text("Hide")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+            
+            // Recent Reflections with Smart Grouping
+            ForEach(smartGroupedReflections, id: \.0) { group, items in
+                Section(group.rawValue) {
                     ForEach(items) { reflection in
                         NavigationLink {
                             ReflectionDetailView(reflection: reflection)
@@ -123,6 +244,9 @@ struct ReflectionsListView: View {
     private var iPadLayout: some View {
         NavigationSplitView {
             VStack(spacing: 0) {
+                // Stats Header
+                iPadStatsHeader
+                
                 // Filter bar
                 iPadFilterBar
                 
@@ -137,7 +261,15 @@ struct ReflectionsListView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    addReflectionMenu
+                    HStack(spacing: 12) {
+                        NavigationLink {
+                            ReflectionInsightsView()
+                        } label: {
+                            Image(systemName: "chart.bar.fill")
+                        }
+                        
+                        addReflectionMenu
+                    }
                 }
             }
         } detail: {
@@ -152,8 +284,56 @@ struct ReflectionsListView: View {
             }
         }
         .sheet(isPresented: $showingNewReflection) {
-            NewReflectionView(periodType: selectedPeriodType)
+            if selectedReflectionType == .quick {
+                NewReflectionView(reflectionType: .quick, periodType: nil)
+            } else {
+                NewReflectionView(reflectionType: selectedReflectionType, periodType: selectedPeriodType)
+            }
         }
+    }
+    
+    private var iPadStatsHeader: some View {
+        HStack(spacing: 16) {
+            // Streak/Rhythm Status
+            HStack(spacing: 8) {
+                Image(systemName: rhythmStatus.icon)
+                    .foregroundStyle(rhythmStatus.color)
+                Text(rhythmStatus.label)
+                    .font(.subheadline)
+                    .fontWeight(.medium)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(rhythmStatus.color.opacity(0.15), in: Capsule())
+            
+            // This Week Count
+            HStack(spacing: 6) {
+                Image(systemName: "calendar")
+                    .font(.caption)
+                Text("\(thisWeekReflections.count) this week")
+                    .font(.caption)
+            }
+            .foregroundStyle(.secondary)
+            
+            Spacer()
+            
+            // Top Theme Preview
+            if let topTheme = topThemes.first {
+                HStack(spacing: 4) {
+                    Image(systemName: "tag.fill")
+                        .font(.caption2)
+                    Text(topTheme.theme)
+                        .font(.caption)
+                }
+                .foregroundStyle(.purple)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.purple.opacity(0.1), in: Capsule())
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.bar)
     }
     
     private var iPadFilterBar: some View {
@@ -198,12 +378,41 @@ struct ReflectionsListView: View {
             .padding(.horizontal)
             .padding(.vertical, 10)
         }
-        .background(.bar)
+        .background(Color.secondary.opacity(0.05))
     }
     
     private var iPadReflectionsList: some View {
         List(selection: $selectedReflection) {
-            ForEach(groupedFilteredReflections, id: \.0) { month, items in
+            // Suggested Reflections
+            if showSuggestedSection && !suggestedReflections.isEmpty {
+                Section {
+                    ForEach(suggestedReflections, id: \.title) { suggestion in
+                        SuggestedReflectionRow(suggestion: suggestion) {
+                            selectedReflectionType = suggestion.type
+                            if let periodType = suggestion.periodType {
+                                selectedPeriodType = periodType
+                            }
+                            showingNewReflection = true
+                        }
+                    }
+                } header: {
+                    HStack {
+                        Label("Suggested", systemImage: "lightbulb.fill")
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Button {
+                            withAnimation { showSuggestedSection = false }
+                        } label: {
+                            Text("Hide")
+                                .font(.caption)
+                        }
+                    }
+                }
+            }
+            
+            // Smart Grouped Reflections
+            ForEach(smartGroupedReflections, id: \.0) { group, items in
                 Section {
                     ForEach(items) { reflection in
                         iPadReflectionRow(reflection: reflection)
@@ -211,7 +420,7 @@ struct ReflectionsListView: View {
                     }
                 } header: {
                     HStack {
-                        Text(month)
+                        Text(group.rawValue)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                         Spacer()
@@ -281,6 +490,11 @@ struct ReflectionsListView: View {
             VStack(spacing: 0) {
                 macToolbar
                 
+                // Suggested Reflections Panel
+                if showSuggestedSection && !suggestedReflections.isEmpty {
+                    macSuggestedPanel
+                }
+                
                 if filteredReflections.isEmpty {
                     emptyState
                 } else {
@@ -307,7 +521,11 @@ struct ReflectionsListView: View {
         }
         .navigationTitle("Reflections")
         .sheet(isPresented: $showingNewReflection) {
-            NewReflectionView(periodType: selectedPeriodType)
+            if selectedReflectionType == .quick {
+                NewReflectionView(reflectionType: .quick, periodType: nil)
+            } else {
+                NewReflectionView(reflectionType: selectedReflectionType, periodType: selectedPeriodType)
+            }
         }
     }
     
@@ -352,6 +570,17 @@ struct ReflectionsListView: View {
                 
                 Spacer()
                 
+                // Insights link - use value-based navigation so it integrates with
+                // NavigationStack(path:) and sidebar clicks can pop the view.
+                NavigationLink(value: AppRoute.reflectionInsights) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chart.bar.fill")
+                        Text("Insights")
+                    }
+                    .font(.subheadline)
+                }
+                .buttonStyle(.plain)
+                
                 // View mode toggle
                 Picker("View", selection: $viewMode) {
                     ForEach(ReflectionsViewMode.allCases, id: \.self) { mode in
@@ -371,12 +600,26 @@ struct ReflectionsListView: View {
             
             Divider()
             
-            // Stats bar
+            // Enhanced Stats bar with rhythm status
             HStack(spacing: 16) {
+                // Rhythm Status Badge
+                HStack(spacing: 6) {
+                    Image(systemName: rhythmStatus.icon)
+                        .font(.caption)
+                        .foregroundStyle(rhythmStatus.color)
+                    
+                    Text(rhythmStatus.label)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(rhythmStatus.color.opacity(0.15), in: Capsule())
+                
                 StatPill(
-                    title: "Total",
-                    value: "\(filteredReflections.count)",
-                    icon: "doc.text",
+                    title: "This Week",
+                    value: "\(thisWeekReflections.count)",
+                    icon: "calendar",
                     color: .blue
                 )
                 
@@ -387,12 +630,19 @@ struct ReflectionsListView: View {
                     color: .green
                 )
                 
-                StatPill(
-                    title: "In Progress",
-                    value: "\(filteredReflections.filter { !$0.isComplete }.count)",
-                    icon: "circle.dashed",
-                    color: .orange
-                )
+                // Top Themes
+                if !topThemes.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "tag.fill")
+                            .font(.caption2)
+                            .foregroundStyle(.purple)
+                        ForEach(topThemes.prefix(3), id: \.theme) { theme in
+                            Text(theme.theme)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
                 
                 Spacer()
             }
@@ -402,6 +652,41 @@ struct ReflectionsListView: View {
             Divider()
         }
         .background(.bar)
+    }
+    
+    private var macSuggestedPanel: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Label("Suggested Reflections", systemImage: "lightbulb.fill")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.orange)
+                
+                Spacer()
+                
+                Button {
+                    withAnimation { showSuggestedSection = false }
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            
+            HStack(spacing: 12) {
+                ForEach(suggestedReflections, id: \.title) { suggestion in
+                    MacSuggestedCard(suggestion: suggestion) {
+                        selectedReflectionType = suggestion.type
+                        if let periodType = suggestion.periodType {
+                            selectedPeriodType = periodType
+                        }
+                        showingNewReflection = true
+                    }
+                }
+            }
+        }
+        .padding(16)
+        .background(Color.orange.opacity(0.05))
     }
     
     private var macGridView: some View {
@@ -428,7 +713,7 @@ struct ReflectionsListView: View {
     
     private var macListView: some View {
         List(selection: $selectedReflection) {
-            ForEach(groupedFilteredReflections, id: \.0) { month, items in
+            ForEach(smartGroupedReflections, id: \.0) { group, items in
                 Section {
                     ForEach(items) { reflection in
                         MacReflectionRow(reflection: reflection)
@@ -439,7 +724,7 @@ struct ReflectionsListView: View {
                     }
                 } header: {
                     HStack {
-                        Text(month)
+                        Text(group.rawValue)
                             .font(.subheadline)
                             .fontWeight(.semibold)
                         Spacer()
@@ -575,6 +860,170 @@ struct ReflectionsListView: View {
         }
         
         return grouped.sorted { $0.key > $1.key }
+    }
+    
+    /// Groups reflections by relative time periods (This Week, Last Week, etc.)
+    private var smartGroupedReflections: [(ReflectionDateGroup, [Reflection])] {
+        let grouped = Dictionary(grouping: filteredReflections) { reflection in
+            ReflectionDateGroup.group(for: reflection.createdAt)
+        }
+        
+        // Sort by the order defined in the enum
+        let order: [ReflectionDateGroup] = [.today, .thisWeek, .lastWeek, .thisMonth, .lastMonth, .older]
+        return order.compactMap { group in
+            if let items = grouped[group], !items.isEmpty {
+                return (group, items)
+            }
+            return nil
+        }
+    }
+    
+    /// Calculate weekly reflection streak
+    private var weeklyStreak: Int {
+        let calendar = Calendar.current
+        var streak = 0
+        var currentWeek = calendar.dateInterval(of: .weekOfYear, for: Date())!.start
+        
+        // Check each week going backwards
+        while true {
+            let weekEnd = calendar.date(byAdding: .day, value: 7, to: currentWeek)!
+            let hasReflection = reflections.contains { reflection in
+                reflection.createdAt >= currentWeek && reflection.createdAt < weekEnd
+            }
+            
+            if hasReflection {
+                streak += 1
+                currentWeek = calendar.date(byAdding: .weekOfYear, value: -1, to: currentWeek)!
+            } else {
+                break
+            }
+        }
+        
+        return streak
+    }
+    
+    /// Reflections created this week
+    private var thisWeekReflections: [Reflection] {
+        let calendar = Calendar.current
+        let weekStart = calendar.dateInterval(of: .weekOfYear, for: Date())!.start
+        return reflections.filter { $0.createdAt >= weekStart }
+    }
+    
+    /// Reflections created this month
+    private var thisMonthReflections: [Reflection] {
+        let calendar = Calendar.current
+        let monthStart = calendar.dateInterval(of: .month, for: Date())!.start
+        return reflections.filter { $0.createdAt >= monthStart }
+    }
+    
+    /// Determine the current weekly rhythm status
+    private var rhythmStatus: WeeklyRhythmStatus {
+        let calendar = Calendar.current
+        let today = Date()
+        let dayOfWeek = calendar.component(.weekday, from: today)
+        
+        // Check if we have a reflection this week
+        if !thisWeekReflections.isEmpty {
+            if weeklyStreak > 1 {
+                return .streak(weeklyStreak)
+            }
+            return .onTrack
+        }
+        
+        // Friday (6) or later in the week, it's due
+        if dayOfWeek >= 6 {
+            return .dueToday
+        }
+        
+        // Check if we missed last week
+        let lastWeekStart = calendar.date(byAdding: .weekOfYear, value: -1, to: calendar.dateInterval(of: .weekOfYear, for: today)!.start)!
+        let lastWeekEnd = calendar.dateInterval(of: .weekOfYear, for: today)!.start
+        let hasLastWeek = reflections.contains { $0.createdAt >= lastWeekStart && $0.createdAt < lastWeekEnd }
+        
+        if !hasLastWeek && dayOfWeek >= 3 { // Wednesday or later without last week's reflection
+            return .overdue
+        }
+        
+        return .dueToday
+    }
+    
+    /// Top themes across all reflections
+    private var topThemes: [(theme: String, count: Int)] {
+        var themeCounts: [String: Int] = [:]
+        
+        for reflection in reflections {
+            for tag in reflection.tags {
+                themeCounts[tag, default: 0] += 1
+            }
+        }
+        
+        return themeCounts
+            .sorted { $0.value > $1.value }
+            .prefix(5)
+            .map { ($0.key, $0.value) }
+    }
+    
+    /// Suggested reflection prompts based on context
+    private var suggestedReflections: [SuggestedReflection] {
+        var suggestions: [SuggestedReflection] = []
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // Weekly reflection if not done this week
+        if thisWeekReflections.filter({ $0.periodType == .week }).isEmpty {
+            suggestions.append(SuggestedReflection(
+                type: .periodic,
+                periodType: .week,
+                title: "Weekly Reflection",
+                reason: weeklyStreak > 0 ? "Keep your \(weeklyStreak)-week streak going!" : "End your week with clarity",
+                priority: .high
+            ))
+        }
+        
+        // Monthly reflection at month end
+        let dayOfMonth = calendar.component(.day, from: today)
+        let daysInMonth = calendar.range(of: .day, in: .month, for: today)!.count
+        if dayOfMonth >= daysInMonth - 3 {
+            let hasMonthlyThisMonth = thisMonthReflections.contains { $0.periodType == .month }
+            if !hasMonthlyThisMonth {
+                suggestions.append(SuggestedReflection(
+                    type: .periodic,
+                    periodType: .month,
+                    title: "Monthly Review",
+                    reason: "Month ending soon - time to review",
+                    priority: .medium
+                ))
+            }
+        }
+        
+        // Quarterly reflection
+        let currentMonth = calendar.component(.month, from: today)
+        let isQuarterEnd = [3, 6, 9, 12].contains(currentMonth) && dayOfMonth >= daysInMonth - 7
+        if isQuarterEnd {
+            let hasQuarterlyRecent = reflections.prefix(10).contains { $0.periodType == .quarter }
+            if !hasQuarterlyRecent {
+                suggestions.append(SuggestedReflection(
+                    type: .periodic,
+                    periodType: .quarter,
+                    title: "Quarterly Review",
+                    reason: "Q\(currentMonth/3) ending - reflect on the quarter",
+                    priority: .medium
+                ))
+            }
+        }
+        
+        // Quick reflection if nothing recent
+        if thisWeekReflections.isEmpty && suggestions.isEmpty {
+            suggestions.append(SuggestedReflection(
+                type: .quick,
+                periodType: nil,
+                title: "Quick Check-in",
+                reason: "Capture a quick thought or learning",
+                priority: .low
+            ))
+        }
+        
+        return suggestions.sorted { $0.priority.rawValue > $1.priority.rawValue }
     }
     
     private func periodColor(for type: ReflectionPeriodType?) -> Color {
@@ -923,6 +1372,206 @@ struct MacReflectionRow: View {
         case .quarter: return .orange
         case .none: return .gray
         }
+    }
+}
+#endif
+
+// MARK: - Suggested Reflection Model
+
+struct SuggestedReflection {
+    enum Priority: Int {
+        case low = 0
+        case medium = 1
+        case high = 2
+    }
+    
+    let type: ReflectionType
+    let periodType: ReflectionPeriodType?
+    let title: String
+    let reason: String
+    let priority: Priority
+    
+    var icon: String {
+        switch type {
+        case .quick: return "bolt.fill"
+        case .periodic:
+            return periodType?.icon ?? "calendar.badge.clock"
+        case .project: return "folder.fill"
+        case .relationship: return "person.2.fill"
+        }
+    }
+    
+    var color: Color {
+        switch priority {
+        case .high: return .orange
+        case .medium: return .blue
+        case .low: return .secondary
+        }
+    }
+}
+
+// MARK: - Reflection Stats Card (iPhone)
+
+#if os(iOS)
+struct ReflectionStatsCard: View {
+    let streak: Int
+    let thisWeekCount: Int
+    let rhythmStatus: WeeklyRhythmStatus
+    let topThemes: [(theme: String, count: Int)]
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Top Row: Rhythm Status & Streak
+            HStack(spacing: 12) {
+                // Rhythm Status Badge
+                HStack(spacing: 8) {
+                    Image(systemName: rhythmStatus.icon)
+                        .font(.system(size: 20))
+                        .foregroundStyle(rhythmStatus.color)
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(rhythmStatus.label)
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                        Text(statusSubtitle)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+                .background(rhythmStatus.color.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+                
+                // This Week Count
+                VStack(spacing: 4) {
+                    Text("\(thisWeekCount)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.blue)
+                    Text("This Week")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(width: 70)
+                .padding(.vertical, 8)
+                .background(Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 12))
+            }
+            
+            // Top Themes
+            if !topThemes.isEmpty {
+                HStack(spacing: 6) {
+                    Image(systemName: "tag.fill")
+                        .font(.caption2)
+                        .foregroundStyle(.purple)
+                    
+                    Text("Top themes:")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                    
+                    ForEach(topThemes.prefix(3), id: \.theme) { theme in
+                        Text(theme.theme)
+                            .font(.caption2)
+                            .fontWeight(.medium)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.purple.opacity(0.1), in: Capsule())
+                    }
+                    
+                    Spacer()
+                }
+            }
+        }
+        .padding(4)
+    }
+    
+    private var statusSubtitle: String {
+        switch rhythmStatus {
+        case .onTrack: return "Keep it up!"
+        case .dueToday: return "Perfect time to reflect"
+        case .overdue: return "Build your habit"
+        case .streak(let weeks): return "\(weeks) consecutive weeks"
+        }
+    }
+}
+#endif
+
+// MARK: - Suggested Reflection Row
+
+struct SuggestedReflectionRow: View {
+    let suggestion: SuggestedReflection
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(suggestion.color.opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    
+                    Image(systemName: suggestion.icon)
+                        .font(.system(size: 16))
+                        .foregroundStyle(suggestion.color)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(suggestion.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(.primary)
+                    
+                    Text(suggestion.reason)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(.vertical, 4)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Mac Suggested Card
+
+#if os(macOS)
+struct MacSuggestedCard: View {
+    let suggestion: SuggestedReflection
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: suggestion.icon)
+                        .font(.system(size: 14))
+                        .foregroundStyle(suggestion.color)
+                    
+                    Text(suggestion.title)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                }
+                
+                Text(suggestion.reason)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            .padding(12)
+            .frame(maxWidth: 200, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor), in: RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(suggestion.color.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
     }
 }
 #endif

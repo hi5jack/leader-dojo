@@ -4,6 +4,7 @@ import SwiftData
 /// A prep briefing view for preparing conversations with a specific person
 struct PersonPrepView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     let person: Person
     
     @State private var isLoading: Bool = true
@@ -11,6 +12,8 @@ struct PersonPrepView: View {
     @State private var talkingPoints: [String] = []
     @State private var error: String? = nil
     @State private var dayRange: Int = 90
+    @State private var isSaved: Bool = false
+    @State private var showSaveToast: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -62,18 +65,36 @@ struct PersonPrepView: View {
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        Task {
-                            await generateBriefing()
+                    HStack(spacing: 12) {
+                        // Regenerate button
+                        Button {
+                            Task {
+                                await generateBriefing()
+                            }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
                         }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
+                        .disabled(isLoading)
+                        
+                        // Save to Timeline button
+                        Button {
+                            saveBriefingToTimeline()
+                        } label: {
+                            Label(isSaved ? "Saved" : "Save", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                        }
+                        .disabled(isLoading || briefing.isEmpty || isSaved)
                     }
-                    .disabled(isLoading)
                 }
             }
             .task {
                 await generateBriefing()
+            }
+            .overlay(alignment: .bottom) {
+                if showSaveToast {
+                    saveToastView
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .padding(.bottom, 20)
+                }
             }
         }
     }
@@ -474,12 +495,74 @@ struct PersonPrepView: View {
         )
     }
     
+    // MARK: - Toast View
+    
+    private var saveToastView: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+            Text("Prep saved to \(person.name)'s timeline")
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.ultraThickMaterial, in: Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
+    }
+    
     // MARK: - Actions
+    
+    private func saveBriefingToTimeline() {
+        // Build full content including talking points
+        var fullContent = briefing
+        if !talkingPoints.isEmpty {
+            fullContent += "\n\n## Talking Points\n"
+            for (index, point) in talkingPoints.enumerated() {
+                fullContent += "\(index + 1). \(point)\n"
+            }
+        }
+        
+        // Create a prep entry for this person
+        let entry = Entry(
+            kind: .prep,
+            title: "Prep: \(person.name)",
+            occurredAt: Date(),
+            rawContent: fullContent,
+            aiSummary: nil,
+            isDecision: false
+        )
+        
+        // Link to person (not project) - will appear in person's activity
+        entry.participants = [person]
+        
+        modelContext.insert(entry)
+        
+        do {
+            try modelContext.save()
+            
+            // Show success state
+            isSaved = true
+            withAnimation(.easeInOut) {
+                showSaveToast = true
+            }
+            
+            // Hide toast after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation(.easeInOut) {
+                    showSaveToast = false
+                }
+            }
+        } catch {
+            print("Failed to save prep briefing: \(error)")
+        }
+    }
     
     private func generateBriefing() async {
         await MainActor.run {
             isLoading = true
             error = nil
+            isSaved = false  // Reset saved state on regenerate
         }
         
         do {

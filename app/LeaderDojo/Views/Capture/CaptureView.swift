@@ -67,13 +67,12 @@ struct CaptureView: View {
     @State private var showVoiceOverlay: Bool = false
     @State private var voiceInputTarget: VoiceInputTarget = .entryContent
     
-    @FocusState private var isTextEditorFocused: Bool
+    // Specialized flow sheets
+    @State private var showingQuickDecision: Bool = false
+    @State private var showingPrepBriefing: Bool = false
+    @State private var showingProjectRequiredAlert: Bool = false
     
-    /// Entry kinds available for quick capture
-    /// Note: .reflection is excluded - use the dedicated Reflection system instead
-    private var captureEntryKinds: [EntryKind] {
-        [.note, .meeting, .update, .decision, .prep]
-    }
+    @FocusState private var isTextEditorFocused: Bool
     
     var body: some View {
         captureContent
@@ -94,10 +93,8 @@ struct CaptureView: View {
                         // Entry-specific fields
                         entryTypeSelector
                         
-                        // Participants picker (for meetings and updates)
-                        if selectedEntryKind == .meeting || selectedEntryKind == .update {
-                            participantsSelector
-                        }
+                        // People picker (available for all entry types)
+                        peopleSelector
                         
                         // Title input
                         titleInput
@@ -151,6 +148,41 @@ struct CaptureView: View {
             accentColor: captureMode.color
         ) { text in
             handleVoiceInputComplete(text)
+        }
+        .onChange(of: selectedEntryKind) { oldValue, newValue in
+            // Redirect Decision and Prep to specialized flows
+            if newValue == .decision {
+                if selectedProject != nil {
+                    showingQuickDecision = true
+                } else {
+                    showingProjectRequiredAlert = true
+                }
+                // Reset to previous kind since we're redirecting
+                selectedEntryKind = oldValue
+            } else if newValue == .prep {
+                if selectedProject != nil {
+                    showingPrepBriefing = true
+                } else {
+                    showingProjectRequiredAlert = true
+                }
+                // Reset to previous kind since we're redirecting
+                selectedEntryKind = oldValue
+            }
+        }
+        .sheet(isPresented: $showingQuickDecision) {
+            if let project = selectedProject {
+                QuickDecisionSheet(project: project)
+            }
+        }
+        .sheet(isPresented: $showingPrepBriefing) {
+            if let project = selectedProject {
+                PrepBriefingView(project: project)
+            }
+        }
+        .alert("Project Required", isPresented: $showingProjectRequiredAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Please select a project first to use this feature.")
         }
     }
     
@@ -259,7 +291,8 @@ struct CaptureView: View {
                 .foregroundStyle(.secondary)
             
             Menu {
-                ForEach(captureEntryKinds, id: \.self) { kind in
+                // Standard entry types
+                ForEach([EntryKind.note, .meeting, .update], id: \.self) { kind in
                     Button {
                         selectedEntryKind = kind
                     } label: {
@@ -270,6 +303,21 @@ struct CaptureView: View {
                             }
                         }
                     }
+                }
+                
+                Divider()
+                
+                // Specialized flows (redirect to dedicated sheets)
+                Button {
+                    selectedEntryKind = .decision
+                } label: {
+                    Label("Quick Decision", systemImage: "checkmark.seal.fill")
+                }
+                
+                Button {
+                    selectedEntryKind = .prep
+                } label: {
+                    Label("Prep Briefing", systemImage: "doc.text.fill")
                 }
             } label: {
                 HStack {
@@ -302,13 +350,13 @@ struct CaptureView: View {
         }
     }
     
-    // MARK: - Participants Selector
+    // MARK: - People Selector
     
-    private var participantsSelector: some View {
+    private var peopleSelector: some View {
         MultiPersonPicker(
             selection: $selectedParticipants,
-            label: "Participants",
-            placeholder: "Add participants (optional)"
+            label: "People",
+            placeholder: "Tag people involved (optional)"
         )
     }
     

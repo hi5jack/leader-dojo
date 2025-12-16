@@ -148,6 +148,11 @@ struct ProjectDetailView: View {
                     showingNewEntry = true
                 }
                 
+                QuickActionButton(title: "Update", icon: "arrow.triangle.2.circlepath", color: .green) {
+                    selectedEntryKind = .update
+                    showingNewEntry = true
+                }
+                
                 QuickActionButton(title: "Note", icon: "note.text", color: .orange) {
                     selectedEntryKind = .note
                     showingNewEntry = true

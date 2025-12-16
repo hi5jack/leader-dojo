@@ -3,12 +3,15 @@ import SwiftData
 
 struct PrepBriefingView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     let project: Project
     
     @State private var isLoading: Bool = true
     @State private var briefing: String = ""
     @State private var error: String? = nil
     @State private var dayRange: Int = 90
+    @State private var isSaved: Bool = false
+    @State private var showSaveToast: Bool = false
     
     var body: some View {
         NavigationStack {
@@ -55,18 +58,36 @@ struct PrepBriefingView: View {
                 }
                 
                 ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        Task {
-                            await generateBriefing()
+                    HStack(spacing: 12) {
+                        // Regenerate button
+                        Button {
+                            Task {
+                                await generateBriefing()
+                            }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
                         }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
+                        .disabled(isLoading)
+                        
+                        // Save to Timeline button
+                        Button {
+                            saveBriefingToTimeline()
+                        } label: {
+                            Label(isSaved ? "Saved" : "Save", systemImage: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                        }
+                        .disabled(isLoading || briefing.isEmpty || isSaved)
                     }
-                    .disabled(isLoading)
                 }
             }
             .task {
                 await generateBriefing()
+            }
+            .overlay(alignment: .bottom) {
+                if showSaveToast {
+                    saveToastView
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .padding(.bottom, 20)
+                }
             }
         }
     }
@@ -511,12 +532,71 @@ struct PrepBriefingView: View {
         }
     }
     
+    // MARK: - Toast View
+    
+    private var saveToastView: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+            Text("Prep saved to timeline")
+                .font(.subheadline)
+                .fontWeight(.medium)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.ultraThickMaterial, in: Capsule())
+        .shadow(color: .black.opacity(0.15), radius: 10, y: 4)
+    }
+    
     // MARK: - Actions
+    
+    private func saveBriefingToTimeline() {
+        // Create a prep entry with the briefing content
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .short
+        
+        let entry = Entry(
+            kind: .prep,
+            title: "Prep: \(project.name)",
+            occurredAt: Date(),
+            rawContent: briefing,
+            aiSummary: nil,
+            isDecision: false
+        )
+        
+        entry.project = project
+        modelContext.insert(entry)
+        
+        // Update project's last active timestamp
+        project.markActive()
+        
+        do {
+            try modelContext.save()
+            
+            // Show success state
+            isSaved = true
+            withAnimation(.easeInOut) {
+                showSaveToast = true
+            }
+            
+            // Hide toast after delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                withAnimation(.easeInOut) {
+                    showSaveToast = false
+                }
+            }
+        } catch {
+            // Handle error silently for now
+            print("Failed to save prep briefing: \(error)")
+        }
+    }
     
     private func generateBriefing() async {
         await MainActor.run {
             isLoading = true
             error = nil
+            isSaved = false  // Reset saved state on regenerate
         }
         
         do {

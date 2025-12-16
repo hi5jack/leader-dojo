@@ -510,6 +510,9 @@ struct EditEntryView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var entry: Entry
     
+    // People selection state
+    @State private var selectedParticipants: [Person] = []
+    
     var body: some View {
         NavigationStack {
             #if os(macOS)
@@ -518,6 +521,17 @@ struct EditEntryView: View {
             iOSEditLayout
             #endif
         }
+        .onAppear {
+            // Initialize with existing participants
+            selectedParticipants = entry.participants ?? []
+        }
+    }
+    
+    private func saveEntry() {
+        entry.participants = selectedParticipants.isEmpty ? nil : selectedParticipants
+        entry.updatedAt = Date()
+        try? modelContext.save()
+        dismiss()
     }
     
     // MARK: - iOS Layout
@@ -534,6 +548,15 @@ struct EditEntryView: View {
                 }
                 
                 DatePicker("Date", selection: $entry.occurredAt, displayedComponents: [.date, .hourAndMinute])
+            }
+            
+            // People Section
+            Section("People") {
+                MultiPersonPicker(
+                    selection: $selectedParticipants,
+                    label: "",
+                    placeholder: "Tag people involved (optional)"
+                )
             }
             
             Section("Content") {
@@ -669,9 +692,7 @@ struct EditEntryView: View {
             
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
-                    entry.updatedAt = Date()
-                    try? modelContext.save()
-                    dismiss()
+                    saveEntry()
                 }
             }
         }
@@ -713,6 +734,7 @@ struct EditEntryView: View {
                     // Right Column - Metadata
                     VStack(spacing: 20) {
                         editMetadataCard
+                        editPeopleCard
                         editOptionsCard
                         editDecisionDetailsCard
                     }
@@ -752,9 +774,7 @@ struct EditEntryView: View {
                 .keyboardShortcut(.cancelAction)
                 
                 Button("Save Changes") {
-                    entry.updatedAt = Date()
-                    try? modelContext.save()
-                    dismiss()
+                    saveEntry()
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
@@ -763,6 +783,24 @@ struct EditEntryView: View {
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
         .background(.ultraThinMaterial)
+    }
+    
+    private var editPeopleCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("People", systemImage: "person.2")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            MultiPersonPicker(
+                selection: $selectedParticipants,
+                label: "",
+                placeholder: "Tag people involved (optional)"
+            )
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
     }
     
     private var editContentCard: some View {

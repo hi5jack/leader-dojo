@@ -82,6 +82,10 @@ final class Project {
     @Relationship(deleteRule: .cascade, inverse: \Reflection.project)
     var reflections: [Reflection]?
     
+    /// Key people for this project (stakeholders, partners, etc.)
+    @Relationship(deleteRule: .nullify, inverse: \Person.keyProjects)
+    var keyPeople: [Person]?
+    
     init(
         id: UUID = UUID(),
         name: String,
@@ -176,6 +180,42 @@ final class Project {
         let allEntries = entries?.filter { $0.deletedAt == nil } ?? []
         return allEntries.filter { $0.kind == .decision || $0.kind == .meeting || $0.isDecision }
             .sorted { $0.occurredAt > $1.occurredAt }
+    }
+    
+    // MARK: - Key People Helpers
+    
+    /// People involved in this project (from entries)
+    var involvedPeople: [Person] {
+        let allEntries = entries?.filter { $0.deletedAt == nil } ?? []
+        let participants = Set(allEntries.flatMap { $0.participants ?? [] })
+        return Array(participants)
+    }
+    
+    /// Key people count
+    var keyPeopleCount: Int {
+        keyPeople?.count ?? 0
+    }
+    
+    /// Check if a person is a key person for this project
+    func isKeyPerson(_ person: Person) -> Bool {
+        keyPeople?.contains { $0.id == person.id } ?? false
+    }
+    
+    /// Add a person as a key person
+    func addKeyPerson(_ person: Person) {
+        if keyPeople == nil {
+            keyPeople = []
+        }
+        if !isKeyPerson(person) {
+            keyPeople?.append(person)
+            updatedAt = Date()
+        }
+    }
+    
+    /// Remove a person from key people
+    func removeKeyPerson(_ person: Person) {
+        keyPeople?.removeAll { $0.id == person.id }
+        updatedAt = Date()
     }
 }
 

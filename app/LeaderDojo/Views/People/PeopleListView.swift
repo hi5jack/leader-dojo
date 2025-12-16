@@ -7,6 +7,7 @@ struct PeopleListView: View {
     
     @State private var searchText: String = ""
     @State private var selectedRelationshipGroup: String? = nil
+    @State private var selectedHealthFilter: RelationshipHealthStatus? = nil
     @State private var showingNewPerson: Bool = false
     @State private var selectedPerson: Person? = nil
     @State private var sortOrder: SortOrder = .name
@@ -16,6 +17,7 @@ struct PeopleListView: View {
         case organization = "Organization"
         case recentActivity = "Recent Activity"
         case commitments = "Commitments"
+        case health = "Health"
         
         var icon: String {
             switch self {
@@ -23,6 +25,7 @@ struct PeopleListView: View {
             case .organization: return "building.2"
             case .recentActivity: return "clock"
             case .commitments: return "checkmark.circle"
+            case .health: return "heart.fill"
             }
         }
     }
@@ -438,6 +441,30 @@ struct PeopleListView: View {
                     }
                 }
             }
+            
+            Section("Health Status") {
+                Button {
+                    selectedHealthFilter = nil
+                } label: {
+                    if selectedHealthFilter == nil {
+                        Label("All", systemImage: "checkmark")
+                    } else {
+                        Text("All")
+                    }
+                }
+                
+                ForEach(RelationshipHealthStatus.allCases, id: \.self) { status in
+                    Button {
+                        selectedHealthFilter = status
+                    } label: {
+                        if selectedHealthFilter == status {
+                            Label(status.displayName, systemImage: "checkmark")
+                        } else {
+                            Label(status.displayName, systemImage: status.icon)
+                        }
+                    }
+                }
+            }
         } label: {
             Image(systemName: "line.3.horizontal.decrease.circle")
         }
@@ -481,6 +508,11 @@ struct PeopleListView: View {
             }
         }
         
+        // Health filter
+        if let healthFilter = selectedHealthFilter {
+            result = result.filter { $0.healthStatus == healthFilter }
+        }
+        
         // Apply sort
         switch sortOrder {
         case .name:
@@ -491,6 +523,8 @@ struct PeopleListView: View {
             result.sort { ($0.lastInteractionDate ?? .distantPast) > ($1.lastInteractionDate ?? .distantPast) }
         case .commitments:
             result.sort { $0.activeCommitmentCount > $1.activeCommitmentCount }
+        case .health:
+            result.sort { $0.relationshipHealthScore < $1.relationshipHealthScore }
         }
         
         return result
@@ -516,6 +550,8 @@ struct PeopleListView: View {
                 if count <= 2 { return "1-2 Commitments" }
                 if count <= 5 { return "3-5 Commitments" }
                 return "5+ Commitments"
+            case .health:
+                return person.healthStatus.displayName
             }
         }
         
@@ -534,6 +570,9 @@ struct PeopleListView: View {
             sortedKeys = grouped.keys.sorted { order.firstIndex(of: $0) ?? 99 < order.firstIndex(of: $1) ?? 99 }
         case .commitments:
             let order = ["5+ Commitments", "3-5 Commitments", "1-2 Commitments", "No Commitments"]
+            sortedKeys = grouped.keys.sorted { order.firstIndex(of: $0) ?? 99 < order.firstIndex(of: $1) ?? 99 }
+        case .health:
+            let order = [RelationshipHealthStatus.atRisk.displayName, RelationshipHealthStatus.needsAttention.displayName, RelationshipHealthStatus.healthy.displayName]
             sortedKeys = grouped.keys.sorted { order.firstIndex(of: $0) ?? 99 < order.firstIndex(of: $1) ?? 99 }
         }
         
@@ -569,16 +608,27 @@ struct PersonRowView: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Avatar placeholder
-            ZStack {
-                Circle()
-                    .fill(avatarColor.opacity(0.2))
-                    .frame(width: 44, height: 44)
+            // Avatar with health indicator
+            ZStack(alignment: .bottomTrailing) {
+                ZStack {
+                    Circle()
+                        .fill(avatarColor.opacity(0.2))
+                        .frame(width: 44, height: 44)
+                    
+                    Text(initials)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(avatarColor)
+                }
                 
-                Text(initials)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(avatarColor)
+                // Health status indicator
+                Circle()
+                    .fill(healthColor)
+                    .frame(width: 12, height: 12)
+                    .overlay(
+                        Circle()
+                            .stroke(.white, lineWidth: 2)
+                    )
             }
             
             VStack(alignment: .leading, spacing: 2) {
@@ -605,6 +655,13 @@ struct PersonRowView: View {
             
             Spacer()
             
+            // Last interaction
+            if let lastText = person.lastInteractionDisplayText {
+                Text(lastText)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            }
+            
             // Commitment badge
             if person.activeCommitmentCount > 0 {
                 HStack(spacing: 4) {
@@ -625,6 +682,14 @@ struct PersonRowView: View {
             }
         }
         .padding(.vertical, 4)
+    }
+    
+    private var healthColor: Color {
+        switch person.healthStatus {
+        case .healthy: return .green
+        case .needsAttention: return .yellow
+        case .atRisk: return .red
+        }
     }
     
     private var initials: String {
@@ -651,16 +716,27 @@ struct MacPersonRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            // Avatar
-            ZStack {
-                Circle()
-                    .fill(avatarColor.opacity(0.2))
-                    .frame(width: 36, height: 36)
+            // Avatar with health indicator
+            ZStack(alignment: .bottomTrailing) {
+                ZStack {
+                    Circle()
+                        .fill(avatarColor.opacity(0.2))
+                        .frame(width: 36, height: 36)
+                    
+                    Text(initials)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(avatarColor)
+                }
                 
-                Text(initials)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(avatarColor)
+                // Health status indicator
+                Circle()
+                    .fill(healthColor)
+                    .frame(width: 10, height: 10)
+                    .overlay(
+                        Circle()
+                            .stroke(Color(nsColor: .windowBackgroundColor), lineWidth: 1.5)
+                    )
             }
             
             VStack(alignment: .leading, spacing: 2) {
@@ -679,8 +755,8 @@ struct MacPersonRow: View {
                     }
                 }
                 
-                if person.role != nil || person.organization != nil {
-                    HStack(spacing: 4) {
+                HStack(spacing: 4) {
+                    if person.role != nil || person.organization != nil {
                         if let role = person.role, !role.isEmpty {
                             Text(role)
                         }
@@ -691,9 +767,17 @@ struct MacPersonRow: View {
                             Text(org)
                         }
                     }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    
+                    if let lastText = person.lastInteractionDisplayText {
+                        if person.role != nil || person.organization != nil {
+                            Text("•")
+                        }
+                        Text(lastText)
+                            .foregroundStyle(person.healthStatus == .atRisk ? .orange : .secondary)
+                    }
                 }
+                .font(.caption)
+                .foregroundStyle(.secondary)
             }
             
             Spacer()
@@ -742,6 +826,14 @@ struct MacPersonRow: View {
         case "Investment & Advisory": return .purple
         case "External": return .green
         default: return .gray
+        }
+    }
+    
+    private var healthColor: Color {
+        switch person.healthStatus {
+        case .healthy: return .green
+        case .needsAttention: return .yellow
+        case .atRisk: return .red
         }
     }
 }

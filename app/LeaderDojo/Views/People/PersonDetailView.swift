@@ -8,7 +8,10 @@ struct PersonDetailView: View {
     @State private var showingEditPerson: Bool = false
     @State private var showingNewCommitment: Bool = false
     @State private var showingRelationshipReflection: Bool = false
+    @State private var showingPersonPrep: Bool = false
     @State private var selectedCommitmentDirection: CommitmentDirection = .iOwe
+    @State private var selectedEntryKindFilter: EntryKind? = nil
+    @State private var showingAllEntries: Bool = false
     
     var body: some View {
         ScrollView {
@@ -42,6 +45,12 @@ struct PersonDetailView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
+                    Button {
+                        showingPersonPrep = true
+                    } label: {
+                        Label("Prep Briefing", systemImage: "doc.text.fill")
+                    }
+                    
                     Button {
                         showingEditPerson = true
                     } label: {
@@ -87,6 +96,9 @@ struct PersonDetailView: View {
         }
         .sheet(isPresented: $showingRelationshipReflection) {
             NewReflectionView(person: person)
+        }
+        .sheet(isPresented: $showingPersonPrep) {
+            PersonPrepView(person: person)
         }
     }
     
@@ -265,15 +277,69 @@ struct PersonDetailView: View {
     
     // MARK: - Entries Section
     
+    private var allEntries: [Entry] {
+        person.entries ?? []
+    }
+    
+    private var filteredEntries: [Entry] {
+        var entries = allEntries.filter { $0.deletedAt == nil }
+        if let filter = selectedEntryKindFilter {
+            entries = entries.filter { $0.kind == filter }
+        }
+        return entries.sorted { $0.occurredAt > $1.occurredAt }
+    }
+    
     private var entriesSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Recent Entries", systemImage: "doc.text")
-                .font(.headline)
-            
-            if let entries = person.entries, !entries.isEmpty {
-                let sortedEntries = entries.sorted { $0.occurredAt > $1.occurredAt }
+            HStack {
+                Label("Recent Entries", systemImage: "doc.text")
+                    .font(.headline)
                 
-                ForEach(sortedEntries.prefix(5)) { entry in
+                Spacer()
+                
+                // Entry type filter
+                if !allEntries.isEmpty {
+                    Menu {
+                        Button {
+                            selectedEntryKindFilter = nil
+                        } label: {
+                            HStack {
+                                Text("All Types")
+                                if selectedEntryKindFilter == nil {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        ForEach(EntryKind.activeCases, id: \.self) { kind in
+                            Button {
+                                selectedEntryKindFilter = kind
+                            } label: {
+                                HStack {
+                                    Label(kind.displayName, systemImage: kind.icon)
+                                    if selectedEntryKindFilter == kind {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: selectedEntryKindFilter?.icon ?? "line.3.horizontal.decrease.circle")
+                            if let filter = selectedEntryKindFilter {
+                                Text(filter.displayName)
+                                    .font(.caption)
+                            }
+                        }
+                        .foregroundStyle(.blue)
+                    }
+                }
+            }
+            
+            if !filteredEntries.isEmpty {
+                ForEach(filteredEntries.prefix(5)) { entry in
                     #if os(macOS)
                     NavigationLink(value: AppRoute.entry(entry.persistentModelID)) {
                         PersonEntryRow(entry: entry)
@@ -289,18 +355,48 @@ struct PersonDetailView: View {
                     #endif
                 }
                 
-                if entries.count > 5 {
-                    Text("+ \(entries.count - 5) more entries")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .padding(.top, 4)
+                // "View All" link if more than 5 entries
+                if filteredEntries.count > 5 {
+                    #if os(macOS)
+                    NavigationLink(value: AppRoute.personEntries(person.persistentModelID)) {
+                        HStack {
+                            Text("View all \(filteredEntries.count) entries")
+                                .font(.subheadline)
+                            Image(systemName: "arrow.right")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.blue)
+                    }
+                    .padding(.top, 4)
+                    #else
+                    NavigationLink {
+                        PersonEntriesView(person: person)
+                    } label: {
+                        HStack {
+                            Text("View all \(filteredEntries.count) entries")
+                                .font(.subheadline)
+                            Image(systemName: "arrow.right")
+                                .font(.caption)
+                        }
+                        .foregroundStyle(.blue)
+                    }
+                    .padding(.top, 4)
+                    #endif
                 }
-            } else {
+            } else if allEntries.isEmpty {
                 EmptyStateCard(
                     icon: "doc.text",
                     title: "No Entries",
                     message: "Entries involving this person will appear here."
                 )
+            } else {
+                // Filter applied but no results
+                Text("No \(selectedEntryKindFilter?.displayName.lowercased() ?? "") entries found.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
             }
         }
     }

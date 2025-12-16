@@ -4,7 +4,7 @@ import Security
 /// Manages secure storage of sensitive data like API keys in the Keychain
 /// Thread-safe: Keychain APIs are inherently thread-safe
 final class KeychainManager: @unchecked Sendable {
-    nonisolated(unsafe) static let shared = KeychainManager()
+    static let shared = KeychainManager()
     
     private let service = "com.joinleaderdojo.app"
     

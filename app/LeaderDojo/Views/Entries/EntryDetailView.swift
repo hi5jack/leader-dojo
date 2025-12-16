@@ -95,6 +95,10 @@ struct EntryDetailView: View {
     
     // MARK: - Entry Header
     
+    private var participants: [Person] {
+        entry.participants ?? []
+    }
+    
     private var entryHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
@@ -128,6 +132,34 @@ struct EntryDetailView: View {
             }
             .font(.caption)
             .foregroundStyle(.secondary)
+            
+            // Participants section
+            if !participants.isEmpty {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Participants")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    
+                    FlowLayout(spacing: 8) {
+                        ForEach(participants) { person in
+                            NavigationLink {
+                                PersonDetailView(person: person)
+                            } label: {
+                                HStack(spacing: 4) {
+                                    PersonAvatarCircle(person: person, size: 20)
+                                    Text(person.name)
+                                        .font(.caption)
+                                }
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.blue.opacity(0.1), in: Capsule())
+                                .foregroundStyle(.blue)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+            }
         }
     }
     

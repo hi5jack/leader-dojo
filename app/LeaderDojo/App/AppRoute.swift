@@ -11,6 +11,10 @@ enum AppRoute: Hashable {
     case commitment(PersistentIdentifier)
     case reflection(PersistentIdentifier)
     case person(PersistentIdentifier)
+    /// Full entry list for a person
+    case personEntries(PersistentIdentifier)
+    /// Person prep briefing view
+    case personPrep(PersistentIdentifier)
     /// New periodic reflection creation (e.g. weekly reflection flow)
     case newPeriodicReflection(ReflectionPeriodType)
     /// New project-specific reflection creation
@@ -18,6 +22,7 @@ enum AppRoute: Hashable {
     /// Aggregate insights views
     case reflectionInsights
     case decisionInsights
+    case relationshipInsights
 }
 
 

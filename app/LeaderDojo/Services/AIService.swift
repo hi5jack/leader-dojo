@@ -252,6 +252,175 @@ actor AIService {
         return PrepBriefingResult(briefing: response)
     }
     
+    /// Generate prep briefing for a conversation with a specific person
+    func generatePersonPrepBriefing(
+        person: Person,
+        recentEntries: [Entry],
+        openCommitments: [Commitment],
+        relevantReflections: [Reflection] = []
+    ) async throws -> PersonPrepBriefingResult {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            throw AIServiceError.apiKeyNotConfigured
+        }
+        
+        let entriesSummary = recentEntries.prefix(10).map { entry in
+            """
+            - [\(entry.kind.displayName)] \(entry.title) (\(entry.occurredAt.formatted(date: .abbreviated, time: .omitted)))
+              Project: \(entry.project?.name ?? "No project")
+              \(entry.displayContent.prefix(100))
+            """
+        }.joined(separator: "\n")
+        
+        let iOweCommitments = openCommitments.filter { $0.direction == .iOwe }
+        let waitingForCommitments = openCommitments.filter { $0.direction == .waitingFor }
+        
+        let reflectionInsights = relevantReflections.prefix(3).compactMap { reflection -> String? in
+            let answers = reflection.questionsAnswers.filter { !$0.answer.isEmpty }
+            guard !answers.isEmpty else { return nil }
+            let date = reflection.createdAt.formatted(date: .abbreviated, time: .omitted)
+            let insight = answers.first?.answer.prefix(200) ?? ""
+            return "- [\(date)] \(insight)..."
+        }.joined(separator: "\n")
+        
+        let systemPrompt = """
+        You are an executive coach helping a leader prepare for a conversation with an important professional contact.
+        
+        Generate a prep briefing that includes:
+        1. Relationship context summary (1-2 sentences about the relationship dynamics)
+        2. Key context from recent interactions
+        3. Open commitments that need discussion
+        4. 3-5 specific talking points for the conversation
+        
+        Return as JSON:
+        {
+            "briefing": "Full briefing text in markdown format",
+            "talkingPoints": ["Point 1", "Point 2", "Point 3"]
+        }
+        
+        Make talking points specific and actionable based on the history provided.
+        """
+        
+        var userPrompt = """
+        Person: \(person.name)
+        Role: \(person.role ?? "Not specified")
+        Organization: \(person.organization ?? "Not specified")
+        Relationship Type: \(person.relationshipType?.displayName ?? "Not specified")
+        Days Since Last Interaction: \(person.daysSinceLastInteraction ?? 0)
+        
+        My Open Commitments to Them (\(iOweCommitments.count)):
+        \(iOweCommitments.isEmpty ? "None" : iOweCommitments.map { "- \($0.title)\(($0.isOverdue ? " (OVERDUE)" : ""))" }.joined(separator: "\n"))
+        
+        Waiting For From Them (\(waitingForCommitments.count)):
+        \(waitingForCommitments.isEmpty ? "None" : waitingForCommitments.map { "- \($0.title)\(($0.isOverdue ? " (OVERDUE)" : ""))" }.joined(separator: "\n"))
+        
+        Recent Interactions:
+        \(entriesSummary.isEmpty ? "No recent entries" : entriesSummary)
+        
+        Notes About This Person: \(person.notes ?? "None")
+        """
+        
+        if !reflectionInsights.isEmpty {
+            userPrompt += """
+            
+            Past Reflection Insights About This Relationship:
+            \(reflectionInsights)
+            """
+        }
+        
+        let response = try await sendChatCompletion(
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
+            apiKey: apiKey
+        )
+        
+        return try parsePersonPrepBriefingResponse(response)
+    }
+    
+    private func parsePersonPrepBriefingResponse(_ response: String) throws -> PersonPrepBriefingResult {
+        let jsonString = extractJSON(from: response)
+        
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            // Fallback to raw response if JSON parsing fails
+            return PersonPrepBriefingResult(briefing: response, talkingPoints: [])
+        }
+        
+        let briefing = json["briefing"] as? String ?? response
+        let talkingPoints = json["talkingPoints"] as? [String] ?? []
+        
+        return PersonPrepBriefingResult(briefing: briefing, talkingPoints: talkingPoints)
+    }
+    
+    /// Suggest participants from entry content by analyzing mentioned names
+    func suggestParticipants(
+        fromContent content: String,
+        existingPeopleNames: [String]
+    ) async throws -> ParticipantSuggestionResult {
+        guard let apiKey = apiKey, !apiKey.isEmpty else {
+            throw AIServiceError.apiKeyNotConfigured
+        }
+        
+        // If no existing people, return empty
+        guard !existingPeopleNames.isEmpty else {
+            return ParticipantSuggestionResult(suggestedNames: [], confidence: 0)
+        }
+        
+        let systemPrompt = """
+        You are analyzing meeting notes or entry content to identify which people are mentioned or involved.
+        
+        Given the content and a list of known people, identify which of the known people are mentioned or clearly involved in this interaction.
+        
+        Rules:
+        - Only suggest names from the provided list of known people
+        - Match names even if partially mentioned (e.g., "John" matches "John Smith")
+        - Don't suggest someone just because their role or organization is mentioned
+        - Be conservative - only suggest when you're confident they were actually involved
+        
+        Return as JSON:
+        {
+            "suggestedNames": ["Full Name 1", "Full Name 2"],
+            "confidence": 0.8
+        }
+        
+        Confidence should be 0.0 to 1.0 based on how certain you are about the matches.
+        """
+        
+        let userPrompt = """
+        Entry Content:
+        \(content.prefix(2000))
+        
+        Known People (suggest ONLY from this list):
+        \(existingPeopleNames.joined(separator: ", "))
+        """
+        
+        let response = try await sendChatCompletionWithTimeout(
+            systemPrompt: systemPrompt,
+            userPrompt: userPrompt,
+            apiKey: apiKey,
+            timeout: 8.0
+        )
+        
+        return parseParticipantSuggestionResponse(response, knownNames: existingPeopleNames)
+    }
+    
+    private func parseParticipantSuggestionResponse(_ response: String, knownNames: [String]) -> ParticipantSuggestionResult {
+        let jsonString = extractJSON(from: response)
+        
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return ParticipantSuggestionResult(suggestedNames: [], confidence: 0)
+        }
+        
+        let suggested = json["suggestedNames"] as? [String] ?? []
+        let confidence = json["confidence"] as? Double ?? 0.5
+        
+        // Filter to only include names that are in the known list (case-insensitive)
+        let lowercaseKnownNames = Set(knownNames.map { $0.lowercased() })
+        let validatedNames = suggested.filter { lowercaseKnownNames.contains($0.lowercased()) }
+        
+        return ParticipantSuggestionResult(suggestedNames: validatedNames, confidence: confidence)
+    }
+    
     // MARK: - Enhanced Reflection Question Generation
     
     /// Generate context-rich reflection questions based on specific events (NEW)
@@ -1016,6 +1185,16 @@ struct EntrySummaryResult {
 
 struct PrepBriefingResult {
     let briefing: String
+}
+
+struct PersonPrepBriefingResult {
+    let briefing: String
+    let talkingPoints: [String]
+}
+
+struct ParticipantSuggestionResult {
+    let suggestedNames: [String]
+    let confidence: Double
 }
 
 struct ReflectionPromptsResult {

@@ -90,6 +90,12 @@
 		43EA49852EE0C4000006D0E9 /* VoiceInputOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */; };
 		43EA49862EE1B0000006D0E9 /* VoiceInputProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */; };
 		43EA49882EE1B0000006D0E9 /* VoiceInputProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */; };
+		43EA4AF22EF14CCF0006D0E9 /* PersonEntriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA4AEF2EF14CCF0006D0E9 /* PersonEntriesView.swift */; };
+		43EA4AF32EF14CCF0006D0E9 /* PersonPrepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA4AF02EF14CCF0006D0E9 /* PersonPrepView.swift */; };
+		43EA4AF42EF14CCF0006D0E9 /* RelationshipInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA4AF12EF14CCF0006D0E9 /* RelationshipInsightsView.swift */; };
+		43EA4AF52EF14CCF0006D0E9 /* PersonEntriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA4AEF2EF14CCF0006D0E9 /* PersonEntriesView.swift */; };
+		43EA4AF62EF14CCF0006D0E9 /* PersonPrepView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA4AF02EF14CCF0006D0E9 /* PersonPrepView.swift */; };
+		43EA4AF72EF14CCF0006D0E9 /* RelationshipInsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43EA4AF12EF14CCF0006D0E9 /* RelationshipInsightsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -155,9 +161,12 @@
 		43EA49762EE13C850006D0E9 /* DecisionReviewSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionReviewSheet.swift; sourceTree = "<group>"; };
 		43EA49792EE13C990006D0E9 /* DecisionInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DecisionInsightsView.swift; sourceTree = "<group>"; };
 		43EA497C2EE0C4000006D0E9 /* SpeechRecognitionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognitionService.swift; sourceTree = "<group>"; };
-		43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputProvider.swift; sourceTree = "<group>"; };
 		43EA497D2EE0C4000006D0E9 /* VoiceInputButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputButton.swift; sourceTree = "<group>"; };
 		43EA497E2EE0C4000006D0E9 /* VoiceInputOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputOverlay.swift; sourceTree = "<group>"; };
+		43EA49872EE1B0000006D0E9 /* VoiceInputProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceInputProvider.swift; sourceTree = "<group>"; };
+		43EA4AEF2EF14CCF0006D0E9 /* PersonEntriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonEntriesView.swift; sourceTree = "<group>"; };
+		43EA4AF02EF14CCF0006D0E9 /* PersonPrepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonPrepView.swift; sourceTree = "<group>"; };
+		43EA4AF12EF14CCF0006D0E9 /* RelationshipInsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RelationshipInsightsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -382,6 +391,9 @@
 		43EA490B2EDBD2890006D0E9 /* People */ = {
 			isa = PBXGroup;
 			children = (
+				43EA4AEF2EF14CCF0006D0E9 /* PersonEntriesView.swift */,
+				43EA4AF02EF14CCF0006D0E9 /* PersonPrepView.swift */,
+				43EA4AF12EF14CCF0006D0E9 /* RelationshipInsightsView.swift */,
 				43EA49072EDBD2890006D0E9 /* EditPersonView.swift */,
 				43EA49082EDBD2890006D0E9 /* NewPersonView.swift */,
 				43EA49092EDBD2890006D0E9 /* PeopleListView.swift */,
@@ -576,6 +588,9 @@
 				001000000009 /* ProjectDetailView.swift in Sources */,
 				43EA49032EDA92140006D0E9 /* AppRoute.swift in Sources */,
 				001000000010 /* NewEntryView.swift in Sources */,
+				43EA4AF52EF14CCF0006D0E9 /* PersonEntriesView.swift in Sources */,
+				43EA4AF62EF14CCF0006D0E9 /* PersonPrepView.swift in Sources */,
+				43EA4AF72EF14CCF0006D0E9 /* RelationshipInsightsView.swift in Sources */,
 				001000000011 /* EntryDetailView.swift in Sources */,
 				43EA48BF2ED989710006D0E9 /* MarkdownText.swift in Sources */,
 				001000000012 /* PrepBriefingView.swift in Sources */,
@@ -624,6 +639,9 @@
 				430C0B462ED9618B0035BE62 /* EntryDetailView.swift in Sources */,
 				43EA49022EDA92140006D0E9 /* AppRoute.swift in Sources */,
 				430C0B412ED9617E0035BE62 /* DashboardView.swift in Sources */,
+				43EA4AF22EF14CCF0006D0E9 /* PersonEntriesView.swift in Sources */,
+				43EA4AF32EF14CCF0006D0E9 /* PersonPrepView.swift in Sources */,
+				43EA4AF42EF14CCF0006D0E9 /* RelationshipInsightsView.swift in Sources */,
 				43EA48BE2ED989710006D0E9 /* MarkdownText.swift in Sources */,
 				430C0B4C2ED9619F0035BE62 /* CaptureView.swift in Sources */,
 				430C0B492ED961990035BE62 /* NewReflectionView.swift in Sources */,
@@ -894,9 +912,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LeaderDojo uses the microphone to capture your voice notes after meetings";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LeaderDojo uses speech recognition to convert your voice to text for quick capture";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -936,9 +954,9 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LeaderDojo uses the microphone to capture your voice notes after meetings";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LeaderDojo uses speech recognition to convert your voice to text for quick capture";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

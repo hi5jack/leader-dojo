@@ -59,6 +59,9 @@ struct NewEntryView: View {
     @State private var showQuickReflection: Bool = false
     @State private var savedEntry: Entry? = nil
     
+    // Participants state (people involved in this entry)
+    @State private var selectedParticipants: [Person] = []
+    
     // Voice input state
     @State private var speechService = SpeechRecognitionService()
     @State private var showVoiceOverlay: Bool = false
@@ -98,6 +101,15 @@ struct NewEntryView: View {
                 .pickerStyle(.menu)
                 
                 DatePicker("Date", selection: $occurredAt, displayedComponents: [.date, .hourAndMinute])
+            }
+            
+            // People Section (optional tagging for all entry types)
+            Section("People") {
+                MultiPersonPicker(
+                    selection: $selectedParticipants,
+                    label: "",
+                    placeholder: "Add people (optional)"
+                )
             }
             
             // Content Section
@@ -413,6 +425,9 @@ struct NewEntryView: View {
                     VStack(spacing: 20) {
                         metadataCard
                         
+                        // People card (optional tagging for all entry types)
+                        participantsCard
+                        
                         if kind == .decision || kind == .meeting {
                             optionsCard
                         }
@@ -614,6 +629,24 @@ struct NewEntryView: View {
                 }
             }
             .toggleStyle(.switch)
+        }
+        .padding(16)
+        .background(.background, in: RoundedRectangle(cornerRadius: 12))
+        .shadow(color: .black.opacity(0.06), radius: 8, y: 2)
+    }
+    
+    private var participantsCard: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("People", systemImage: "person.2")
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+            
+            MultiPersonPicker(
+                selection: $selectedParticipants,
+                label: "",
+                placeholder: "Add people (optional)"
+            )
         }
         .padding(16)
         .background(.background, in: RoundedRectangle(cornerRadius: 12))
@@ -992,6 +1025,11 @@ struct NewEntryView: View {
         )
         
         entry.project = project
+        
+        // Link participants for meetings and updates
+        if !selectedParticipants.isEmpty {
+            entry.participants = selectedParticipants
+        }
         
         // Store decision hypothesis fields if this is a decision
         if shouldShowDecisionDetails {

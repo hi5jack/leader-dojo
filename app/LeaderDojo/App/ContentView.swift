@@ -253,11 +253,21 @@ struct ContentView: View {
             if let project = modelContext.model(for: id) as? Project {
                 NewReflectionView(project: project)
             }
+        case .personEntries(let id):
+            if let person = modelContext.model(for: id) as? Person {
+                PersonEntriesView(person: person)
+            }
+        case .personPrep(let id):
+            if let person = modelContext.model(for: id) as? Person {
+                PersonPrepView(person: person)
+            }
         case .reflectionInsights:
             ReflectionInsightsView()
         case .decisionInsights:
             DecisionInsightsView()
-            }
+        case .relationshipInsights:
+            RelationshipInsightsView()
+        }
     }
     #endif
     

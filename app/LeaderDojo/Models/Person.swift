@@ -126,6 +126,11 @@ final class Person {
     @Relationship(deleteRule: .nullify)
     var reflections: [Reflection]?
     
+    /// Projects where this person is marked as a key stakeholder/participant
+    /// Note: Inverse is declared on `Project.keyPeople` to avoid SwiftData macro circular reference.
+    @Relationship(deleteRule: .nullify)
+    var keyProjects: [Project]?
+    
     init(
         id: UUID = UUID(),
         name: String,
@@ -213,6 +218,16 @@ final class Person {
         return Calendar.current.dateComponents([.day], from: lastDate, to: Date()).day
     }
     
+    /// Human-readable display text for last interaction (e.g., "2d ago", "1w ago")
+    var lastInteractionDisplayText: String? {
+        guard let days = daysSinceLastInteraction else { return nil }
+        if days == 0 { return "Today" }
+        if days == 1 { return "Yesterday" }
+        if days < 7 { return "\(days)d ago" }
+        if days < 30 { return "\(days / 7)w ago" }
+        return "\(days / 30)mo ago"
+    }
+    
     // MARK: - Reflection Helpers (NEW)
     
     /// Count of reflections about this person
@@ -247,6 +262,84 @@ final class Person {
     var activeProjects: [Project] {
         let projectSet = Set(entries?.compactMap { $0.project } ?? [])
         return Array(projectSet).filter { $0.status == .active }
+    }
+    
+    // MARK: - Relationship Health (Phase 2)
+    
+    /// Commitment balance: ratio of I Owe to Waiting For
+    /// Returns -1 to 1 where negative = you owe more, positive = they owe more
+    var commitmentBalance: Double {
+        let total = Double(iOweCount + waitingForCount)
+        guard total > 0 else { return 0 }
+        return Double(waitingForCount - iOweCount) / total
+    }
+    
+    /// Health score: 0-100 based on interaction recency, commitment balance, overdue status
+    var relationshipHealthScore: Int {
+        var score = 100
+        
+        // Deduct for staleness (no recent interaction)
+        if let days = daysSinceLastInteraction {
+            if days > 30 { score -= 30 }
+            else if days > 14 { score -= 15 }
+            else if days > 7 { score -= 5 }
+        } else {
+            // No interactions at all
+            score -= 20
+        }
+        
+        // Deduct for overdue commitments
+        if hasOverdueCommitments { score -= 25 }
+        
+        // Deduct for severe commitment imbalance (you owe too much or they owe too much)
+        if abs(commitmentBalance) > 0.6 { score -= 20 }
+        else if abs(commitmentBalance) > 0.3 { score -= 10 }
+        
+        // Bonus for having reflections (shows intentional relationship management)
+        if (daysSinceLastReflection ?? 100) < 30 { score += 5 }
+        
+        return max(0, min(100, score))
+    }
+    
+    /// Health status enum for UI display
+    var healthStatus: RelationshipHealthStatus {
+        switch relationshipHealthScore {
+        case 80...100: return .healthy
+        case 50..<80: return .needsAttention
+        default: return .atRisk
+        }
+    }
+}
+
+// MARK: - Relationship Health Status
+
+enum RelationshipHealthStatus: String, CaseIterable {
+    case healthy
+    case needsAttention
+    case atRisk
+    
+    var color: String {
+        switch self {
+        case .healthy: return "green"
+        case .needsAttention: return "yellow"
+        case .atRisk: return "red"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .healthy: return "heart.fill"
+        case .needsAttention: return "exclamationmark.circle.fill"
+        case .atRisk: return "exclamationmark.triangle.fill"
+        }
+    }
+    
+    var displayName: String {
+        switch self {
+        case .healthy: return "Healthy"
+        case .needsAttention: return "Needs Attention"
+        case .atRisk: return "At Risk"
+        }
     }
 }
 

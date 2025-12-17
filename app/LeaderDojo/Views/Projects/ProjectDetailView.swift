@@ -1,17 +1,21 @@
 import SwiftUI
 import SwiftData
 
+private struct NewEntrySheetData: Identifiable {
+    let id = UUID()
+    let kind: EntryKind?
+}
+
 struct ProjectDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var project: Project
     
-    @State private var showingNewEntry: Bool = false
+    @State private var newEntrySheet: NewEntrySheetData? = nil
     @State private var showingPrepBriefing: Bool = false
     @State private var showingEditProject: Bool = false
     @State private var showingNewCommitment: Bool = false
     @State private var showingProjectReflection: Bool = false
     @State private var showingQuickDecision: Bool = false
-    @State private var selectedEntryKind: EntryKind? = nil
     @State private var selectedCommitmentDirection: CommitmentDirection = .iOwe
     
     var body: some View {
@@ -39,7 +43,7 @@ struct ProjectDetailView: View {
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     Button {
-                        showingNewEntry = true
+                        newEntrySheet = NewEntrySheetData(kind: nil)
                     } label: {
                         Label("Add Entry", systemImage: "plus.circle")
                     }
@@ -74,8 +78,8 @@ struct ProjectDetailView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingNewEntry) {
-            NewEntryView(project: project, preselectedKind: selectedEntryKind)
+        .sheet(item: $newEntrySheet) { sheet in
+            NewEntryView(project: project, preselectedKind: sheet.kind)
         }
         .sheet(isPresented: $showingPrepBriefing) {
             PrepBriefingView(project: project)
@@ -144,18 +148,15 @@ struct ProjectDetailView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 QuickActionButton(title: "Meeting", icon: "person.2.fill", color: .blue) {
-                    selectedEntryKind = .meeting
-                    showingNewEntry = true
+                    newEntrySheet = NewEntrySheetData(kind: .meeting)
                 }
                 
                 QuickActionButton(title: "Update", icon: "arrow.triangle.2.circlepath", color: .green) {
-                    selectedEntryKind = .update
-                    showingNewEntry = true
+                    newEntrySheet = NewEntrySheetData(kind: .update)
                 }
                 
                 QuickActionButton(title: "Note", icon: "note.text", color: .orange) {
-                    selectedEntryKind = .note
-                    showingNewEntry = true
+                    newEntrySheet = NewEntrySheetData(kind: .note)
                 }
                 
                 QuickActionButton(title: "Decision", icon: "checkmark.seal.fill", color: .purple) {

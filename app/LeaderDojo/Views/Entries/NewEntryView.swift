@@ -34,7 +34,17 @@ struct NewEntryView: View {
     var initialRationale: String?
     var initialReviewDate: Date?
     
-    @State private var kind: EntryKind = .note
+    @State private var kind: EntryKind
+    
+    init(project: Project, preselectedKind: EntryKind? = nil, initialTitle: String? = nil, initialRationale: String? = nil, initialReviewDate: Date? = nil) {
+        self.project = project
+        self.preselectedKind = preselectedKind
+        self.initialTitle = initialTitle
+        self.initialRationale = initialRationale
+        self.initialReviewDate = initialReviewDate
+        // Initialize kind with preselected value, defaulting to .note
+        _kind = State(initialValue: preselectedKind ?? .note)
+    }
     @State private var title: String = ""
     @State private var rawContent: String = ""
     @State private var occurredAt: Date = Date()
@@ -348,9 +358,6 @@ struct NewEntryView: View {
             }
         }
         .onAppear {
-            if let preselected = preselectedKind {
-                kind = preselected
-            }
             // Set initial values from quick decision flow
             if let initialTitle = initialTitle {
                 title = initialTitle
@@ -452,9 +459,6 @@ struct NewEntryView: View {
         .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle("New Entry")
         .onAppear {
-            if let preselected = preselectedKind {
-                kind = preselected
-            }
             // Set initial values from quick decision flow
             if let initialTitle = initialTitle {
                 title = initialTitle
